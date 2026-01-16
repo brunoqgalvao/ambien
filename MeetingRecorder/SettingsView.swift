@@ -136,7 +136,7 @@ struct SettingsTabButton: View {
                     .font(.caption)
             }
             .frame(width: 70, height: 50)
-            .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
+            .background(isSelected ? Color.brandViolet.opacity(0.1) : Color.clear)
             .cornerRadius(8)
         }
         .buttonStyle(.plain)
@@ -180,8 +180,8 @@ struct GeneralSettingsTab: View {
                             .font(.system(.body, design: .monospaced))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color(.controlBackgroundColor))
-                            .cornerRadius(6)
+                            .background(Color.brandSurface)
+                            .cornerRadius(BrandRadius.small)
                     }
 
                     Toggle("Auto-detect meetings", isOn: $autoDetectMeetings)
@@ -277,8 +277,8 @@ struct GeneralSettingsTab: View {
                             .font(.system(.body, design: .monospaced))
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Color(.controlBackgroundColor))
-                            .cornerRadius(6)
+                            .background(Color.brandSurface)
+                            .cornerRadius(BrandRadius.small)
                     }
 
                     Toggle("AI cleanup (grammar, filler words)", isOn: Binding(
@@ -412,8 +412,8 @@ struct APISettingsTab: View {
                     }
                 }
             }
-            .background(Color(.controlBackgroundColor).opacity(0.5))
-            .cornerRadius(10)
+            .background(Color.brandSurface.opacity(0.5))
+            .cornerRadius(BrandRadius.medium)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
@@ -436,8 +436,8 @@ struct APISettingsTab: View {
                         onDelete: deleteAnthropicKey
                     )
                 }
-                .background(Color(.controlBackgroundColor).opacity(0.5))
-                .cornerRadius(10)
+                .background(Color.brandSurface.opacity(0.5))
+                .cornerRadius(BrandRadius.medium)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
@@ -536,7 +536,7 @@ struct ProviderRow: View {
                     // Provider icon
                     ZStack {
                         Circle()
-                            .fill(provider.isRecommended ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.1))
+                            .fill(provider.isRecommended ? Color.brandViolet.opacity(0.1) : Color.secondary.opacity(0.1))
                             .frame(width: 32, height: 32)
                         Image(systemName: provider.icon)
                             .font(.system(size: 14))
@@ -555,7 +555,7 @@ struct ProviderRow: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Color.accentColor)
+                                    .background(Color.brandViolet)
                                     .cornerRadius(4)
                             }
                         }
@@ -872,8 +872,8 @@ struct ProviderModelSection: View {
                         .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.2))
-                        .foregroundColor(.accentColor)
+                        .background(Color.brandViolet.opacity(0.2))
+                        .foregroundColor(.brandViolet)
                         .cornerRadius(4)
                 }
 
@@ -920,12 +920,12 @@ struct ModelRadioRow: View {
                 // Radio button
                 ZStack {
                     Circle()
-                        .stroke(isEnabled ? Color.accentColor : Color.secondary, lineWidth: 1.5)
+                        .stroke(isEnabled ? Color.brandViolet : Color.secondary, lineWidth: 1.5)
                         .frame(width: 16, height: 16)
 
                     if isSelected {
                         Circle()
-                            .fill(isEnabled ? Color.accentColor : Color.secondary)
+                            .fill(isEnabled ? Color.brandViolet : Color.secondary)
                             .frame(width: 8, height: 8)
                     }
                 }
@@ -1015,7 +1015,7 @@ struct CostsSettingsTab: View {
                                     .frame(height: 8)
 
                                 RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.accentColor)
+                                    .fill(Color.brandViolet)
                                     .frame(width: geometry.size.width * min(totalHours / 100, 1.0), height: 8)
                             }
                         }
@@ -1096,11 +1096,11 @@ struct AboutSettingsTab: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(Color.accentColor.opacity(0.1))
+                        .fill(Color.brandViolet.opacity(0.1))
                         .frame(width: 80, height: 80)
                     Image(systemName: "mic.circle.fill")
                         .font(.system(size: 48))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.brandViolet)
                 }
 
                 Text("MeetingRecorder")
@@ -1160,7 +1160,7 @@ struct AboutLink: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color(.controlBackgroundColor))
+            .background(Color.brandSurface)
             .cornerRadius(8)
         }
         .buttonStyle(.plain)

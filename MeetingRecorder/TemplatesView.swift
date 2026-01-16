@@ -121,31 +121,13 @@ struct TemplatesToolbar: View {
             Spacer()
 
             // Search
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-
-                TextField("Search templates...", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13))
-                    .frame(width: 160)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.white)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.brandBorder, lineWidth: 1)
-            )
+            BrandSearchField(placeholder: "Search templates...", text: $searchText)
+                .frame(width: 200)
 
             // Actions
-            Button(action: onNew) {
-                Label("New Template", systemImage: "plus")
-                    .font(.system(size: 13, weight: .medium))
+            BrandPrimaryButton(title: "New Template", icon: "plus", size: .small) {
+                onNew()
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.brandViolet)
 
             Menu {
                 Button(action: onReset) {
@@ -763,7 +745,7 @@ struct VariableChip: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color.brandViolet.opacity(0.08))
-        .cornerRadius(6)
+        .cornerRadius(BrandRadius.small)
     }
 }
 

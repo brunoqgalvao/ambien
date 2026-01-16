@@ -93,7 +93,7 @@ struct OnboardingView: View {
             HStack(spacing: 8) {
                 ForEach(OnboardingStep.allCases, id: \.rawValue) { step in
                     Circle()
-                        .fill(step == currentStep ? Color.accentColor : Color.secondary.opacity(0.3))
+                        .fill(step == currentStep ? Color.brandViolet : Color.secondary.opacity(0.3))
                         .frame(width: 8, height: 8)
                 }
             }
@@ -121,11 +121,11 @@ struct WelcomeStepView: View {
             // App icon placeholder
             ZStack {
                 Circle()
-                    .fill(Color.accentColor.opacity(0.1))
+                    .fill(Color.brandViolet.opacity(0.1))
                     .frame(width: 80, height: 80)
                 Image(systemName: "mic.circle.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.brandViolet)
             }
 
             VStack(spacing: 8) {
@@ -145,8 +145,8 @@ struct WelcomeStepView: View {
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(width: 160, height: 44)
-                    .background(Color.accentColor)
-                    .cornerRadius(10)
+                    .background(Color.brandViolet)
+                    .cornerRadius(BrandRadius.medium)
             }
             .buttonStyle(.plain)
 
@@ -355,8 +355,8 @@ struct PermissionRow: View {
             }
         }
         .padding(12)
-        .background(Color(.controlBackgroundColor))
-        .cornerRadius(10)
+        .background(Color.brandSurface)
+        .cornerRadius(BrandRadius.medium)
     }
 }
 
@@ -409,7 +409,7 @@ struct APIKeyStepView: View {
                 Link("Don't have one? Get it at platform.openai.com",
                      destination: URL(string: "https://platform.openai.com/api-keys")!)
                     .font(.caption)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.brandViolet)
 
                 // Validation status
                 if isValidating {
@@ -461,8 +461,8 @@ struct APIKeyStepView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentColor.opacity(0.05))
-            .cornerRadius(10)
+            .background(Color.brandViolet.opacity(0.05))
+            .cornerRadius(BrandRadius.medium)
             .padding(.horizontal, 48)
 
             Spacer()

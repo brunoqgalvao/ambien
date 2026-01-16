@@ -50,6 +50,7 @@
 		1A0000000000000000000104 /* SpeakerLabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000105 /* SpeakerLabelingView.swift */; };
 		1A0000000000000000000106 /* AudioCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000107 /* AudioCompressor.swift */; };
 		1A0000000000000000000108 /* SilenceProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000109 /* SilenceProcessor.swift */; };
+		1A000000000000000000010A /* BrandComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000010B /* BrandComponents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -97,6 +98,7 @@
 		1A0000000000000000000105 /* SpeakerLabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerLabelingView.swift; sourceTree = "<group>"; };
 		1A0000000000000000000107 /* AudioCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCompressor.swift; sourceTree = "<group>"; };
 		1A0000000000000000000109 /* SilenceProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceProcessor.swift; sourceTree = "<group>"; };
+		1A000000000000000000010B /* BrandComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandComponents.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +157,7 @@
 				1A00000000000000000000F3 /* PostProcessingService.swift */,
 				1A00000000000000000000F5 /* SummaryTemplatesSettingsTab.swift */,
 				1A00000000000000000000F7 /* BrandAssets.swift */,
+				1A000000000000000000010B /* BrandComponents.swift */,
 				1A00000000000000000000F9 /* SidebarView.swift */,
 				1A00000000000000000000FB /* HomeView.swift */,
 				1A00000000000000000000FD /* AnalyticsView.swift */,
@@ -285,6 +288,7 @@
 				1A00000000000000000000F2 /* PostProcessingService.swift in Sources */,
 				1A00000000000000000000F4 /* SummaryTemplatesSettingsTab.swift in Sources */,
 				1A00000000000000000000F6 /* BrandAssets.swift in Sources */,
+				1A000000000000000000010A /* BrandComponents.swift in Sources */,
 				1A00000000000000000000F8 /* SidebarView.swift in Sources */,
 				1A00000000000000000000FA /* HomeView.swift in Sources */,
 				1A00000000000000000000FC /* AnalyticsView.swift in Sources */,

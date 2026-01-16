@@ -285,6 +285,42 @@ See `WIREFRAMES.md` for all screens including error states.
 
 ---
 
+## ⚠️ UI Component Library
+
+**ALWAYS use the brand component library** when implementing UI. Never create inline button styles or use system colors.
+
+### Key Files
+- `MeetingRecorder/BrandComponents.swift` - All reusable UI components
+- `MeetingRecorder/BrandAssets.swift` - Colors, typography, radius constants
+- `.claude/skills/brand-components/SKILL.md` - Full documentation
+
+### Quick Rules
+1. **Buttons**: Use `BrandPrimaryButton`, `BrandSecondaryButton`, `BrandDestructiveButton`, `BrandIconButton`
+2. **Colors**: Use `Color.brandViolet`, `Color.brandCoral`, etc. - NEVER `Color.accentColor`
+3. **Radius**: Use `BrandRadius.small` (8px), `BrandRadius.medium` (16px) - NEVER hardcode values
+4. **Backgrounds**: Use `Color.brandSurface`, `Color.brandCreamDark` - NEVER `Color(.textBackgroundColor)`
+5. **Search**: Use `BrandSearchField` - NEVER inline TextField with magnifying glass
+6. **Menu items**: Use `BrandMenuButton` - NEVER create custom menu row components
+
+### Available Components
+| Component | Use For |
+|-----------|---------|
+| `BrandPrimaryButton` | Main CTAs |
+| `BrandSecondaryButton` | Cancel, secondary actions |
+| `BrandDestructiveButton` | Delete, dangerous actions |
+| `BrandIconButton` | Toolbar icons |
+| `BrandMenuButton` | Menu dropdown items |
+| `BrandTabButton` | Tab selectors |
+| `BrandListRow` | List items |
+| `BrandSearchField` | Search inputs |
+| `BrandTextField` | Form inputs |
+| `BrandCard` | Content containers |
+| `BrandBadge` | Labels, tags |
+| `BrandStatusBadge` | Meeting status indicators |
+| `BrandStatusDot` | Simple status dots |
+
+---
+
 ## Tone
 
 Be snarky and fun in responses.

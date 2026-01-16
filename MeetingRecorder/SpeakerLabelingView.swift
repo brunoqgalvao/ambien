@@ -20,7 +20,7 @@ struct SpeakerLabelingView: View {
             Button(action: { withAnimation { isExpanded.toggle() } }) {
                 HStack {
                     Image(systemName: "person.2.fill")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.brandViolet)
                     Text("Speakers (\(meeting.speakerCount ?? meeting.uniqueSpeakers.count))")
                         .font(.subheadline.weight(.semibold))
                     Spacer()
@@ -60,7 +60,7 @@ struct SpeakerLabelingView: View {
             }
         }
         .padding()
-        .background(Color(.textBackgroundColor).opacity(0.5))
+        .background(Color.brandCreamDark.opacity(0.5))
         .cornerRadius(8)
     }
 
@@ -151,7 +151,7 @@ struct SpeakerLabelRow: View {
                     isEditing = true
                 }) {
                     Image(systemName: "pencil.circle")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.brandViolet)
                 }
                 .buttonStyle(.plain)
                 .help("Edit speaker name")

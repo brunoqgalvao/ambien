@@ -121,7 +121,7 @@ struct WizardProgressBar: View {
         HStack(spacing: 0) {
             ForEach(0..<totalSteps, id: \.self) { step in
                 Rectangle()
-                    .fill(step <= currentStep ? Color.accentColor : Color.secondary.opacity(0.2))
+                    .fill(step <= currentStep ? Color.brandViolet : Color.secondary.opacity(0.2))
                     .frame(height: 3)
             }
         }
@@ -214,7 +214,7 @@ struct WelcomeStep: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(width: 200, height: 48)
-                    .background(Color.accentColor)
+                    .background(Color.brandViolet)
                     .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -433,7 +433,7 @@ struct PermissionStepLayout: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                             .frame(width: 22, height: 22)
-                            .background(Circle().fill(Color.accentColor))
+                            .background(Circle().fill(Color.brandViolet))
 
                         Text(instruction)
                             .font(.system(size: 14))
@@ -583,7 +583,7 @@ struct ScreenRecordingScreenshot: View {
                     Divider().padding(.leading, 44)
                     MockAppRow(name: "Chrome", isEnabled: true)
                 }
-                .background(Color(.controlBackgroundColor))
+                .background(Color.brandSurface)
                 .cornerRadius(8)
             }
             .padding(16)
@@ -618,12 +618,12 @@ struct MockAppRow: View {
             if isHighlighted {
                 Image(systemName: "arrow.left")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.brandViolet)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(isHighlighted ? Color.accentColor.opacity(0.1) : Color.clear)
+        .background(isHighlighted ? Color.brandViolet.opacity(0.1) : Color.clear)
     }
 }
 
@@ -640,11 +640,11 @@ struct MockButton: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isPrimary ? Color.accentColor : Color(.controlBackgroundColor))
+                    .fill(isPrimary ? Color.brandViolet : Color.brandSurface)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(isHighlighted ? Color.accentColor : Color.clear, lineWidth: 2)
+                    .stroke(isHighlighted ? Color.brandViolet : Color.clear, lineWidth: 2)
             )
     }
 }

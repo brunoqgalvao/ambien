@@ -143,7 +143,7 @@ struct MenuBarButton: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+            .background(isHovered ? Color.brandViolet.opacity(0.1) : Color.clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -205,8 +205,8 @@ struct TabButton: View {
                 .foregroundColor(isSelected ? .primary : .secondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
-                .cornerRadius(6)
+                .background(isSelected ? Color.brandViolet.opacity(0.1) : Color.clear)
+                .cornerRadius(BrandRadius.small)
         }
         .buttonStyle(.plain)
     }
@@ -274,8 +274,8 @@ struct RecordingView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 12)
-                .background((useMicOnly ? micRecorder.isRecording : audioManager.isRecording) ? Color.red : Color.accentColor)
-                .cornerRadius(10)
+                .background((useMicOnly ? micRecorder.isRecording : audioManager.isRecording) ? Color.red : Color.brandViolet)
+                .cornerRadius(BrandRadius.medium)
             }
             .buttonStyle(.plain)
 

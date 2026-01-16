@@ -90,8 +90,8 @@ struct CalendarMeetingRow: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(.textBackgroundColor))
-                        .cornerRadius(6)
+                        .background(Color.brandCreamDark)
+                        .cornerRadius(BrandRadius.small)
                 }
 
                 // Chevron
@@ -136,9 +136,9 @@ struct CalendarMeetingRow: View {
 
     private var backgroundColor: Color {
         if isSelected {
-            return Color.accentColor.opacity(0.1)
+            return Color.brandViolet.opacity(0.1)
         } else if isHovered {
-            return Color(.textBackgroundColor).opacity(0.5)
+            return Color.brandCreamDark.opacity(0.5)
         }
         return Color.clear
     }
@@ -187,7 +187,7 @@ struct QuickActionButton: View {
                 .frame(width: 28, height: 28)
                 .background(
                     Circle()
-                        .fill(isHovered ? Color(.textBackgroundColor) : Color.clear)
+                        .fill(isHovered ? Color.brandCreamDark : Color.clear)
                 )
         }
         .buttonStyle(.plain)

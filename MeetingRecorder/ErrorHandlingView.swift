@@ -116,8 +116,8 @@ struct TranscriptionFailedView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.controlBackgroundColor))
-            .cornerRadius(10)
+            .background(Color.brandSurface)
+            .cornerRadius(BrandRadius.medium)
         }
         .padding(16)
         .frame(width: 340)
@@ -153,8 +153,8 @@ struct InvalidAPIKeyView: View {
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(.controlBackgroundColor))
-                    .cornerRadius(6)
+                    .background(Color.brandSurface)
+                    .cornerRadius(BrandRadius.small)
                 }
 
                 HStack {
@@ -307,7 +307,7 @@ struct NetworkOfflineView: View {
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.controlBackgroundColor))
+                .background(Color.brandSurface)
                 .cornerRadius(8)
             }
         }

@@ -86,7 +86,7 @@ struct MeetingDetailView: View {
             DetailKeyboardFooter()
         }
         .frame(minWidth: 450, idealWidth: 550, minHeight: 550, idealHeight: 700)
-        .background(Color(.windowBackgroundColor))
+        .background(Color.brandBackground)
         .onDisappear {
             audioPlayer.stop()
         }
@@ -376,7 +376,7 @@ struct MeetingHeaderSection: View {
             // Editable Title
             if isEditingTitle {
                 TextField("Meeting title", text: $editedTitle)
-                    .font(.title2.weight(.bold))
+                    .font(.brandDisplay(22, weight: .bold))
                     .textFieldStyle(.plain)
                     .focused($titleFieldFocused)
                     .onSubmit { saveTitle() }
@@ -385,7 +385,8 @@ struct MeetingHeaderSection: View {
                     }
             } else {
                 Text(meeting.title)
-                    .font(.title2.weight(.bold))
+                    .font(.brandDisplay(22, weight: .bold))
+                    .foregroundColor(.brandTextPrimary)
                     .lineLimit(2)
                     .onTapGesture {
                         editedTitle = meeting.title
@@ -398,8 +399,8 @@ struct MeetingHeaderSection: View {
             // Editable Description
             if isEditingDescription {
                 TextField("Add a description...", text: $editedDescription)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(.brandDisplay(14))
+                    .foregroundColor(.brandTextSecondary)
                     .textFieldStyle(.plain)
                     .focused($descriptionFieldFocused)
                     .onSubmit { saveDescription() }
@@ -409,8 +410,8 @@ struct MeetingHeaderSection: View {
             } else {
                 let descriptionText = meeting.description ?? ""
                 Text(descriptionText.isEmpty ? "Add a description..." : descriptionText)
-                    .font(.subheadline)
-                    .foregroundColor(descriptionText.isEmpty ? .secondary.opacity(0.6) : .secondary)
+                    .font(.brandDisplay(14))
+                    .foregroundColor(descriptionText.isEmpty ? .brandTextSecondary.opacity(0.6) : .brandTextSecondary)
                     .lineLimit(3)
                     .onTapGesture {
                         editedDescription = meeting.description ?? ""
@@ -477,32 +478,32 @@ struct MeetingMetadataRow: View {
             // Created date/time row
             HStack(spacing: 8) {
                 Text("Created")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.brandDisplay(11, weight: .medium))
+                    .foregroundColor(.brandTextSecondary)
                     .frame(width: 60, alignment: .leading)
 
                 Text(formattedDateTimeRange)
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.primary)
+                    .font(.brandMono(11, weight: .medium))
+                    .foregroundColor(.brandTextPrimary)
             }
 
             // Meeting source row
             if let sourceApp = meeting.sourceApp {
                 HStack(spacing: 8) {
                     Text("Meeting")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.brandDisplay(11, weight: .medium))
+                        .foregroundColor(.brandTextSecondary)
                         .frame(width: 60, alignment: .leading)
 
                     HStack(spacing: 6) {
                         // Colored dot indicator
                         Circle()
                             .fill(sourceColor(for: sourceApp))
-                            .frame(width: 8, height: 8)
+                            .frame(width: 6, height: 6)
 
                         Text(meeting.windowTitle ?? sourceApp)
-                            .font(.caption.weight(.medium))
-                            .foregroundColor(.primary)
+                            .font(.brandDisplay(12, weight: .medium))
+                            .foregroundColor(.brandTextPrimary)
                             .lineLimit(1)
 
                         Spacer()
@@ -511,11 +512,11 @@ struct MeetingMetadataRow: View {
                         Button(action: {}) {
                             HStack(spacing: 2) {
                                 Text("Change")
-                                    .font(.caption)
+                                    .font(.brandDisplay(11))
                                 Image(systemName: "chevron.down")
-                                    .font(.caption2)
+                                    .font(.system(size: 9))
                             }
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.brandViolet)
                         }
                         .buttonStyle(.plain)
                         .help("Link to calendar event (coming soon)")
@@ -749,27 +750,17 @@ struct ShareButton: View {
     let icon: String
     let label: String
     let action: () -> Void
-
-    @State private var isHovering = false
+    var isDisabled: Bool = false
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption)
-                Text(label)
-                    .font(.caption)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(isHovering ? Color(.textBackgroundColor) : Color(.textBackgroundColor).opacity(0.6))
-            .foregroundColor(.primary)
-            .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovering = hovering
-        }
+        BrandSecondaryButton(
+            title: label,
+            icon: icon,
+            size: .small,
+            action: action
+        )
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.5 : 1)
     }
 }
 
@@ -779,25 +770,24 @@ struct MeetingInfoCard: View {
     let meeting: Meeting
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 16) {
-                InfoItem(icon: "calendar", label: "Date", value: formattedDate)
-                InfoItem(icon: "clock", label: "Time", value: meeting.formattedTime)
-                InfoItem(icon: "timer", label: "Duration", value: meeting.formattedDuration)
-            }
-
-            HStack(spacing: 16) {
-                if let app = meeting.sourceApp {
-                    InfoItem(icon: "app", label: "Source", value: app)
+        BrandCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 16) {
+                    InfoItem(icon: "calendar", label: "Date", value: formattedDate)
+                    InfoItem(icon: "clock", label: "Time", value: meeting.formattedTime)
+                    InfoItem(icon: "timer", label: "Duration", value: meeting.formattedDuration)
                 }
-                if let cost = meeting.formattedCost {
-                    InfoItem(icon: "dollarsign.circle", label: "Cost", value: cost)
+
+                HStack(spacing: 16) {
+                    if let app = meeting.sourceApp {
+                        InfoItem(icon: "app", label: "Source", value: app)
+                    }
+                    if let cost = meeting.formattedCost {
+                        InfoItem(icon: "dollarsign.circle", label: "Cost", value: cost)
+                    }
                 }
             }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
     }
 
     private var formattedDate: String {
@@ -849,17 +839,17 @@ struct AudioPlayerCard: View {
                 playerContent
             } else {
                 // Audio file not ready yet (still recording or processing)
-                HStack(spacing: 12) {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Preparing audio...")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                BrandCard(padding: 16) {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Preparing audio...")
+                            .font(.brandDisplay(14))
+                            .foregroundColor(.brandTextSecondary)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.textBackgroundColor).opacity(0.5))
-                .cornerRadius(8)
             }
         }
         .onAppear {
@@ -880,130 +870,119 @@ struct AudioPlayerCard: View {
 
     @ViewBuilder
     private var playerContent: some View {
-        VStack(spacing: 12) {
-            // Row 1: Play controls + Scrubber + Time
-            HStack(spacing: 12) {
-                // Play/Pause button
-                Button(action: {
-                    if player.isPlaying {
-                        player.pause()
-                    } else {
-                        player.play(url: URL(fileURLWithPath: audioPath))
-                    }
-                }) {
-                    Image(systemName: player.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.accentColor)
-                }
-                .buttonStyle(.plain)
-
-                // Skip backward
-                Button(action: { player.skip(seconds: -15) }) {
-                    Image(systemName: "gobackward.15")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .disabled(!player.isReady)
-
-                // Current time
-                Text(formatTime(player.currentTime))
-                    .font(.caption.monospacedDigit())
-                    .foregroundColor(.secondary)
-                    .frame(width: 40, alignment: .trailing)
-
-                // Interactive scrubber
-                Slider(
-                    value: Binding(
-                        get: { player.progress },
-                        set: { newValue in
-                            player.seek(to: newValue)
-                        }
-                    ),
-                    in: 0...1
-                )
-                .controlSize(.small)
-
-                // Duration
-                Text(formatTime(player.duration))
-                    .font(.caption.monospacedDigit())
-                    .foregroundColor(.secondary)
-                    .frame(width: 40, alignment: .leading)
-
-                // Skip forward
-                Button(action: { player.skip(seconds: 15) }) {
-                    Image(systemName: "goforward.15")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .disabled(!player.isReady)
-            }
-
-            // Row 2: Volume + Speed controls
-            HStack(spacing: 16) {
-                // Volume control
-                HStack(spacing: 6) {
+        BrandCard(padding: 16) {
+            VStack(spacing: 12) {
+                // Row 1: Play controls + Scrubber + Time
+                HStack(spacing: 12) {
+                    // Play/Pause button
                     Button(action: {
-                        if player.volume > 0 {
-                            player.setVolume(0)
+                        if player.isPlaying {
+                            player.pause()
                         } else {
-                            player.setVolume(1.0)
+                            player.play(url: URL(fileURLWithPath: audioPath))
                         }
                     }) {
-                        Image(systemName: player.volumeIconName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .frame(width: 16)
+                        Image(systemName: player.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.brandViolet)
                     }
                     .buttonStyle(.plain)
-                    .help(player.volume > 0 ? "Mute" : "Unmute")
 
+                    // Skip backward
+                    BrandIconButton(
+                        icon: "gobackward.15",
+                        size: 28,
+                        action: { player.skip(seconds: -15) }
+                    )
+                    .disabled(!player.isReady)
+
+                    // Current time
+                    Text(formatTime(player.currentTime))
+                        .font(.brandMono(11))
+                        .foregroundColor(.brandTextSecondary)
+                        .frame(width: 40, alignment: .trailing)
+
+                    // Interactive scrubber
                     Slider(
                         value: Binding(
-                            get: { Double(player.volume) },
-                            set: { player.setVolume(Float($0)) }
+                            get: { player.progress },
+                            set: { newValue in
+                                player.seek(to: newValue)
+                            }
                         ),
                         in: 0...1
                     )
-                    .controlSize(.mini)
-                    .frame(width: 70)
+                    .tint(.brandViolet)
+                    .controlSize(.small)
+
+                    // Duration
+                    Text(formatTime(player.duration))
+                        .font(.brandMono(11))
+                        .foregroundColor(.brandTextSecondary)
+                        .frame(width: 40, alignment: .leading)
+
+                    // Skip forward
+                    BrandIconButton(
+                        icon: "goforward.15",
+                        size: 28,
+                        action: { player.skip(seconds: 15) }
+                    )
+                    .disabled(!player.isReady)
                 }
 
-                Spacer()
+                // Row 2: Volume + Speed controls
+                HStack(spacing: 16) {
+                    // Volume control
+                    HStack(spacing: 6) {
+                        Image(systemName: player.volumeIconName)
+                            .font(.system(size: 11))
+                            .foregroundColor(.brandTextSecondary)
+                            .frame(width: 16)
 
-                // Playback speed selector
-                Menu {
-                    ForEach(AudioPlayerManager.playbackRates, id: \.self) { rate in
-                        Button(action: { player.setPlaybackRate(rate) }) {
-                            HStack {
-                                Text(formatRate(rate))
-                                if rate == player.playbackRate {
-                                    Image(systemName: "checkmark")
+                        Slider(
+                            value: Binding(
+                                get: { Double(player.volume) },
+                                set: { player.setVolume(Float($0)) }
+                            ),
+                            in: 0...1
+                        )
+                        .tint(.brandViolet)
+                        .controlSize(.mini)
+                        .frame(width: 80)
+                    }
+
+                    Spacer()
+
+                    // Playback speed selector
+                    Menu {
+                        ForEach(AudioPlayerManager.playbackRates, id: \.self) { rate in
+                            Button(action: { player.setPlaybackRate(rate) }) {
+                                HStack {
+                                    Text(formatRate(rate))
+                                    if rate == player.playbackRate {
+                                        Image(systemName: "checkmark")
+                                    }
                                 }
                             }
                         }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(player.playbackRateText)
+                                .font(.brandMono(11, weight: .semibold))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 9))
+                        }
+                        .foregroundColor(.brandViolet)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.brandViolet.opacity(0.1))
+                        .cornerRadius(BrandRadius.small)
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(player.playbackRateText)
-                            .font(.caption.weight(.medium))
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(.textBackgroundColor))
-                    .cornerRadius(4)
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
             }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
     }
 
     private func formatTime(_ time: TimeInterval) -> String {
@@ -1049,56 +1028,43 @@ struct TranscriptSummarySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Tab bar
-            HStack(spacing: 0) {
-                ForEach(ContentTab.allCases, id: \.self) { tab in
-                    Button(action: { selectedTab = tab }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: tab.icon)
-                                .font(.caption)
-                            Text(tab.rawValue)
-                                .font(.subheadline)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(selectedTab == tab ? Color.accentColor.opacity(0.1) : Color.clear)
-                        .foregroundColor(selectedTab == tab ? .accentColor : .secondary)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 4) {
+                    ForEach(ContentTab.allCases, id: \.self) { tab in
+                        BrandTabButton(
+                            title: tab.rawValue,
+                            icon: tab.icon,
+                            isSelected: selectedTab == tab,
+                            action: { selectedTab = tab }
+                        )
                     }
-                    .buttonStyle(.plain)
-                }
 
-                Spacer()
-
-                // Copy button
-                Button(action: copyContent) {
-                    Image(systemName: "doc.on.doc")
-                        .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .help("Copy content")
-                .disabled(currentContent == nil)
-
-                // Reprocess button (if not processed yet)
-                if let onReprocess = onReprocess, !meeting.isProcessed && meeting.transcript != nil {
-                    Button(action: { Task { await onReprocess() } }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "sparkles")
-                                .font(.caption)
-                            Text("Summarize")
-                                .font(.caption)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(6)
+                    if let onReprocess = onReprocess, !meeting.isProcessed && meeting.transcript != nil {
+                        BrandPrimaryButton(
+                            title: "Summarize",
+                            icon: "sparkles",
+                            size: .small,
+                            action: { Task { await onReprocess() } }
+                        )
+                        .help("Generate AI summary")
+                        .padding(.leading, 8)
                     }
-                    .buttonStyle(.plain)
-                    .help("Generate AI summary")
+
+                    Spacer()
+
+                    // Copy button
+                    BrandIconButton(
+                        icon: "doc.on.doc",
+                        size: 28,
+                        action: copyContent
+                    )
+                    .help("Copy content")
+                    .disabled(currentContent == nil)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color(.textBackgroundColor).opacity(0.5))
+            .background(Color.brandBackground)
 
             Divider()
 
@@ -1121,8 +1087,12 @@ struct TranscriptSummarySection: View {
                 .padding()
             }
         }
-        .background(Color(.textBackgroundColor).opacity(0.3))
-        .cornerRadius(8)
+        .background(Color.brandSurface)
+        .cornerRadius(BrandRadius.medium)
+        .overlay(
+            RoundedRectangle(cornerRadius: BrandRadius.medium)
+                .stroke(Color.brandBorder, lineWidth: 1)
+        )
     }
 
     private var currentContent: String? {
@@ -1446,7 +1416,7 @@ struct KeyPointsView: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "diamond.fill")
                         .font(.caption2)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.brandViolet)
                         .padding(.top, 4)
 
                     Text(point)
@@ -1508,15 +1478,19 @@ struct PrivateNotesContentView: View {
                     .frame(minHeight: 200)
             }
             .padding(8)
-            .background(Color(.textBackgroundColor).opacity(0.5))
-            .cornerRadius(8)
+            .background(Color.brandBackground)
+            .cornerRadius(BrandRadius.small)
+            .overlay(
+                RoundedRectangle(cornerRadius: BrandRadius.small)
+                    .stroke(Color.brandBorder, lineWidth: 1)
+            )
 
             // Footer with character count
             HStack {
                 Spacer()
                 Text("\(notesText.count) characters")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.brandMono(10))
+                    .foregroundColor(.brandTextSecondary)
             }
         }
         .onAppear {
@@ -1701,42 +1675,41 @@ struct ParticipantsSection: View {
     @State private var isExpanded = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button(action: { withAnimation { isExpanded.toggle() } }) {
-                HStack {
-                    Image(systemName: "person.crop.rectangle.stack")
-                        .foregroundColor(.secondary)
-                    Text("Detected Participants (\(participants.count))")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+        BrandCard(padding: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button(action: { withAnimation { isExpanded.toggle() } }) {
+                    HStack {
+                        Image(systemName: "person.crop.rectangle.stack")
+                            .foregroundColor(.brandTextSecondary)
+                        Text("Detected Participants (\(participants.count))")
+                            .font(.brandDisplay(12, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.brandTextSecondary)
+                    }
                 }
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            if isExpanded {
-                FlowLayout(spacing: 6) {
-                    ForEach(participants) { participant in
-                        HStack(spacing: 4) {
-                            Image(systemName: sourceIcon(participant.source))
-                                .font(.caption2)
-                            Text(participant.name)
-                                .font(.caption)
+                if isExpanded {
+                    FlowLayout(spacing: 6) {
+                        ForEach(participants) { participant in
+                            HStack(spacing: 4) {
+                                Image(systemName: sourceIcon(participant.source))
+                                    .font(.system(size: 10))
+                                Text(participant.name)
+                                    .font(.brandDisplay(11))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.brandBackground)
+                            .cornerRadius(BrandRadius.small)
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(.textBackgroundColor))
-                        .cornerRadius(4)
                     }
                 }
             }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.3))
-        .cornerRadius(8)
     }
 
     private func sourceIcon(_ source: MeetingParticipant.ParticipantSource) -> String {
@@ -1756,39 +1729,38 @@ struct ScreenshotPreviewSection: View {
     @State private var isExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button(action: { withAnimation { isExpanded.toggle() } }) {
-                HStack {
-                    Image(systemName: "photo")
-                        .foregroundColor(.secondary)
-                    Text("Meeting Screenshot")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+        BrandCard(padding: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button(action: { withAnimation { isExpanded.toggle() } }) {
+                    HStack {
+                        Image(systemName: "photo")
+                            .foregroundColor(.brandTextSecondary)
+                        Text("Meeting Screenshot")
+                            .font(.brandDisplay(12, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                        Spacer()
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.brandTextSecondary)
+                    }
                 }
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            if isExpanded {
-                if let image = NSImage(contentsOfFile: path) {
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 300)
-                        .cornerRadius(8)
-                        .onTapGesture {
-                            // Open in Preview
-                            NSWorkspace.shared.open(URL(fileURLWithPath: path))
-                        }
+                if isExpanded {
+                    if let image = NSImage(contentsOfFile: path) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxHeight: 300)
+                            .cornerRadius(BrandRadius.small)
+                            .onTapGesture {
+                                // Open in Preview
+                                NSWorkspace.shared.open(URL(fileURLWithPath: path))
+                            }
+                    }
                 }
             }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.3))
-        .cornerRadius(8)
     }
 }
 
@@ -1801,7 +1773,7 @@ struct DiarizedSegmentsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Conversation")
-                .font(.subheadline.weight(.semibold))
+                .font(.brandDisplay(14, weight: .semibold))
                 .padding(.bottom, 4)
 
             ForEach(segments) { segment in
@@ -1812,17 +1784,17 @@ struct DiarizedSegmentsView: View {
                         .frame(width: 32, height: 32)
                         .overlay(
                             Text(meeting.speakerName(for: segment.speakerId).prefix(1).uppercased())
-                                .font(.caption.weight(.semibold))
+                                .font(.brandDisplay(12, weight: .semibold))
                                 .foregroundColor(.white)
                         )
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(meeting.speakerName(for: segment.speakerId))
-                            .font(.caption.weight(.semibold))
+                            .font(.brandDisplay(12, weight: .semibold))
                             .foregroundColor(colorForSpeaker(segment.speakerId))
 
                         Text(segment.text)
-                            .font(.body)
+                            .font(.brandDisplay(13))
                             .textSelection(.enabled)
                     }
                 }
@@ -1892,36 +1864,35 @@ struct TranscriptSection: View {
     let meeting: Meeting
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Transcript")
-                    .font(.subheadline.weight(.semibold))
+        BrandCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Transcript")
+                        .font(.brandDisplay(14, weight: .semibold))
 
-                Spacer()
+                    Spacer()
 
-                if meeting.transcript != nil {
-                    Button(action: copyTranscript) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.caption)
+                    if meeting.transcript != nil {
+                        BrandIconButton(
+                            icon: "doc.on.doc",
+                            size: 24,
+                            action: copyTranscript
+                        )
+                        .help("Copy transcript")
                     }
-                    .buttonStyle(.plain)
-                    .help("Copy transcript")
+                }
+
+                if let transcript = meeting.transcript {
+                    Text(transcript)
+                        .font(.brandDisplay(13))
+                        .lineSpacing(4)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    TranscriptPlaceholder(status: meeting.status)
                 }
             }
-
-            if let transcript = meeting.transcript {
-                Text(transcript)
-                    .font(.body)
-                    .lineSpacing(4)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                TranscriptPlaceholder(status: meeting.status)
-            }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.3))
-        .cornerRadius(8)
     }
 
     private func copyTranscript() {
@@ -1956,8 +1927,8 @@ struct TranscriptPlaceholder: View {
                 Text("Transcription failed")
             }
         }
-        .font(.subheadline)
-        .foregroundColor(.secondary)
+        .font(.brandDisplay(13))
+        .foregroundColor(.brandTextSecondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
     }
@@ -1969,27 +1940,26 @@ struct ActionItemsSection: View {
     let items: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Action Items")
-                .font(.subheadline.weight(.semibold))
+        BrandCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Action Items")
+                    .font(.brandDisplay(14, weight: .semibold))
 
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(items, id: \.self) { item in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "circle")
-                            .font(.caption2)
-                            .foregroundColor(.accentColor)
-                            .padding(.top, 3)
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(items, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "circle")
+                                .font(.system(size: 10))
+                                .foregroundColor(.brandViolet)
+                                .padding(.top, 3)
 
-                        Text(item)
-                            .font(.body)
+                            Text(item)
+                                .font(.brandDisplay(13))
+                        }
                     }
                 }
             }
         }
-        .padding()
-        .background(Color(.textBackgroundColor).opacity(0.3))
-        .cornerRadius(8)
     }
 }
 
@@ -2001,47 +1971,38 @@ struct ErrorSection: View {
     @State private var isRetrying = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+        BrandCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.brandCoral)
+                    Text("Error")
+                        .font(.brandDisplay(14, weight: .bold))
+                }
 
                 Text(message)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
+                    .font(.brandDisplay(13))
+                    .foregroundColor(.brandTextPrimary)
 
-                Spacer()
-            }
-
-            if let onRetry = onRetry {
-                Button(action: {
-                    isRetrying = true
-                    onRetry()
-                }) {
-                    HStack(spacing: 6) {
-                        if isRetrying {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                        } else {
-                            Image(systemName: "arrow.clockwise")
+                if let onRetry = onRetry {
+                    BrandPrimaryButton(
+                        title: isRetrying ? "Retrying..." : "Retry Transcription",
+                        icon: isRetrying ? nil : "arrow.clockwise",
+                        isDisabled: isRetrying,
+                        size: .small,
+                        action: {
+                            isRetrying = true
+                            onRetry()
+                            // Note: isRetrying will stay true until view reloads
+                            // or we add complex state management here
                         }
-                        Text(isRetrying ? "Retrying..." : "Retry Transcription")
-                    }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.accentColor)
-                    .cornerRadius(8)
+                    )
                 }
-                .buttonStyle(.plain)
-                .disabled(isRetrying)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
+        .background(Color.brandCoral.opacity(0.05))
+        .cornerRadius(BrandRadius.medium)
     }
 }
 
@@ -2049,34 +2010,38 @@ struct ErrorSection: View {
 
 struct DetailKeyboardFooter: View {
     var body: some View {
-        Divider()
         HStack(spacing: 20) {
-            DetailShortcutHint(keys: "← →", action: "seek ±10s")
-            DetailShortcutHint(keys: "Space", action: "play/pause")
-            DetailShortcutHint(keys: "C", action: "copy transcript")
-            DetailShortcutHint(keys: "Esc", action: "back")
+            Spacer()
+
+            KeyboardHint(keys: "Space", action: "Play/Pause")
+            KeyboardHint(keys: "←/→", action: "Seek")
+            KeyboardHint(keys: "C", action: "Copy Transcript")
+            KeyboardHint(keys: "Esc", action: "Back")
+
+            Spacer()
         }
-        .padding(.horizontal, 20)
         .padding(.vertical, 10)
+        .background(Color.brandSurface)
     }
 }
 
-struct DetailShortcutHint: View {
+struct KeyboardHint: View {
     let keys: String
     let action: String
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Text(keys)
-                .font(.caption.weight(.medium).monospaced())
-                .padding(.horizontal, 4)
+                .font(.brandMono(10, weight: .semibold))
+                .padding(.horizontal, 5)
                 .padding(.vertical, 2)
-                .background(Color(.textBackgroundColor))
-                .cornerRadius(3)
+                .background(Color.brandViolet.opacity(0.1))
+                .foregroundColor(.brandViolet)
+                .cornerRadius(4)
 
             Text(action)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.brandDisplay(11))
+                .foregroundColor(.brandTextSecondary)
         }
     }
 }

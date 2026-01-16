@@ -183,7 +183,7 @@ struct TemplateRow: View {
                 .font(.caption2)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.accentColor.opacity(0.1))
+                .background(Color.brandViolet.opacity(0.1))
                 .cornerRadius(4)
 
             // Actions (shown on hover)
@@ -225,11 +225,11 @@ struct TemplateRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isSelected ? Color.accentColor.opacity(0.08) : (isHovering ? Color(.controlBackgroundColor) : Color.clear))
+                .fill(isSelected ? Color.brandViolet.opacity(0.08) : (isHovering ? Color.brandSurface : Color.clear))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(isSelected ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
+                .stroke(isSelected ? Color.brandViolet.opacity(0.3) : Color.clear, lineWidth: 1)
         )
         .onHover { hovering in
             isHovering = hovering
@@ -309,8 +309,8 @@ struct TemplateEditorSheet: View {
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(Color(.controlBackgroundColor))
-                                    .cornerRadius(6)
+                                    .background(Color.brandSurface)
+                                    .cornerRadius(BrandRadius.small)
                                 }
                                 .buttonStyle(.plain)
                                 .popover(isPresented: $showingIconPicker) {
@@ -342,7 +342,7 @@ struct TemplateEditorSheet: View {
                                 .frame(minHeight: 80)
                                 .scrollContentBackground(.hidden)
                                 .padding(4)
-                                .background(Color(.textBackgroundColor))
+                                .background(Color.brandCreamDark)
                                 .cornerRadius(4)
                         }
                         .padding(8)
@@ -370,7 +370,7 @@ struct TemplateEditorSheet: View {
                                 .frame(minHeight: 200)
                                 .scrollContentBackground(.hidden)
                                 .padding(4)
-                                .background(Color(.textBackgroundColor))
+                                .background(Color.brandCreamDark)
                                 .cornerRadius(4)
                         }
                         .padding(8)
@@ -453,8 +453,8 @@ struct IconPickerPopover: View {
                     Image(systemName: iconName)
                         .font(.title2)
                         .frame(width: 36, height: 36)
-                        .background(selectedIcon == iconName ? Color.accentColor.opacity(0.2) : Color.clear)
-                        .cornerRadius(6)
+                        .background(selectedIcon == iconName ? Color.brandViolet.opacity(0.2) : Color.clear)
+                        .cornerRadius(BrandRadius.small)
                 }
                 .buttonStyle(.plain)
             }

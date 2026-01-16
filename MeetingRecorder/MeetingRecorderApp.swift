@@ -178,7 +178,7 @@ struct MenuBarDropdown: View {
 
             // Navigation
             VStack(spacing: 2) {
-                MenuActionButton(icon: "rectangle.stack", title: "Open App", shortcut: "O") {
+                BrandMenuButton(icon: "rectangle.stack", title: "Open App", shortcut: "O") {
                     MainAppWindowController.shared.showWindow()
                 }
 
@@ -190,7 +190,7 @@ struct MenuBarDropdown: View {
                     meetingDetector.isEnabled.toggle()
                 }
 
-                MenuActionButton(icon: "magnifyingglass", title: "Search", shortcut: "F") {
+                BrandMenuButton(icon: "magnifyingglass", title: "Search", shortcut: "F") {
                     MainAppWindowController.shared.showWindow()
                 }
             }
@@ -216,11 +216,11 @@ struct MenuBarDropdown: View {
 
             // Footer
             VStack(spacing: 2) {
-                MenuActionButton(icon: "gear", title: "Settings...", shortcut: ",") {
+                BrandMenuButton(icon: "gear", title: "Settings...", shortcut: ",") {
                     MainAppWindowController.shared.openSettings()
                 }
 
-                MenuActionButton(icon: "power", title: "Quit", shortcut: "Q") {
+                BrandMenuButton(icon: "power", title: "Quit", shortcut: "Q") {
                     NSApplication.shared.terminate(nil)
                 }
             }
@@ -262,8 +262,8 @@ struct MenuToggleButton: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
-            .cornerRadius(6)
+            .background(isHovered ? Color.brandViolet.opacity(0.1) : Color.clear)
+            .cornerRadius(BrandRadius.small)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -300,7 +300,7 @@ struct RecordingStatusCard: View {
         }
         .padding(12)
         .background(Color.red.opacity(0.08))
-        .cornerRadius(10)
+        .cornerRadius(BrandRadius.medium)
     }
 
     private func formatDuration(_ duration: TimeInterval) -> String {
@@ -351,47 +351,6 @@ struct MenuQuickActionButton: View {
             .padding(.vertical, 8)
             .background(isHovered ? color.opacity(0.08) : Color.clear)
             .cornerRadius(8)
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovered = hovering
-        }
-    }
-}
-
-// MARK: - Menu Action Button
-
-struct MenuActionButton: View {
-    let icon: String
-    let title: String
-    let shortcut: String?
-    let action: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 13))
-                    .foregroundColor(.secondary)
-                    .frame(width: 20)
-
-                Text(title)
-                    .font(.system(size: 13))
-
-                Spacer()
-
-                if let shortcut = shortcut {
-                    Text("\u{2318}\(shortcut)")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary.opacity(0.7))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
-            .cornerRadius(6)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -629,10 +588,10 @@ struct AboutView: View {
                             .font(.system(size: 10))
                     }
                     .font(.system(size: 13))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(.brandViolet)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(Color.accentColor.opacity(0.08))
+                    .background(Color.brandViolet.opacity(0.08))
                     .cornerRadius(8)
                 }
 
@@ -648,7 +607,7 @@ struct AboutView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(Color(.controlBackgroundColor))
+                    .background(Color.brandSurface)
                     .cornerRadius(8)
                 }
             }

@@ -212,23 +212,8 @@ struct DetailToolbar: View {
             Spacer()
 
             // Search
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-
-                TextField("Search...", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13))
-                    .frame(width: 180)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.white)
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.brandBorder, lineWidth: 1)
-            )
+            BrandSearchField(placeholder: "Search...", text: $searchText)
+                .frame(width: 220)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
@@ -503,18 +488,11 @@ struct MeetingsListView: View {
             .frame(minWidth: 300, idealWidth: 350)
             .background(Color.white)
 
-            // Detail - use .id() to force re-render when selection changes
+            // Detail - use MeetingDetailView with full Amie-style features
             if let meeting = selectedMeeting {
-                MeetingDetailContentView(
+                MeetingDetailView(
                     meeting: meeting,
-                    onRename: {
-                        meetingToRename = meeting
-                        newTitle = meeting.title
-                    },
-                    onTitleChanged: { updatedMeeting in
-                        selectedMeeting = updatedMeeting
-                        Task { await viewModel.loadData() }
-                    }
+                    showBackButton: false
                 )
                 .id(meeting.id) // Force view recreation on selection change
             } else {
@@ -666,11 +644,11 @@ struct PrimaryActionButton: View {
 
     private var backgroundColor: Color {
         if isDisabled {
-            return Color.accentColor.opacity(0.6)
+            return Color.brandViolet.opacity(0.6)
         } else if isHovered {
-            return Color.accentColor.opacity(0.85)
+            return Color.brandViolet.opacity(0.85)
         } else {
-            return Color.accentColor
+            return Color.brandViolet
         }
     }
 }
@@ -698,7 +676,7 @@ struct SecondaryActionButton: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color(.textBackgroundColor) : Color(.textBackgroundColor).opacity(0.6))
+                    .fill(isHovered ? Color.brandCreamDark : Color.brandCreamDark.opacity(0.6))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -1105,7 +1083,7 @@ struct CustomCalendarView: View {
                             .foregroundColor(.secondary)
                             .frame(width: 28, height: 28)
                             .background(Color.brandBackground)
-                            .cornerRadius(6)
+                            .cornerRadius(BrandRadius.small)
                     }
                     .buttonStyle(.plain)
 
@@ -1123,7 +1101,7 @@ struct CustomCalendarView: View {
                             .foregroundColor(.secondary)
                             .frame(width: 28, height: 28)
                             .background(Color.brandBackground)
-                            .cornerRadius(6)
+                            .cornerRadius(BrandRadius.small)
                     }
                     .buttonStyle(.plain)
                 }
@@ -1279,7 +1257,7 @@ struct CalendarMeetingCard: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
         .background(isHovered ? Color.brandViolet.opacity(0.03) : Color.white)
-        .cornerRadius(10)
+        .cornerRadius(BrandRadius.medium)
         .shadow(color: Color.black.opacity(0.02), radius: 2, y: 1)
         .overlay(
             RoundedRectangle(cornerRadius: 10)

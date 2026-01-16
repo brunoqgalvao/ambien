@@ -275,24 +275,7 @@ struct SearchBar: View {
     @Binding var text: String
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-
-            TextField("Search meetings...", text: $text)
-                .textFieldStyle(.plain)
-
-            if !text.isEmpty {
-                Button(action: { text = "" }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(8)
-        .background(Color(.textBackgroundColor).opacity(0.5))
-        .cornerRadius(8)
+        BrandSearchField(placeholder: "Search meetings...", text: $text)
     }
 }
 
@@ -338,9 +321,9 @@ struct FailedTranscriptionsBanner: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Color.accentColor)
+                .background(Color.brandViolet)
                 .foregroundColor(.white)
-                .cornerRadius(6)
+                .cornerRadius(BrandRadius.small)
             }
             .buttonStyle(.plain)
             .disabled(isRetrying)
@@ -477,7 +460,7 @@ struct MeetingRowView: View {
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color(.textBackgroundColor))
+                    .background(Color.brandCreamDark)
                     .cornerRadius(4)
             }
 
@@ -493,7 +476,7 @@ struct MeetingRowView: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.accentColor)
+                    .background(Color.brandViolet)
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
@@ -549,8 +532,8 @@ struct TranscriptionErrorPopover: View {
                 .foregroundColor(.primary)
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.textBackgroundColor))
-                .cornerRadius(6)
+                .background(Color.brandCreamDark)
+                .cornerRadius(BrandRadius.small)
 
             HStack(spacing: 8) {
                 Button(action: onDismiss) {
@@ -560,8 +543,8 @@ struct TranscriptionErrorPopover: View {
                         .padding(.vertical, 6)
                 }
                 .buttonStyle(.plain)
-                .background(Color(.controlBackgroundColor))
-                .cornerRadius(6)
+                .background(Color.brandSurface)
+                .cornerRadius(BrandRadius.small)
 
                 Button(action: onRetry) {
                     HStack(spacing: 4) {
@@ -575,8 +558,8 @@ struct TranscriptionErrorPopover: View {
                     .foregroundColor(.white)
                 }
                 .buttonStyle(.plain)
-                .background(Color.accentColor)
-                .cornerRadius(6)
+                .background(Color.brandViolet)
+                .cornerRadius(BrandRadius.small)
             }
         }
         .padding(12)

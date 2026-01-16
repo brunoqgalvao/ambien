@@ -244,41 +244,21 @@ struct FilterBar: View {
 
             // Search field
             HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-
-                TextField("Search...", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .frame(width: 150)
-                    .focused($searchFieldFocused)
-                    .onSubmit {
-                        if !searchText.isEmpty {
-                            isSearching = true
-                        }
+                BrandSearchField(placeholder: "Search...", text: $searchText) {
+                    if !searchText.isEmpty {
+                        isSearching = true
                     }
-
-                if !searchText.isEmpty {
-                    Button(action: {
-                        searchText = ""
-                        isSearching = false
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
                 }
+                .frame(width: 180)
 
                 Text("⌘F")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(Color(.textBackgroundColor))
-                    .cornerRadius(4)
+                    .font(.brandMono(10))
+                    .foregroundColor(.brandTextSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.brandViolet.opacity(0.08))
+                    .cornerRadius(BrandRadius.small / 2)
             }
-            .padding(8)
-            .background(Color(.textBackgroundColor).opacity(0.5))
-            .cornerRadius(8)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -299,7 +279,7 @@ struct FilterPill: View {
                 .foregroundColor(isSelected ? .white : .primary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(isSelected ? Color.accentColor : Color(.textBackgroundColor))
+                .background(isSelected ? Color.brandViolet : Color.brandCreamDark)
                 .cornerRadius(16)
         }
         .buttonStyle(.plain)
@@ -406,7 +386,7 @@ struct EmptyCalendarState: View {
                     .font(.caption.weight(.medium))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
-                    .background(Color(.textBackgroundColor))
+                    .background(Color.brandCreamDark)
                     .cornerRadius(4)
 
                 Text("Start Recording")
@@ -445,7 +425,7 @@ struct ShortcutHint: View {
                 .font(.caption.weight(.medium).monospaced())
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-                .background(Color(.textBackgroundColor))
+                .background(Color.brandCreamDark)
                 .cornerRadius(3)
 
             Text(action)
