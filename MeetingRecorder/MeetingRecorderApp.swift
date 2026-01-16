@@ -279,27 +279,12 @@ struct RecordingStatusCard: View {
     let duration: TimeInterval
     let title: String
 
-    @State private var isPulsing = false
-
     var body: some View {
         HStack(spacing: 12) {
-            // Pulse indicator
-            ZStack {
-                Circle()
-                    .fill(Color.red.opacity(0.2))
-                    .frame(width: 32, height: 32)
-                    .scaleEffect(isPulsing ? 1.3 : 1.0)
-                    .opacity(isPulsing ? 0 : 0.5)
-
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 10, height: 10)
-            }
-            .onAppear {
-                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: false)) {
-                    isPulsing = true
-                }
-            }
+            // Recording indicator - static red dot (no distracting animation)
+            Circle()
+                .fill(Color.red)
+                .frame(width: 10, height: 10)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)

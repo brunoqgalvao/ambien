@@ -114,11 +114,10 @@ class RecordingIslandController {
         // Size depends on whether we have a notch
         let windowSize: NSSize
         if hasNotch {
-            // Notch mode: notch width + content on each side + corner radius padding
-            // Use expanded width (110) so window doesn't need to resize on hover
-            let topCornerRadius: CGFloat = 6
-            let contentWidth: CGFloat = 50 + 110  // left (50) + right expanded (110)
-            let totalWidth = NotchInfo.notchWidth + contentWidth + (topCornerRadius * 2)
+            // Notch mode: notch width + content on each side
+            // Use expanded width (105) so window doesn't need to resize on hover
+            let contentWidth: CGFloat = 50 + 105  // left (50) + right expanded (105)
+            let totalWidth = NotchInfo.notchWidth + contentWidth
             let totalHeight = NotchInfo.notchHeight
             windowSize = NSSize(width: totalWidth, height: totalHeight)
         } else {
@@ -184,23 +183,24 @@ class RecordingIslandController {
         guard let screen = NSScreen.main else { return }
 
         let screenFrame = screen.frame
-        let windowHeight = panel.frame.height
 
         if hasNotch {
-            // Notch mode: position so the notch gap is centered on screen
-            // Window layout: [left 50] [notch] [right 110] [padding]
-            // We want the notch center to align with screen center
-            let topCornerRadius: CGFloat = 6
-            let leftContentWidth: CGFloat = 50 + topCornerRadius
-            let notchCenter = screenFrame.midX
-            let x = notchCenter - leftContentWidth - (NotchInfo.notchWidth / 2)
+            // Fixed window size = expanded width; align notch center to screen center.
+            let leftWidth: CGFloat = 50
+            let rightWidthExpanded: CGFloat = 110
+            let windowWidth = leftWidth + NotchInfo.notchWidth + rightWidthExpanded
+            let windowHeight = NotchInfo.notchHeight
+
+            let notchCenterX = screenFrame.midX
+            let x = notchCenterX - (NotchInfo.notchWidth / 2) - leftWidth
             let y = screenFrame.maxY - windowHeight
-            panel.setFrameOrigin(NSPoint(x: x, y: y))
+
+            panel.setFrame(NSRect(x: x, y: y, width: windowWidth, height: windowHeight), display: true)
         } else {
             // Pill mode: centered horizontally, below menu bar
             let windowWidth = panel.frame.width
             let x = screenFrame.midX - windowWidth / 2
-            let y = screenFrame.maxY - 60  // 60px from top (below menu bar)
+            let y = screenFrame.maxY - 60
             panel.setFrameOrigin(NSPoint(x: x, y: y))
         }
     }
@@ -240,9 +240,7 @@ struct RecordingIslandView: View {
             }
         }
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHovering = hovering
-            }
+            isHovering = hovering
         }
     }
 }
@@ -269,53 +267,75 @@ struct NotchWrapperView: View {
         isHovered ? rightWidthExpanded : rightWidthCompact
     }
 
+    private var expandedWidth: CGFloat {
+        leftWidth + NotchInfo.notchWidth + rightWidthExpanded
+    }
+
+    private var visibleWidth: CGFloat {
+        leftWidth + NotchInfo.notchWidth + rightWidth
+    }
+
     var body: some View {
-        // Content + mask width animates together
-        HStack(spacing: 0) {
-            // Left: red recording dot
-            Circle()
-                .fill(Color.red)
-                .frame(width: 10, height: 10)
-                .frame(width: leftWidth)
-
-            // Center: notch spacer
-            Spacer()
-                .frame(width: NotchInfo.notchWidth)
-
-            // Right: timer + stop button
-            HStack(spacing: 8) {
-                Text(formatDuration(audioManager.currentDuration))
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.8))
-
-                // Stop button appears on hover
-                Button(action: stopRecording) {
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 9))
-                        .foregroundColor(.white)
-                        .frame(width: 22, height: 22)
-                        .background(Circle().fill(Color.red))
-                }
-                .buttonStyle(.plain)
-                .opacity(isHovered ? 1 : 0)
-                .scaleEffect(isHovered ? 1 : 0.5)
-            }
-            .frame(width: rightWidth, alignment: .leading)
-        }
-        .frame(height: NotchInfo.notchHeight)
-        .padding(.horizontal, topCornerRadius)
-        .background {
-            Rectangle()
-                .fill(Color.black)
-                .padding(-50)
-        }
-        .mask {
+        ZStack(alignment: .leading) {
+            // Background shape (full expanded width, clipped by mask below)
             NotchShape(
                 topCornerRadius: topCornerRadius,
                 bottomCornerRadius: bottomCornerRadius
             )
+            .fill(Color.black)
+
+            // Content (always at expanded width, button fades in/out)
+            HStack(spacing: 0) {
+                // Left: red recording dot
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 10, height: 10)
+                    .frame(width: leftWidth)
+
+                // Center: notch spacer
+                Spacer()
+                    .frame(width: NotchInfo.notchWidth)
+
+                // Right: timer + stop button (always full width)
+                HStack(spacing: 8) {
+                    Text(formatDuration(audioManager.currentDuration))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.8))
+
+                    Button(action: stopRecording) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.white)
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(Color.red))
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(isHovered ? 1 : 0)
+                }
+                .frame(width: rightWidthExpanded, alignment: .leading)
+            }
         }
-        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isHovered)
+        .frame(width: expandedWidth, height: NotchInfo.notchHeight, alignment: .leading)
+        .mask(
+            // Animated mask - only this changes size
+            HStack(spacing: 0) {
+                NotchShape(
+                    topCornerRadius: topCornerRadius,
+                    bottomCornerRadius: bottomCornerRadius
+                )
+                .frame(width: visibleWidth, height: NotchInfo.notchHeight, alignment: .leading)
+                Spacer(minLength: 0)
+            }
+        )
+        .contentShape(
+            // Hit testing matches visible area
+            HStack(spacing: 0) {
+                Rectangle()
+                    .frame(width: visibleWidth, height: NotchInfo.notchHeight)
+                Spacer(minLength: 0)
+            }
+        )
+        .animation(.spring(response: 0.25, dampingFraction: 0.8), value: visibleWidth)
     }
 
     private func stopRecording() {

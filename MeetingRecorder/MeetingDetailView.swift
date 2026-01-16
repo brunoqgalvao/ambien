@@ -273,7 +273,23 @@ struct DetailHeader: View {
 
             Spacer()
 
-            MeetingStatusBadge(status: meeting.status)
+            // Status indicator - only show for non-ready states
+            if meeting.status == .failed {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundColor(.red)
+                    .help(meeting.errorMessage ?? "Transcription failed")
+            } else if meeting.status == .transcribing {
+                ProgressView()
+                    .scaleEffect(0.7)
+            } else if meeting.status == .recording {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+            } else if meeting.status == .pendingTranscription {
+                Image(systemName: "clock")
+                    .foregroundColor(.orange)
+            }
+            // .ready = no indicator
         }
         .padding()
     }

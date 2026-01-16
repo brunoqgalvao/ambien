@@ -305,6 +305,15 @@ class AudioCaptureManager: NSObject, ObservableObject {
             updatedMeeting.speakerCount = result.speakerCount
             updatedMeeting.diarizationSegments = result.diarizationSegments
 
+            // Auto-generate a smart title from transcript (cheap GPT-4o-mini call)
+            if !result.text.isEmpty {
+                transcriptionProgress = "Generating title..."
+                if let generatedTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
+                    updatedMeeting.title = generatedTitle
+                    print("[AudioCapture] Auto-generated title: \(generatedTitle)")
+                }
+            }
+
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
             transcriptionProgress = nil
@@ -881,6 +890,15 @@ class MicRecorderWithTranscription: ObservableObject {
             updatedMeeting.duration = result.duration
             updatedMeeting.status = .ready
             updatedMeeting.errorMessage = nil
+
+            // Auto-generate a smart title from transcript
+            if !result.text.isEmpty {
+                status = "Generating title..."
+                if let generatedTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
+                    updatedMeeting.title = generatedTitle
+                    print("[MicRecorderWithTranscription] Auto-generated title: \(generatedTitle)")
+                }
+            }
 
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting

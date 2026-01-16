@@ -380,10 +380,8 @@ class QuickRecordingManager: ObservableObject {
                 // Auto-paste at cursor
                 pasteTextAtCursor(finalText)
 
-                // Save dictation to database
-                // Estimate cost: whisper-1 at ~$0.006/min = 0.6¢/min
-                let estimatedCostCents = Int(ceil(duration / 60.0 * 0.6))
-                await saveDictation(text: finalText, duration: duration, costCents: estimatedCostCents)
+                // Save dictation to storage
+                saveDictation(text: finalText, duration: duration)
 
                 print("[QuickRecording] Done & pasted: \"\(finalText)\"")
             }
@@ -544,31 +542,17 @@ class QuickRecordingManager: ObservableObject {
 
     // MARK: - Helpers
 
-    /// Save dictation to database
-    private func saveDictation(text: String, duration: TimeInterval, costCents: Int?) async {
-        // Generate a title from first few words
-        let words = text.split(separator: " ").prefix(5)
-        let title = words.isEmpty ? "Dictation" : words.joined(separator: " ") + (text.split(separator: " ").count > 5 ? "..." : "")
-
-        let dictation = Meeting(
-            title: title,
-            startTime: Date().addingTimeInterval(-duration),
-            endTime: Date(),
-            duration: duration,
-            sourceApp: "Dictation",
-            audioPath: "",  // Audio was temporary, not saved
-            transcript: text,
-            apiCostCents: costCents,
-            status: .ready,
-            isDictation: true
+    /// Save dictation to QuickRecordingStorage
+    private func saveDictation(text: String, duration: TimeInterval) {
+        let recording = QuickRecording(
+            text: text,
+            createdAt: Date(),
+            durationSeconds: duration,
+            copiedToClipboard: true
         )
 
-        do {
-            try await DatabaseManager.shared.insert(dictation)
-            print("[QuickRecording] Dictation saved to database: \(dictation.id)")
-        } catch {
-            print("[QuickRecording] Failed to save dictation: \(error)")
-        }
+        QuickRecordingStorage.shared.save(recording)
+        print("[QuickRecording] Dictation saved: \(text.prefix(30))...")
     }
 
     /// Paste text at the current cursor position

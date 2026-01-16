@@ -378,18 +378,57 @@ struct MeetingRowView: View {
 
     @State private var isEditing = false
     @State private var editedTitle = ""
+    @State private var isHovered = false
+    @State private var showErrorPopover = false
 
     var body: some View {
         HStack(spacing: 12) {
             // Dictation icon or status indicator
+            // Ready state = no indicator (success is the default/expected)
             if meeting.isDictation {
                 Image(systemName: "text.bubble")
                     .font(.caption)
                     .foregroundColor(.purple)
                     .frame(width: 20, height: 20)
-            } else if meeting.status != .ready {
-                MeetingStatusBadge(status: meeting.status)
+            } else if meeting.status == .failed {
+                // Failed: show warning icon with popover for details
+                Button(action: { showErrorPopover.toggle() }) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+                .frame(width: 20, height: 20)
+                .popover(isPresented: $showErrorPopover, arrowEdge: .trailing) {
+                    TranscriptionErrorPopover(
+                        errorMessage: meeting.errorMessage ?? "Unknown error",
+                        onRetry: {
+                            showErrorPopover = false
+                            onRetry?()
+                        },
+                        onDismiss: { showErrorPopover = false }
+                    )
+                }
+                .help("Transcription failed - click for details")
+            } else if meeting.status == .transcribing {
+                // Transcribing: show spinner
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .frame(width: 20, height: 20)
+            } else if meeting.status == .recording {
+                // Recording: show pulsing red dot
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                    .frame(width: 20, height: 20)
+            } else if meeting.status == .pendingTranscription {
+                // Pending: show clock icon
+                Image(systemName: "clock")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .frame(width: 20, height: 20)
             }
+            // .ready status = no indicator shown (success is default)
 
             // Meeting info
             VStack(alignment: .leading, spacing: 2) {
@@ -442,18 +481,23 @@ struct MeetingRowView: View {
                     .cornerRadius(4)
             }
 
-            // Retry button for failed transcriptions
-            if meeting.status == .failed {
+            // Retry button for failed transcriptions - shows on hover or always if failed
+            if meeting.status == .failed && isHovered {
                 Button(action: { onRetry?() }) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.caption)
-                        .foregroundColor(.white)
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.caption)
+                        Text("Retry")
+                            .font(.caption.weight(.medium))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor)
+                    .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
-                .frame(width: 20, height: 20)
-                .background(Color.red)
-                .cornerRadius(4)
-                .help("Retry transcription")
+                .transition(.opacity)
             }
 
             // Chevron
@@ -464,6 +508,11 @@ struct MeetingRowView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
         .onTapGesture(count: 2) {
             // Double-click to edit
             editedTitle = meeting.title
@@ -472,33 +521,66 @@ struct MeetingRowView: View {
     }
 }
 
-// MARK: - Status Badge
+// MARK: - Transcription Error Popover
 
-struct MeetingStatusBadge: View {
-    let status: MeetingStatus
+struct TranscriptionErrorPopover: View {
+    let errorMessage: String
+    let onRetry: () -> Void
+    let onDismiss: () -> Void
 
     var body: some View {
-        Group {
-            if status == .transcribing {
-                ProgressView()
-                    .scaleEffect(0.6)
-            } else {
-                Image(systemName: status.icon)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.red)
+                Text("Transcription Failed")
+                    .font(.headline)
+                Spacer()
+            }
+
+            Divider()
+
+            Text("Error Details")
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.secondary)
+
+            Text(errorMessage)
+                .font(.caption)
+                .foregroundColor(.primary)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.textBackgroundColor))
+                .cornerRadius(6)
+
+            HStack(spacing: 8) {
+                Button(action: onDismiss) {
+                    Text("Dismiss")
+                        .font(.caption.weight(.medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.plain)
+                .background(Color(.controlBackgroundColor))
+                .cornerRadius(6)
+
+                Button(action: onRetry) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.caption)
+                        Text("Retry")
+                            .font(.caption.weight(.medium))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .foregroundColor(.white)
+                }
+                .buttonStyle(.plain)
+                .background(Color.accentColor)
+                .cornerRadius(6)
             }
         }
-        .font(.caption)
-        .foregroundColor(statusColor)
-        .frame(width: 20, height: 20)
-    }
-
-    private var statusColor: Color {
-        switch status {
-        case .recording: return .red
-        case .pendingTranscription: return .orange
-        case .transcribing: return .blue
-        case .ready: return .green  // Not shown, but kept for completeness
-        case .failed: return .red
-        }
+        .padding(12)
+        .frame(width: 280)
     }
 }
 
@@ -570,9 +652,23 @@ struct MeetingContextMenu: View {
         .frame(width: 350, height: 500)
 }
 
-#Preview("Meeting Row - Ready") {
-    MeetingRowView(meeting: Meeting.sampleMeetings[0])
-        .frame(width: 350)
+#Preview("Meeting Row - Ready (No Indicator)") {
+    VStack(spacing: 0) {
+        MeetingRowView(meeting: Meeting.sampleMeetings[0])
+        Divider()
+        // Show how ready meetings look clean without any badge
+        MeetingRowView(meeting: Meeting(
+            title: "Product Planning",
+            startTime: Date().addingTimeInterval(-7200),
+            duration: 2400,
+            sourceApp: "Zoom",
+            audioPath: "/path/to/audio.m4a",
+            transcript: "Meeting notes...",
+            apiCostCents: 42,
+            status: .ready
+        ))
+    }
+    .frame(width: 350)
 }
 
 #Preview("Meeting Row - Transcribing") {
@@ -581,8 +677,34 @@ struct MeetingContextMenu: View {
 }
 
 #Preview("Meeting Row - Failed") {
-    MeetingRowView(meeting: Meeting.sampleMeetings[3])
-        .frame(width: 350)
+    VStack(spacing: 0) {
+        MeetingRowView(
+            meeting: Meeting.sampleMeetings[3],
+            onRetry: { print("Retry tapped") }
+        )
+        Divider()
+        // Different error message
+        MeetingRowView(
+            meeting: Meeting(
+                title: "Team Sync",
+                startTime: Date().addingTimeInterval(-3600),
+                duration: 1800,
+                audioPath: "/path/to/audio.m4a",
+                status: .failed,
+                errorMessage: "Network timeout - could not reach OpenAI API"
+            ),
+            onRetry: { print("Retry tapped") }
+        )
+    }
+    .frame(width: 350)
+}
+
+#Preview("Error Popover") {
+    TranscriptionErrorPopover(
+        errorMessage: "API key invalid or expired. Please check your OpenAI API key in Settings.",
+        onRetry: { print("Retry") },
+        onDismiss: { print("Dismiss") }
+    )
 }
 
 #Preview("Empty State") {
@@ -593,19 +715,6 @@ struct MeetingContextMenu: View {
 #Preview("Empty Search") {
     EmptyMeetingListView(hasSearchQuery: true)
         .frame(width: 350, height: 300)
-}
-
-#Preview("Status Badges") {
-    HStack(spacing: 16) {
-        ForEach(MeetingStatus.allCases, id: \.self) { status in
-            VStack {
-                MeetingStatusBadge(status: status)
-                Text(status.displayName)
-                    .font(.caption2)
-            }
-        }
-    }
-    .padding()
 }
 
 #Preview("Failed Banner") {
