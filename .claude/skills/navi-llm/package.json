@@ -1,0 +1,19 @@
+{
+  "name": "navi-llm",
+  "version": "1.0.0",
+  "description": "Multi-LLM dispatch skill for Claude Code",
+  "type": "module",
+  "main": "index.ts",
+  "bin": {
+    "navi-llm": "./index.ts"
+  },
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "dependencies": {
+    "ai": "^4.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@ai-sdk/google": "^1.0.0"
+  }
+}

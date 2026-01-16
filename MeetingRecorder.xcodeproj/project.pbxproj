@@ -1,0 +1,439 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A0000000000000000000001 /* MeetingRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000011 /* MeetingRecorderApp.swift */; };
+		1A0000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000012 /* ContentView.swift */; };
+		1A0000000000000000000003 /* ValidationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000013 /* ValidationManager.swift */; };
+		1A0000000000000000000004 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000014 /* KeychainHelper.swift */; };
+		1A0000000000000000000005 /* AudioCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000017 /* AudioCaptureManager.swift */; };
+		1A0000000000000000000006 /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000018 /* TranscriptionService.swift */; };
+		1A0000000000000000000007 /* Meeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000019 /* Meeting.swift */; };
+		1A0000000000000000000008 /* DatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001A /* DatabaseManager.swift */; };
+		1A0000000000000000000009 /* MeetingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001B /* MeetingListView.swift */; };
+		1A000000000000000000000A /* MeetingDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001C /* MeetingDetailView.swift */; };
+		1A000000000000000000000B /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 1A00000000000000000000A1 /* GRDB */; };
+		1A00000000000000000000C0 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001D /* CalendarView.swift */; };
+		1A00000000000000000000C1 /* CalendarMeetingRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001E /* CalendarMeetingRow.swift */; };
+		1A00000000000000000000C2 /* SearchResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001F /* SearchResultsView.swift */; };
+		1A00000000000000000000C3 /* DictationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B0 /* DictationManager.swift */; };
+		1A00000000000000000000C4 /* DictationIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B1 /* DictationIndicatorView.swift */; };
+		1A00000000000000000000C5 /* DictationOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B2 /* DictationOverlayWindow.swift */; };
+		1A00000000000000000000C6 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B3 /* HotkeyManager.swift */; };
+		1A00000000000000000000C7 /* AgentAPIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B4 /* AgentAPIManager.swift */; };
+		1A00000000000000000000C8 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B5 /* OnboardingView.swift */; };
+		1A00000000000000000000C9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B6 /* SettingsView.swift */; };
+		1A00000000000000000000CA /* ErrorHandlingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000B7 /* ErrorHandlingView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1A0000000000000000000010 /* MeetingRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MeetingRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1A0000000000000000000011 /* MeetingRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingRecorderApp.swift; sourceTree = "<group>"; };
+		1A0000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1A0000000000000000000013 /* ValidationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationManager.swift; sourceTree = "<group>"; };
+		1A0000000000000000000014 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		1A0000000000000000000015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1A0000000000000000000016 /* MeetingRecorder.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingRecorder.entitlements; sourceTree = "<group>"; };
+		1A0000000000000000000017 /* AudioCaptureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCaptureManager.swift; sourceTree = "<group>"; };
+		1A0000000000000000000018 /* TranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionService.swift; sourceTree = "<group>"; };
+		1A0000000000000000000019 /* Meeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meeting.swift; sourceTree = "<group>"; };
+		1A000000000000000000001A /* DatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseManager.swift; sourceTree = "<group>"; };
+		1A000000000000000000001B /* MeetingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingListView.swift; sourceTree = "<group>"; };
+		1A000000000000000000001C /* MeetingDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingDetailView.swift; sourceTree = "<group>"; };
+		1A000000000000000000001D /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		1A000000000000000000001E /* CalendarMeetingRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMeetingRow.swift; sourceTree = "<group>"; };
+		1A000000000000000000001F /* SearchResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsView.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B0 /* DictationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationManager.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B1 /* DictationIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationIndicatorView.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B2 /* DictationOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationOverlayWindow.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B3 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B4 /* AgentAPIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentAPIManager.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B5 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		1A00000000000000000000B7 /* ErrorHandlingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1A0000000000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A000000000000000000000B /* GRDB in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1A0000000000000000000030 = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000031 /* MeetingRecorder */,
+				1A0000000000000000000032 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1A0000000000000000000031 /* MeetingRecorder */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000011 /* MeetingRecorderApp.swift */,
+				1A0000000000000000000012 /* ContentView.swift */,
+				1A0000000000000000000013 /* ValidationManager.swift */,
+				1A0000000000000000000014 /* KeychainHelper.swift */,
+				1A0000000000000000000017 /* AudioCaptureManager.swift */,
+				1A0000000000000000000018 /* TranscriptionService.swift */,
+				1A0000000000000000000019 /* Meeting.swift */,
+				1A000000000000000000001A /* DatabaseManager.swift */,
+				1A000000000000000000001B /* MeetingListView.swift */,
+				1A000000000000000000001C /* MeetingDetailView.swift */,
+				1A000000000000000000001D /* CalendarView.swift */,
+				1A000000000000000000001E /* CalendarMeetingRow.swift */,
+				1A000000000000000000001F /* SearchResultsView.swift */,
+				1A00000000000000000000B0 /* DictationManager.swift */,
+				1A00000000000000000000B1 /* DictationIndicatorView.swift */,
+				1A00000000000000000000B2 /* DictationOverlayWindow.swift */,
+				1A00000000000000000000B3 /* HotkeyManager.swift */,
+				1A00000000000000000000B4 /* AgentAPIManager.swift */,
+				1A00000000000000000000B5 /* OnboardingView.swift */,
+				1A00000000000000000000B6 /* SettingsView.swift */,
+				1A00000000000000000000B7 /* ErrorHandlingView.swift */,
+				1A0000000000000000000015 /* Info.plist */,
+				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
+			);
+			path = MeetingRecorder;
+			sourceTree = "<group>";
+		};
+		1A0000000000000000000032 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1A0000000000000000000010 /* MeetingRecorder.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A0000000000000000000040 /* MeetingRecorder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A0000000000000000000060 /* Build configuration list for PBXNativeTarget "MeetingRecorder" */;
+			buildPhases = (
+				1A0000000000000000000041 /* Sources */,
+				1A0000000000000000000020 /* Frameworks */,
+				1A0000000000000000000042 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeetingRecorder;
+			packageProductDependencies = (
+				1A00000000000000000000A1 /* GRDB */,
+			);
+			productName = MeetingRecorder;
+			productReference = 1A0000000000000000000010 /* MeetingRecorder.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1A0000000000000000000050 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1A0000000000000000000040 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 1A0000000000000000000051 /* Build configuration list for PBXProject "MeetingRecorder" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 1A0000000000000000000030;
+			packageReferences = (
+				1A00000000000000000000A0 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+			);
+			productRefGroup = 1A0000000000000000000032 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1A0000000000000000000040 /* MeetingRecorder */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1A0000000000000000000042 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A0000000000000000000041 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A0000000000000000000001 /* MeetingRecorderApp.swift in Sources */,
+				1A0000000000000000000002 /* ContentView.swift in Sources */,
+				1A0000000000000000000003 /* ValidationManager.swift in Sources */,
+				1A0000000000000000000004 /* KeychainHelper.swift in Sources */,
+				1A0000000000000000000005 /* AudioCaptureManager.swift in Sources */,
+				1A0000000000000000000006 /* TranscriptionService.swift in Sources */,
+				1A0000000000000000000007 /* Meeting.swift in Sources */,
+				1A0000000000000000000008 /* DatabaseManager.swift in Sources */,
+				1A0000000000000000000009 /* MeetingListView.swift in Sources */,
+				1A000000000000000000000A /* MeetingDetailView.swift in Sources */,
+				1A00000000000000000000C0 /* CalendarView.swift in Sources */,
+				1A00000000000000000000C1 /* CalendarMeetingRow.swift in Sources */,
+				1A00000000000000000000C2 /* SearchResultsView.swift in Sources */,
+				1A00000000000000000000C3 /* DictationManager.swift in Sources */,
+				1A00000000000000000000C4 /* DictationIndicatorView.swift in Sources */,
+				1A00000000000000000000C5 /* DictationOverlayWindow.swift in Sources */,
+				1A00000000000000000000C6 /* HotkeyManager.swift in Sources */,
+				1A00000000000000000000C7 /* AgentAPIManager.swift in Sources */,
+				1A00000000000000000000C8 /* OnboardingView.swift in Sources */,
+				1A00000000000000000000C9 /* SettingsView.swift in Sources */,
+				1A00000000000000000000CA /* ErrorHandlingView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1A0000000000000000000070 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		1A0000000000000000000071 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		1A0000000000000000000072 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MeetingRecorder/MeetingRecorder.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8W296T4QJG;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeetingRecorder/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MeetingRecorder needs microphone access to capture your voice during meetings and for dictation.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetingrecorder.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1A0000000000000000000073 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MeetingRecorder/MeetingRecorder.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8W296T4QJG;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeetingRecorder/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025. All rights reserved.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MeetingRecorder needs microphone access to capture your voice during meetings and for dictation.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetingrecorder.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A0000000000000000000051 /* Build configuration list for PBXProject "MeetingRecorder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0000000000000000000070 /* Debug */,
+				1A0000000000000000000071 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1A0000000000000000000060 /* Build configuration list for PBXNativeTarget "MeetingRecorder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A0000000000000000000072 /* Debug */,
+				1A0000000000000000000073 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1A00000000000000000000A0 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.24.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1A00000000000000000000A1 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1A00000000000000000000A0 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 1A0000000000000000000050 /* Project object */;
+}

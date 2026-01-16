@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.3</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2025 MeetingRecorder. All rights reserved.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MeetingRecorder needs microphone access to capture your voice during meetings and for system-wide dictation.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>MeetingRecorder needs screen recording permission to capture system audio from meetings (Zoom, Google Meet, Teams, etc.). This allows recording what others say in your calls.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>MeetingRecorder uses AppleScript to detect Google Meet in browser tabs for auto-recording.</string>
+	<key>NSSupportsAutomaticTermination</key>
+	<false/>
+	<key>NSApplicationSupportsSecureRestorableState</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://meetingrecorder.app/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string></string>
+</dict>
+</plist>
