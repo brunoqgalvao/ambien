@@ -15,6 +15,81 @@ Building a native macOS app that:
 
 ---
 
+## ⚠️ CRITICAL: Project Structure
+
+**DO NOT create files outside of `MeetingRecorder/` folder!**
+
+```
+ami-like/
+├── MeetingRecorder/                 ← ALL Swift source files go HERE
+│   ├── MeetingRecorderApp.swift
+│   ├── ContentView.swift
+│   ├── AudioCaptureManager.swift
+│   ├── ... (all other .swift files)
+│   ├── Info.plist
+│   └── MeetingRecorder.entitlements
+├── MeetingRecorder.xcodeproj/       ← Xcode project (references files in MeetingRecorder/)
+├── CLAUDE.md
+├── PRD.md
+└── WIREFRAMES.md
+```
+
+**The Xcode project (`MeetingRecorder.xcodeproj`) references files from `MeetingRecorder/` folder. NEVER create a second source folder.**
+
+---
+
+## ⚠️ CRITICAL: Screen Recording Permission Fix
+
+**Problem:** Screen Recording permission doesn't persist across builds.
+
+**Root Cause:** Inconsistent code signing = macOS treats each build as a new app.
+
+**Required Settings in Xcode:**
+
+| Setting | Value | Where |
+|---------|-------|-------|
+| `PRODUCT_BUNDLE_IDENTIFIER` | `com.meetingrecorder.app` | Build Settings |
+| `CODE_SIGN_IDENTITY` | `Apple Development` | Build Settings (Debug + Release) |
+| `CODE_SIGN_STYLE` | `Automatic` | Build Settings |
+| `ENABLE_HARDENED_RUNTIME` | `YES` | Build Settings |
+| App Sandbox | **DISABLED** | Signing & Capabilities |
+
+**Entitlements file (`MeetingRecorder.entitlements`):**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+</dict>
+</plist>
+```
+
+**DO NOT include `com.apple.security.app-sandbox` in entitlements - leaving it out disables sandbox.**
+
+**If permission still doesn't stick:**
+1. Clean Build Folder (`Cmd+Shift+K`)
+2. System Settings → Privacy → Screen Recording → Remove app if listed
+3. Delete `~/Library/Developer/Xcode/DerivedData/MeetingRecorder-*`
+4. Rebuild and re-grant permission
+
+---
+
+## ⚠️ CRITICAL: Adding New Swift Files
+
+When creating new Swift files:
+1. Create the file in `/MeetingRecorder/` folder
+2. **MUST also add to Xcode project** - the `project.pbxproj` file needs:
+   - PBXFileReference entry
+   - Entry in PBXGroup children
+   - PBXBuildFile entry
+   - Entry in PBXSourcesBuildPhase
+
+**Or in Xcode GUI:** Right-click MeetingRecorder group → Add Files → Select file → Check "Add to target"
+
+---
+
 ## Key Documents
 
 | File | Purpose |

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Identity: GHOST // SIGNAL</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --surface-color: #111111;
+            --surface-hover: #1a1a1a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888888;
+            --brand-primary: #FF3B00; /* International Orange - Danger/Action */
+            --brand-secondary: #E6E6E6; /* Raw Steel */
+            --accent-success: #00FF66; /* Terminal Green */
+            --accent-record: #FF003C; /* Rec Red */
+            --border-radius: 4px; /* Sharp, industrial */
+            --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            border-bottom: 1px solid #333;
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--brand-primary);
+        }
+
+        h2 {
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 4rem 4rem 4rem;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* NAMING SECTION */
+        .name-card {
+            background: var(--surface-color);
+            border: 1px solid #222;
+            padding: 2rem;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .name-card:hover {
+            border-color: var(--brand-primary);
+            transform: translateY(-2px);
+        }
+
+        .name-title {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .name-tagline {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .name-rationale {
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        /* LOGO SECTION */
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .logo-box {
+            background: var(--surface-color);
+            border: 1px solid #222;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        
+        .logo-box svg {
+            color: var(--brand-primary);
+            transition: color 0.3s;
+        }
+
+        .logo-box:hover svg {
+            color: #fff;
+        }
+
+        .logo-caption {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        /* COLOR PALETTE */
+        .color-strip {
+            height: 100px;
+            display: flex;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .color-block {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        /* TYPOGRAPHY */
+        .type-specimen {
+            background: var(--surface-color);
+            padding: 2rem;
+            border: 1px solid #222;
+        }
+
+        .font-primary {
+            font-family: var(--font-mono);
+        }
+
+        .huge-text {
+            font-size: 4rem;
+            line-height: 1;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -2px;
+        }
+
+        /* VOICE & TONE */
+        .voice-example {
+            border-left: 2px solid var(--brand-primary);
+            padding-left: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .voice-bad {
+            border-left: 2px solid #333;
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* UI COMPONENTS */
+        .ui-preview {
+            background: #000;
+            border: 1px solid #333;
+            padding: 2rem;
+            border-radius: 6px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.6rem 1.2rem;
+            background: var(--brand-primary);
+            color: #000;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 0 0 rgba(255, 59, 0, 0.7);
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            box-shadow: 2px 2px 0 #fff;
+            transform: translate(-1px, -1px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid #444;
+        }
+        
+        .btn-ghost:hover {
+            border-color: #fff;
+            box-shadow: none;
+        }
+
+        .recording-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 100px;
+            border: 1px solid #333;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-record);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .hero-banner {
+            padding: 6rem 0;
+            text-align: center;
+            background: radial-gradient(circle at center, #111 0%, #050505 70%);
+        }
+
+        .hero-text {
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: -3px;
+            line-height: 0.9;
+            margin-bottom: 1rem;
+            font-family: var(--font-sans);
+        }
+        
+        .hero-text span {
+            color: var(--brand-primary);
+        }
+
+        .manifesto {
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="font-family: var(--font-mono); font-weight: bold; letter-spacing: -1px;">
+            // BRAND_BOOK_V2.0
+        </div>
+        <div style="font-size: 0.8rem; color: #666;">
+            STATUS: <span style="color: var(--brand-primary)">REBELLIOUS</span>
+        </div>
+    </header>
+
+    <div class="hero-banner">
+        <div class="hero-text">
+            NO BOTS.<br>
+            <span>JUST GHOST.</span>
+        </div>
+        <div class="manifesto">
+            <p>> We don't join your Zoom call. We don't steal your data.</p>
+            <p>> We listen locally. We transcribe silently. We disappear.</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- NAMES -->
+        <h2>01 / IDENTITY CANDIDATES</h2>
+        <div class="section-grid">
+            <div class="name-card">
+                <div class="name-title">GHOST</div>
+                <div class="name-tagline">The Invisible Recorder</div>
+                <div class="name-rationale">
+                    Captures the core value prop: "No bot joins the call." It's mysterious, cool, and implies privacy. You are a ghost in the machine.
+                </div>
+            </div>
+
+            <div class="name-card">
+                <div class="name-title">VANDAL</div>
+                <div class="name-tagline">Leave Your Mark</div>
+                <div class="name-rationale">
+                    Aggressive, artistic, memorable. Implies breaking the rules of traditional meeting software. Maybe too edgy?
+                </div>
+            </div>
+
+            <div class="name-card" style="border-color: var(--brand-primary);">
+                <div class="name-title" style="color: var(--brand-primary);">SIGNAL</div>
+                <div class="name-tagline">Pure Audio. Zero Noise.</div>
+                <div class="name-rationale">
+                    A clean, audiophile-grade name. It cuts through the "noise" of subscription SaaS. It feels like a high-end tool (Dieter Rams era).
+                </div>
+            </div>
+
+            <div class="name-card">
+                <div class="name-title">ISO</div>
+                <div class="name-tagline">In Search Of / Isolation</div>
+                <div class="name-rationale">
+                    Short, photographic/technical term. Implies isolation (local privacy) and standard quality.
+                </div>
+            </div>
+            
+            <div class="name-card">
+                <div class="name-title">BLACKBOX</div>
+                <div class="name-tagline">Record Everything. Explain Nothing.</div>
+                <div class="name-rationale">
+                    The ultimate durable recorder. Indestructible, private, essential for post-incident (meeting) analysis.
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGOS -->
+        <h2>02 / VISUAL MARK</h2>
+        <div class="logo-grid">
+            <!-- LOGO 1: The Tape/Eye -->
+            <div class="logo-box">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="16" width="48" height="32" rx="2" stroke="currentColor" stroke-width="4"/>
+                    <circle cx="22" cy="32" r="6" stroke="currentColor" stroke-width="3"/>
+                    <circle cx="42" cy="32" r="6" stroke="currentColor" stroke-width="3"/>
+                    <path d="M28 32H36" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <div class="logo-caption">CONCEPT A: THE ANALOG<br>Retro-futurist Tape Cassette. Tactile. Reliable.</div>
+            </div>
+
+            <!-- LOGO 2: The Signal/Ghost -->
+            <div class="logo-box">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="12" width="6" height="40" rx="2"/>
+                    <rect x="38" y="12" width="6" height="40" rx="2"/>
+                    <rect x="29" y="20" width="6" height="24" rx="2"/>
+                    <path d="M12 32H52" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <div class="logo-caption">CONCEPT B: THE INTERFERENCE<br>Abstract waveform that forms a 'pause' or 'gate'. Minimalist.</div>
+            </div>
+
+            <!-- LOGO 3: The Prism/Core -->
+            <div class="logo-box">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 4L4 52H60L32 4Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                    <circle cx="32" cy="36" r="8" fill="currentColor"/>
+                </svg>
+                <div class="logo-caption">CONCEPT C: THE CORE<br>A warning sign. A record button. Sharp, dangerous edges.</div>
+            </div>
+        </div>
+
+        <!-- COLORS -->
+        <h2>03 / CHROMATIC SYSTEM</h2>
+        <div class="color-strip">
+            <div class="color-block" style="background: #FF3B00; color: #000;">
+                <div>SAFETY ORANGE</div>
+                <div>#FF3B00</div>
+            </div>
+            <div class="color-block" style="background: #111111; color: #fff;">
+                <div>CARBON</div>
+                <div>#111111</div>
+            </div>
+            <div class="color-block" style="background: #E6E6E6; color: #000;">
+                <div>RAW STEEL</div>
+                <div>#E6E6E6</div>
+            </div>
+            <div class="color-block" style="background: #00FF66; color: #000;">
+                <div>TERMINAL</div>
+                <div>#00FF66</div>
+            </div>
+        </div>
+        <p style="color: #666; font-size: 0.9rem;">
+            REJECTED: SaaS Blue, Blurple, Gradients.<br>
+            ACCEPTED: Industrial safety colors, High contrast monochrome, Raw materials.
+        </p>
+
+        <!-- TYPOGRAPHY -->
+        <h2>04 / TYPOGRAPHY</h2>
+        <div class="section-grid">
+            <div class="type-specimen">
+                <div class="label">HEADLINES / DATA / CODE</div>
+                <div class="font-primary" style="font-size: 1.5rem; margin-bottom: 1rem;">
+                    Berkeley Mono<br>
+                    JetBrains Mono<br>
+                    SF Mono
+                </div>
+                <p style="font-family: var(--font-mono); font-size: 0.9rem; color: #888;">
+                    We use monospaced fonts not just for code, but for headlines. It conveys data, precision, and "raw" information.
+                </p>
+            </div>
+            <div class="type-specimen">
+                <div class="label">UI / BODY</div>
+                <div class="font-sans" style="font-size: 1.5rem; margin-bottom: 1rem;">
+                    Inter (Tight)<br>
+                    SF Pro (System)
+                </div>
+                <p style="font-size: 0.9rem; color: #888;">
+                    For readability in long transcripts, we revert to a clean, tight grotesque sans-serif. 
+                </p>
+            </div>
+        </div>
+
+        <!-- VOICE -->
+        <h2>05 / VOICE & TONE</h2>
+        <div class="section-grid">
+            <div>
+                <span class="label">THE MARKETING HOOK</span>
+                <div class="voice-example">
+                    "Stop renting your memory. Buy it once. Keep it forever."
+                </div>
+                <div class="voice-bad">
+                    "The AI meeting assistant that boosts productivity."
+                </div>
+            </div>
+            
+            <div>
+                <span class="label">THE ONBOARDING</span>
+                <div class="voice-example">
+                    "Paste your API Key. We don't want it. We don't store it. It goes straight to OpenAI."
+                </div>
+                <div class="voice-bad">
+                    "Let's get you set up with our secure cloud integration!"
+                </div>
+            </div>
+        </div>
+
+        <!-- UI ELEMENTS -->
+        <h2>06 / UI COMPONENTS</h2>
+        <div class="ui-preview">
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+                <button class="btn">
+                    Start Recording
+                </button>
+                <button class="btn btn-ghost">
+                    Settings
+                </button>
+            </div>
+
+            <div style="background: #111; padding: 1rem; border-radius: 4px; border: 1px solid #333; font-family: var(--font-mono); color: #888; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <span style="color: #fff;">Daily Standup</span>
+                    <span class="recording-pill"><div class="pulse"></div> REC 04:23</span>
+                </div>
+                <div style="line-height: 1.6;">
+                    <span style="color: var(--brand-primary)">></span> Alex: Okay, shipping the beta today.<br>
+                    <span style="color: var(--brand-primary)">></span> Sarah: Did we fix the auth bug?<br>
+                    <span style="color: var(--brand-primary)">></span> Alex: Yeah, patched it last night.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

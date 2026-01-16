@@ -131,6 +131,27 @@ actor DatabaseManager {
             print("[DatabaseManager] Migration v1_initial applied")
         }
 
+        // Migration 2: Add isDictation column
+        migrator.registerMigration("v2_add_is_dictation") { db in
+            try db.alter(table: "meetings") { t in
+                t.add(column: "is_dictation", .boolean).notNull().defaults(to: false)
+            }
+            print("[DatabaseManager] Migration v2_add_is_dictation applied")
+        }
+
+        // Migration 3: Add participant and speaker fields
+        migrator.registerMigration("v3_add_participants_speakers") { db in
+            try db.alter(table: "meetings") { t in
+                t.add(column: "window_title", .text)
+                t.add(column: "screenshot_path", .text)
+                t.add(column: "participants", .text)        // JSON encoded [MeetingParticipant]
+                t.add(column: "speaker_count", .integer)
+                t.add(column: "speaker_labels", .text)      // JSON encoded [SpeakerLabel]
+                t.add(column: "diarization_segments", .text) // JSON encoded [DiarizationSegment]
+            }
+            print("[DatabaseManager] Migration v3_add_participants_speakers applied")
+        }
+
         do {
             try migrator.migrate(db)
         } catch {
@@ -240,6 +261,20 @@ actor DatabaseManager {
         }
     }
 
+    /// Get meetings with failed transcription status
+    func getFailedMeetings() async throws -> [Meeting] {
+        guard let db = dbQueue else { return [] }
+
+        return try await db.read { db in
+            let records = try MeetingRecord.fetchAll(
+                db,
+                sql: "SELECT * FROM meetings WHERE status = ? ORDER BY created_at DESC",
+                arguments: [MeetingStatus.failed.rawValue]
+            )
+            return records.map { $0.toMeeting() }
+        }
+    }
+
     // MARK: - Full-Text Search
 
     /// Search meetings by title and transcript
@@ -312,6 +347,15 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
     var status: String
     let createdAt: Date
     var errorMessage: String?
+    var isDictation: Bool
+
+    // Participant & speaker fields
+    var windowTitle: String?
+    var screenshotPath: String?
+    var participants: String?        // JSON encoded [MeetingParticipant]
+    var speakerCount: Int?
+    var speakerLabels: String?       // JSON encoded [SpeakerLabel]
+    var diarizationSegments: String? // JSON encoded [DiarizationSegment]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -327,6 +371,13 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         case status
         case createdAt = "created_at"
         case errorMessage = "error_message"
+        case isDictation = "is_dictation"
+        case windowTitle = "window_title"
+        case screenshotPath = "screenshot_path"
+        case participants
+        case speakerCount = "speaker_count"
+        case speakerLabels = "speaker_labels"
+        case diarizationSegments = "diarization_segments"
     }
 
     init(_ meeting: Meeting) {
@@ -342,12 +393,39 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         self.status = meeting.status.rawValue
         self.createdAt = meeting.createdAt
         self.errorMessage = meeting.errorMessage
+        self.isDictation = meeting.isDictation
+
+        // Participant & speaker fields
+        self.windowTitle = meeting.windowTitle
+        self.screenshotPath = meeting.screenshotPath
+        self.speakerCount = meeting.speakerCount
 
         // Encode action items as JSON
         if let items = meeting.actionItems {
             self.actionItems = try? String(data: JSONEncoder().encode(items), encoding: .utf8)
         } else {
             self.actionItems = nil
+        }
+
+        // Encode participants as JSON
+        if let items = meeting.participants {
+            self.participants = try? String(data: JSONEncoder().encode(items), encoding: .utf8)
+        } else {
+            self.participants = nil
+        }
+
+        // Encode speaker labels as JSON
+        if let items = meeting.speakerLabels {
+            self.speakerLabels = try? String(data: JSONEncoder().encode(items), encoding: .utf8)
+        } else {
+            self.speakerLabels = nil
+        }
+
+        // Encode diarization segments as JSON
+        if let items = meeting.diarizationSegments {
+            self.diarizationSegments = try? String(data: JSONEncoder().encode(items), encoding: .utf8)
+        } else {
+            self.diarizationSegments = nil
         }
     }
 
@@ -356,6 +434,24 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         var actionItemsArray: [String]? = nil
         if let json = actionItems, let data = json.data(using: .utf8) {
             actionItemsArray = try? JSONDecoder().decode([String].self, from: data)
+        }
+
+        // Decode participants from JSON
+        var participantsArray: [MeetingParticipant]? = nil
+        if let json = participants, let data = json.data(using: .utf8) {
+            participantsArray = try? JSONDecoder().decode([MeetingParticipant].self, from: data)
+        }
+
+        // Decode speaker labels from JSON
+        var speakerLabelsArray: [SpeakerLabel]? = nil
+        if let json = speakerLabels, let data = json.data(using: .utf8) {
+            speakerLabelsArray = try? JSONDecoder().decode([SpeakerLabel].self, from: data)
+        }
+
+        // Decode diarization segments from JSON
+        var segmentsArray: [DiarizationSegment]? = nil
+        if let json = diarizationSegments, let data = json.data(using: .utf8) {
+            segmentsArray = try? JSONDecoder().decode([DiarizationSegment].self, from: data)
         }
 
         return Meeting(
@@ -371,7 +467,14 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             apiCostCents: apiCostCents,
             status: MeetingStatus(rawValue: status) ?? .ready,
             createdAt: createdAt,
-            errorMessage: errorMessage
+            errorMessage: errorMessage,
+            isDictation: isDictation,
+            windowTitle: windowTitle,
+            screenshotPath: screenshotPath,
+            participants: participantsArray,
+            speakerCount: speakerCount,
+            speakerLabels: speakerLabelsArray,
+            diarizationSegments: segmentsArray
         )
     }
 }

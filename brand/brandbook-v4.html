@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MURMUR — Brand Identity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* The Palette: Electric Violet meets Warm Cream */
+            --violet: #8B5CF6;
+            --violet-bright: #A78BFA;
+            --violet-deep: #6D28D9;
+            --violet-glow: rgba(139, 92, 246, 0.4);
+
+            --cream: #FAF7F2;
+            --cream-dark: #F0EBE3;
+            --ink: #1A1A1A;
+            --ink-soft: #4A4A4A;
+
+            /* Accent: Coral pop */
+            --coral: #FF6B6B;
+            --coral-soft: #FFE5E5;
+
+            /* Typography */
+            --font-display: 'Syne', sans-serif;
+            --font-serif: 'Instrument Serif', Georgia, serif;
+            --font-mono: 'DM Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--cream);
+            color: var(--ink);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════════════════════════════════
+           HERO - Full viewport, dramatic entrance
+        ═══════════════════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-left {
+            background: var(--violet);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .hero-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--violet-bright) 0%, transparent 70%);
+            opacity: 0.5;
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .hero-right {
+            background: var(--cream);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .logo-badge {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-badge svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .hero-title {
+            font-family: var(--font-serif);
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 400;
+            color: white;
+            line-height: 0.9;
+            position: relative;
+            z-index: 10;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-title em {
+            font-style: italic;
+            display: block;
+        }
+
+        .hero-tagline {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-description {
+            max-width: 400px;
+        }
+
+        .hero-description h2 {
+            font-family: var(--font-serif);
+            font-size: 2.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--ink);
+        }
+
+        .hero-description p {
+            font-size: 1.1rem;
+            color: var(--ink-soft);
+            line-height: 1.7;
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--ink-soft);
+            letter-spacing: 0.1em;
+        }
+
+        .scroll-hint::after {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--ink-soft);
+            animation: scroll-line 1.5s ease-in-out infinite;
+        }
+
+        @keyframes scroll-line {
+            0%, 100% { transform: scaleX(1); transform-origin: left; }
+            50% { transform: scaleX(0.5); transform-origin: left; }
+        }
+
+        /* ═══════════════════════════════════════════
+           NAMING SECTION - Editorial grid
+        ═══════════════════════════════════════════ */
+        .section {
+            padding: 8rem 4rem;
+            position: relative;
+        }
+
+        .section-number {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            color: var(--violet);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .section-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            font-weight: 400;
+            margin-bottom: 4rem;
+            max-width: 600px;
+        }
+
+        .names-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .name-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+
+        .name-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(139, 92, 246, 0.15);
+        }
+
+        .name-card.featured {
+            background: var(--violet);
+            color: white;
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .name-card.featured::before {
+            content: '★';
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .name-card-title {
+            font-family: var(--font-serif);
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .name-card.featured .name-card-title {
+            font-size: 5rem;
+            font-style: italic;
+        }
+
+        .name-card-subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .name-card-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .name-small {
+            background: var(--cream-dark);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .name-small-title {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            font-style: italic;
+        }
+
+        .name-small-desc {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--ink-soft);
+            letter-spacing: 0.05em;
+        }
+
+        /* ═══════════════════════════════════════════
+           COLORS - Dramatic swatches
+        ═══════════════════════════════════════════ */
+        .colors-section {
+            background: var(--ink);
+            color: white;
+        }
+
+        .colors-section .section-title {
+            color: white;
+        }
+
+        .colors-section .section-number {
+            color: var(--violet-bright);
+        }
+
+        .color-showcase {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .color-block {
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .color-block:hover {
+            transform: scale(1.02);
+        }
+
+        .color-block.primary {
+            background: var(--violet);
+            min-height: 300px;
+        }
+
+        .color-block.primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--violet-bright) 0%, var(--violet-deep) 100%);
+            opacity: 0.5;
+        }
+
+        .color-block.cream {
+            background: var(--cream);
+            color: var(--ink);
+        }
+
+        .color-block.coral {
+            background: var(--coral);
+        }
+
+        .color-block.ink-block {
+            background: var(--ink);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .color-name {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .color-hex {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            opacity: 0.7;
+            letter-spacing: 0.1em;
+            position: relative;
+            z-index: 1;
+            margin-top: 0.5rem;
+        }
+
+        /* Theme switcher */
+        .theme-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .theme-card {
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .theme-card.light {
+            background: var(--cream);
+            color: var(--ink);
+        }
+
+        .theme-card.dark {
+            background: #0A0A0A;
+            color: white;
+        }
+
+        .theme-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            opacity: 0.5;
+            margin-bottom: 2rem;
+        }
+
+        .theme-window {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        .theme-card.dark .theme-window {
+            background: #1A1A1A;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .window-header {
+            padding: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .theme-card.dark .window-header {
+            border-bottom-color: rgba(255,255,255,0.05);
+        }
+
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #E5E5E5;
+        }
+
+        .theme-card.dark .window-dot {
+            background: #333;
+        }
+
+        .window-content {
+            padding: 1.5rem;
+        }
+
+        .recording-state {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--violet);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .rec-dot {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: rec-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes rec-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        .rec-info {
+            flex: 1;
+        }
+
+        .rec-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .rec-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .meeting-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-card.dark .meeting-item {
+            border-bottom-color: rgba(255,255,255,0.05);
+        }
+
+        .meeting-title {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .meeting-date {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+
+        /* ═══════════════════════════════════════════
+           LOGO SECTION - Gallery display
+        ═══════════════════════════════════════════ */
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .logo-card {
+            aspect-ratio: 1;
+            background: white;
+            border-radius: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .logo-card:hover {
+            transform: scale(1.03);
+        }
+
+        .logo-card.dark-bg {
+            background: var(--ink);
+            color: white;
+        }
+
+        .logo-card.violet-bg {
+            background: var(--violet);
+            color: white;
+        }
+
+        .logo-mark {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-card-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.5;
+            position: absolute;
+            bottom: 2rem;
+        }
+
+        /* Menu bar icons */
+        .menubar-preview {
+            background: linear-gradient(180deg, #3D3D3D 0%, #2A2A2A 100%);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .menubar-icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.8;
+        }
+
+        .menubar-icon.active {
+            opacity: 1;
+        }
+
+        /* ═══════════════════════════════════════════
+           TYPOGRAPHY
+        ═══════════════════════════════════════════ */
+        .type-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .type-specimen {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+        }
+
+        .type-name {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            color: var(--violet);
+            margin-bottom: 1.5rem;
+        }
+
+        .type-display {
+            font-family: var(--font-serif);
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+
+        .type-display em {
+            font-style: italic;
+        }
+
+        .type-sample {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--ink-soft);
+        }
+
+        .type-mono-sample {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: var(--ink-soft);
+        }
+
+        /* ═══════════════════════════════════════════
+           VOICE & TONE
+        ═══════════════════════════════════════════ */
+        .voice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .voice-column h3 {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        .voice-example {
+            margin-bottom: 2rem;
+        }
+
+        .voice-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            color: var(--violet);
+        }
+
+        .voice-good {
+            font-size: 1.25rem;
+            line-height: 1.5;
+            padding-left: 1.5rem;
+            border-left: 3px solid var(--violet);
+        }
+
+        .voice-bad {
+            font-size: 1rem;
+            line-height: 1.5;
+            padding-left: 1.5rem;
+            border-left: 3px solid #E5E5E5;
+            color: var(--ink-soft);
+            opacity: 0.6;
+        }
+
+        .taglines {
+            background: var(--violet);
+            border-radius: 24px;
+            padding: 3rem;
+            color: white;
+        }
+
+        .tagline-item {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .tagline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* ═══════════════════════════════════════════
+           UI COMPONENTS
+        ═══════════════════════════════════════════ */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .component-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+        }
+
+        .component-label {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 12px;
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--violet);
+            color: white;
+            box-shadow: 0 4px 20px var(--violet-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--violet-glow);
+        }
+
+        .btn-secondary {
+            background: var(--cream);
+            color: var(--ink);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--cream-dark);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--ink);
+        }
+
+        .btn-ghost:hover {
+            background: var(--cream);
+        }
+
+        .btn-recording {
+            background: var(--coral);
+            color: white;
+            animation: btn-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes btn-pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3); }
+            50% { box-shadow: 0 4px 30px rgba(255, 107, 107, 0.5); }
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--cream-dark);
+            border-radius: 12px;
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            background: var(--cream);
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--violet);
+            background: white;
+        }
+
+        .input-field::placeholder {
+            color: var(--ink-soft);
+            opacity: 0.5;
+        }
+
+        /* ═══════════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════════ */
+        .footer {
+            padding: 4rem;
+            text-align: center;
+            border-top: 1px solid var(--cream-dark);
+        }
+
+        .footer-logo {
+            font-family: var(--font-serif);
+            font-size: 2rem;
+            font-style: italic;
+            color: var(--violet);
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--ink-soft);
+            letter-spacing: 0.1em;
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-left {
+                min-height: 60vh;
+            }
+
+            .names-grid,
+            .color-showcase,
+            .logo-grid,
+            .type-showcase,
+            .voice-grid,
+            .components-grid,
+            .theme-display {
+                grid-template-columns: 1fr;
+            }
+
+            .name-card.featured {
+                grid-column: span 1;
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════
+         HERO
+    ═══════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-left">
+            <div class="logo-badge">
+                <svg viewBox="0 0 48 48" fill="none">
+                    <circle cx="24" cy="20" r="8" fill="#8B5CF6"/>
+                    <path d="M16 20C16 20 16 32 24 32C32 32 32 20 32 20" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M24 32V40" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M18 40H30" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <h1 class="hero-title">
+                <em>Murmur</em>
+            </h1>
+
+            <span class="hero-tagline">Your Mac's quiet memory</span>
+        </div>
+
+        <div class="hero-right">
+            <div class="hero-description">
+                <h2>The meeting recorder that doesn't join your meeting.</h2>
+                <p>Local-first. No bots. No subscriptions. Just you and your conversations, captured beautifully and transcribed instantly.</p>
+            </div>
+            <span class="scroll-hint">SCROLL</span>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         NAMING
+    ═══════════════════════════════════════════ -->
+    <section class="section">
+        <span class="section-number">01 — IDENTITY</span>
+        <h2 class="section-title">A name that whispers, not shouts.</h2>
+
+        <div class="names-grid">
+            <div class="name-card featured">
+                <div>
+                    <span class="name-card-subtitle">Primary recommendation</span>
+                    <h3 class="name-card-title">Murmur</h3>
+                </div>
+                <div>
+                    <p class="name-card-desc">
+                        A soft, continuous sound. It captures the essence of background listening—present but unobtrusive.
+                        It's memorable, easy to spell, and has beautiful phonetics. The double "ur" creates a gentle rhythm.
+                        <br><br>
+                        <strong>Domain:</strong> murmur.app, getmurmur.com
+                    </p>
+                </div>
+            </div>
+
+            <div class="name-card">
+                <h3 class="name-card-title">Sotto</h3>
+                <span class="name-card-subtitle">From "sotto voce"</span>
+                <p class="name-card-desc">Italian for "under voice"—speaking softly so only nearby listeners hear. Musical, sophisticated.</p>
+            </div>
+
+            <div class="name-card">
+                <h3 class="name-card-title">Vesper</h3>
+                <span class="name-card-subtitle">Evening quiet</span>
+                <p class="name-card-desc">The quiet evening hour. Implies reflection and memory. Premium, slightly mysterious.</p>
+            </div>
+
+            <div class="name-card">
+                <h3 class="name-card-title">Hum</h3>
+                <span class="name-card-subtitle">Background presence</span>
+                <p class="name-card-desc">Three letters. Always there, barely noticed. Simple, friendly, memorable.</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 2rem;">
+            <div class="name-small">
+                <span class="name-small-title">Lull</span>
+                <span class="name-small-desc">Calming, background</span>
+            </div>
+            <div class="name-small">
+                <span class="name-small-title">Aside</span>
+                <span class="name-small-desc">Theatrical, private note</span>
+            </div>
+            <div class="name-small">
+                <span class="name-small-title">Cue</span>
+                <span class="name-small-desc">Prompt, trigger, short</span>
+            </div>
+            <div class="name-small">
+                <span class="name-small-title">Drift</span>
+                <span class="name-small-desc">Flowing, capturing</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         COLORS
+    ═══════════════════════════════════════════ -->
+    <section class="section colors-section">
+        <span class="section-number">02 — CHROMATICS</span>
+        <h2 class="section-title">Bold violet meets warm neutrals.</h2>
+
+        <div class="color-showcase">
+            <div class="color-block primary">
+                <span class="color-name">Electric Violet</span>
+                <span class="color-hex">#8B5CF6 — Primary brand</span>
+            </div>
+            <div class="color-block cream">
+                <span class="color-name">Warm Cream</span>
+                <span class="color-hex">#FAF7F2 — Light background</span>
+            </div>
+            <div class="color-block coral">
+                <span class="color-name">Coral Pop</span>
+                <span class="color-hex">#FF6B6B — Recording state</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;">
+            <div class="color-block" style="background: var(--violet-bright); min-height: 100px;">
+                <span class="color-hex" style="font-size: 0.65rem;">#A78BFA</span>
+            </div>
+            <div class="color-block" style="background: var(--violet-deep); min-height: 100px;">
+                <span class="color-hex" style="font-size: 0.65rem;">#6D28D9</span>
+            </div>
+            <div class="color-block ink-block" style="min-height: 100px;">
+                <span class="color-hex" style="font-size: 0.65rem;">#1A1A1A</span>
+            </div>
+            <div class="color-block" style="background: var(--ink-soft); min-height: 100px;">
+                <span class="color-hex" style="font-size: 0.65rem;">#4A4A4A</span>
+            </div>
+            <div class="color-block" style="background: var(--cream-dark); color: var(--ink); min-height: 100px;">
+                <span class="color-hex" style="font-size: 0.65rem;">#F0EBE3</span>
+            </div>
+        </div>
+
+        <div class="theme-display">
+            <div class="theme-card light">
+                <div class="theme-label">Light Mode</div>
+                <div class="theme-window">
+                    <div class="window-header">
+                        <div class="window-dot"></div>
+                        <div class="window-dot"></div>
+                        <div class="window-dot"></div>
+                    </div>
+                    <div class="window-content">
+                        <div class="recording-state">
+                            <div class="rec-dot"></div>
+                            <div class="rec-info">
+                                <div class="rec-title">Weekly Standup</div>
+                                <div class="rec-time">Recording • 12:34</div>
+                            </div>
+                        </div>
+                        <div class="meeting-item">
+                            <span class="meeting-title">Product Sync</span>
+                            <span class="meeting-date">Today, 2:00 PM</span>
+                        </div>
+                        <div class="meeting-item">
+                            <span class="meeting-title">Design Review</span>
+                            <span class="meeting-date">Yesterday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="theme-card dark">
+                <div class="theme-label">Dark Mode</div>
+                <div class="theme-window">
+                    <div class="window-header">
+                        <div class="window-dot"></div>
+                        <div class="window-dot"></div>
+                        <div class="window-dot"></div>
+                    </div>
+                    <div class="window-content">
+                        <div class="recording-state">
+                            <div class="rec-dot"></div>
+                            <div class="rec-info">
+                                <div class="rec-title">Client Call</div>
+                                <div class="rec-time">Recording • 08:21</div>
+                            </div>
+                        </div>
+                        <div class="meeting-item">
+                            <span class="meeting-title" style="color: white;">Investor Update</span>
+                            <span class="meeting-date">Today, 4:00 PM</span>
+                        </div>
+                        <div class="meeting-item">
+                            <span class="meeting-title" style="color: white;">Team Retro</span>
+                            <span class="meeting-date">Monday</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         LOGO
+    ═══════════════════════════════════════════ -->
+    <section class="section">
+        <span class="section-number">03 — MARK</span>
+        <h2 class="section-title">Three concepts, one voice.</h2>
+
+        <div class="logo-grid">
+            <div class="logo-card">
+                <div class="logo-mark">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <circle cx="40" cy="30" r="14" fill="#8B5CF6"/>
+                        <path d="M26 30C26 30 26 54 40 54C54 54 54 30 54 30" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M40 54V68" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M28 68H52" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-card-label">The Mic — Classic</span>
+            </div>
+
+            <div class="logo-card violet-bg">
+                <div class="logo-mark">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <circle cx="40" cy="40" r="24" stroke="white" stroke-width="6"/>
+                        <circle cx="40" cy="40" r="8" fill="white"/>
+                        <path d="M40 8V16" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M40 64V72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M8 40H16" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M64 40H72" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-card-label">The Signal — Broadcast</span>
+            </div>
+
+            <div class="logo-card dark-bg">
+                <div class="logo-mark">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <path d="M20 50C20 50 28 30 40 30C52 30 60 50 60 50" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M12 40C12 40 24 20 40 20C56 20 68 40 68 40" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+                        <path d="M28 60C28 60 32 45 40 45C48 45 52 60 52 60" stroke="#8B5CF6" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+                        <circle cx="40" cy="50" r="6" fill="#8B5CF6"/>
+                    </svg>
+                </div>
+                <span class="logo-card-label">The Wave — Sound</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <p style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-soft); letter-spacing: 0.1em; margin-bottom: 1rem;">MENU BAR PREVIEW</p>
+            <div class="menubar-preview" style="display: inline-flex;">
+                <svg class="menubar-icon" viewBox="0 0 18 18" fill="white">
+                    <circle cx="9" cy="6" r="3"/>
+                    <path d="M6 6C6 6 6 12 9 12C12 12 12 6 12 6" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <path d="M9 12V15" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M6 15H12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <svg class="menubar-icon active" viewBox="0 0 18 18" fill="none">
+                    <circle cx="9" cy="9" r="5" stroke="#8B5CF6" stroke-width="1.5"/>
+                    <circle cx="9" cy="9" r="2" fill="#8B5CF6"/>
+                </svg>
+                <svg class="menubar-icon" viewBox="0 0 18 18" fill="none">
+                    <path d="M4 11C4 11 6 6 9 6C12 6 14 11 14 11" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="9" cy="11" r="2" fill="white"/>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         TYPOGRAPHY
+    ═══════════════════════════════════════════ -->
+    <section class="section" style="background: var(--cream-dark);">
+        <span class="section-number">04 — TYPE</span>
+        <h2 class="section-title">Elegant meets functional.</h2>
+
+        <div class="type-showcase">
+            <div class="type-specimen">
+                <div class="type-name">DISPLAY — INSTRUMENT SERIF</div>
+                <div class="type-display">
+                    <em>Murmur</em><br>
+                    captures<br>
+                    everything.
+                </div>
+                <p class="type-sample">
+                    Used for headlines, hero text, and moments of emphasis. The italic style adds warmth and sophistication.
+                </p>
+            </div>
+
+            <div class="type-specimen">
+                <div class="type-name">UI — SYNE + DM MONO</div>
+                <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">
+                    Bold headlines
+                </div>
+                <p class="type-sample">
+                    Syne for UI text and navigation. Clean, modern, with personality. Weights from 400-800 provide flexibility.
+                </p>
+                <p class="type-mono-sample" style="margin-top: 1rem;">
+                    DM Mono for timestamps, labels, and technical information. 00:12:34 • REC • API_KEY
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         VOICE & TONE
+    ═══════════════════════════════════════════ -->
+    <section class="section">
+        <span class="section-number">05 — VOICE</span>
+        <h2 class="section-title">Smart. Warm. Never corporate.</h2>
+
+        <div class="voice-grid">
+            <div class="voice-column">
+                <h3>How we sound</h3>
+
+                <div class="voice-example">
+                    <div class="voice-label">Empty State</div>
+                    <p class="voice-good">"It's quiet in here. Start a recording to fill this space."</p>
+                </div>
+
+                <div class="voice-example">
+                    <div class="voice-label" style="color: #999;">vs. Generic</div>
+                    <p class="voice-bad">"No recordings found. Click 'New Recording' to begin."</p>
+                </div>
+
+                <div class="voice-example">
+                    <div class="voice-label">Error</div>
+                    <p class="voice-good">"Mic access needed. We promise to listen, not judge."</p>
+                </div>
+
+                <div class="voice-example">
+                    <div class="voice-label">Success</div>
+                    <p class="voice-good">"Transcription complete. 47 minutes of brilliance, captured."</p>
+                </div>
+            </div>
+
+            <div class="voice-column">
+                <div class="taglines">
+                    <div class="tagline-item">"Your Mac's quiet memory."</div>
+                    <div class="tagline-item">"No bots. No subscriptions. No BS."</div>
+                    <div class="tagline-item">"The meeting recorder that doesn't join your meeting."</div>
+                    <div class="tagline-item">"Stop renting your memory."</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         UI COMPONENTS
+    ═══════════════════════════════════════════ -->
+    <section class="section" style="background: var(--cream-dark);">
+        <span class="section-number">06 — COMPONENTS</span>
+        <h2 class="section-title">Building blocks with personality.</h2>
+
+        <div class="components-grid">
+            <div class="component-card">
+                <div class="component-label">BUTTONS</div>
+                <div class="buttons-row">
+                    <button class="btn btn-primary">Start Recording</button>
+                    <button class="btn btn-secondary">Settings</button>
+                    <button class="btn btn-ghost">Cancel</button>
+                </div>
+                <div class="buttons-row" style="margin-top: 1rem;">
+                    <button class="btn btn-recording">
+                        <span style="width: 8px; height: 8px; background: white; border-radius: 50%; animation: rec-pulse 1s infinite;"></span>
+                        Recording • 12:34
+                    </button>
+                </div>
+            </div>
+
+            <div class="component-card">
+                <div class="component-label">INPUTS</div>
+                <input type="text" class="input-field" placeholder="Search transcripts...">
+                <input type="text" class="input-field" placeholder="Paste your OpenAI API key" style="font-family: var(--font-mono); font-size: 0.85rem;">
+            </div>
+
+            <div class="component-card" style="grid-column: span 2;">
+                <div class="component-label">MEETING CARD</div>
+                <div style="background: var(--cream); border-radius: 16px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 0.25rem;">Product Roadmap Review</h4>
+                        <p style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-soft);">Today, 2:00 PM • 47 minutes</p>
+                        <p style="font-size: 0.9rem; color: var(--ink-soft); margin-top: 0.75rem; line-height: 1.5;">Discussed Q3 timeline. Sarah mentioned API integration priority. Action items: finalize specs by Friday...</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-ghost" style="padding: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </button>
+                        <button class="btn btn-ghost" style="padding: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════ -->
+    <footer class="footer">
+        <div class="footer-logo">Murmur</div>
+        <p class="footer-text">Brand Identity v4.0 — Built with intention</p>
+    </footer>
+
+</body>
+</html>

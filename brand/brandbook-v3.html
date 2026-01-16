@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Identity V3 • Vesper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6', // Primary Light Mode
+                            600: '#7c3aed', // Primary Brand
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065', // Deepest background
+                        },
+                        dark: {
+                            bg: '#09090b',
+                            surface: '#18181b',
+                            border: '#27272a'
+                        }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(124, 58, 237, 0.5)',
+                        'glow-lg': '0 0 40px -10px rgba(124, 58, 237, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .mesh-gradient {
+            background-color: #ffffff;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(266,59%,94%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(289,100%,96%,1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(255,100%,96%,1) 0px, transparent 50%);
+        }
+
+        .dark .mesh-gradient-dark {
+            background-color: #09090b;
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(266,50%,15%,0.4) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(289,50%,10%,0.4) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(255,50%,10%,0.4) 0px, transparent 50%);
+        }
+
+        /* Smooth switching simulation */
+        .theme-section {
+            transition: all 0.3s ease;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-dark {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 selection:bg-brand-200 selection:text-brand-900">
+
+    <!-- Header / Nav -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-slate-200/50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md bg-brand-600 flex items-center justify-center text-white">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                </div>
+                <span class="font-bold tracking-tight text-slate-900">Vesper</span>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">v3.0 Identity</span>
+            </div>
+            <div class="text-sm text-slate-500 font-medium">macOS Native • Local-First</div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-32">
+        
+        <!-- HERO -->
+        <header class="max-w-5xl mx-auto px-6 mb-32 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs font-semibold uppercase tracking-wider mb-8">
+                Design System
+            </div>
+            <h1 class="text-6xl md:text-7xl font-bold tracking-tight text-slate-900 mb-6">
+                Intelligent memory <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-purple-400">for your conversations.</span>
+            </h1>
+            <p class="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                A brand identity inspired by the vibrancy of Nubank, the playfulness of Arc, and the refined utility of Amie.
+            </p>
+        </header>
+
+        <!-- 1. NAME OPTIONS -->
+        <section class="max-w-6xl mx-auto px-6 mb-32">
+            <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm">01</span>
+                Naming Options
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Concept 1 -->
+                <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-32 bg-brand-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <h3 class="text-3xl font-bold text-brand-600 mb-2 relative z-10">Vesper</h3>
+                    <p class="text-slate-500 text-sm relative z-10">Evening prayers; a quiet time. Implies listening in the background. Premium, dark, sophisticated.</p>
+                </div>
+
+                <!-- Concept 2 -->
+                <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-32 bg-purple-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-2 relative z-10">Iris</h3>
+                    <p class="text-slate-500 text-sm relative z-10">Part of the eye (focus) and a purple flower. Represents clarity and visualising audio.</p>
+                </div>
+
+                <!-- Concept 3 -->
+                <div class="p-8 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-32 bg-indigo-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-2 relative z-10">Lume</h3>
+                    <p class="text-slate-500 text-sm relative z-10">Light, illumination, clarity. Bringing light to your meeting notes.</p>
+                </div>
+
+                <!-- Others -->
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 class="font-bold text-slate-700">Velvet</h4>
+                    <p class="text-xs text-slate-400 mt-1">Soft, premium, privacy.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 class="font-bold text-slate-700">Fable</h4>
+                    <p class="text-xs text-slate-400 mt-1">Storytelling, history.</p>
+                </div>
+                <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 class="font-bold text-slate-700">Sonar</h4>
+                    <p class="text-xs text-slate-400 mt-1">Tech-forward, detection.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. COLOR PALETTE -->
+        <section class="max-w-6xl mx-auto px-6 mb-32">
+            <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm">02</span>
+                Color DNA
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <!-- Primary Brand -->
+                <div>
+                    <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">Primary Brand (Nubank Purple)</h4>
+                    <div class="space-y-2">
+                        <div class="h-24 rounded-2xl bg-brand-600 flex items-center justify-between px-6 shadow-glow">
+                            <span class="text-white font-bold">Brand Purple</span>
+                            <span class="text-white/80 font-mono text-sm">#7C3AED</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2 h-16">
+                            <div class="bg-brand-200 rounded-lg"></div>
+                            <div class="bg-brand-400 rounded-lg"></div>
+                            <div class="bg-brand-500 rounded-lg"></div>
+                            <div class="bg-brand-700 rounded-lg"></div>
+                            <div class="bg-brand-900 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Neutrals -->
+                <div>
+                    <h4 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">Neutrals (Zinc)</h4>
+                    <div class="space-y-2">
+                        <div class="h-24 rounded-2xl bg-slate-900 flex items-center justify-between px-6">
+                            <span class="text-white font-bold">Surface Dark</span>
+                            <span class="text-white/80 font-mono text-sm">#09090B</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2 h-16">
+                            <div class="bg-slate-100 rounded-lg"></div>
+                            <div class="bg-slate-200 rounded-lg"></div>
+                            <div class="bg-slate-400 rounded-lg"></div>
+                            <div class="bg-slate-600 rounded-lg"></div>
+                            <div class="bg-slate-800 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. LOGO CONCEPTS -->
+        <section class="max-w-6xl mx-auto px-6 mb-32">
+            <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm">03</span>
+                Logo Concepts
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Logo 1: The Pulse -->
+                <div class="flex flex-col items-center p-12 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div class="w-24 h-24 rounded-2xl bg-brand-600 flex items-center justify-center shadow-glow mb-6 text-white">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12h3" />
+                            <path d="M7 12l2 -6l4 12l3 -9l3 3" />
+                            <path d="M22 12h-3" />
+                        </svg>
+                    </div>
+                    <h4 class="font-bold text-slate-900">The Pulse</h4>
+                    <p class="text-center text-sm text-slate-500 mt-2">Represents the heartbeat of the meeting. Active, alive.</p>
+                </div>
+
+                <!-- Logo 2: The Capture -->
+                <div class="flex flex-col items-center p-12 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div class="w-24 h-24 rounded-2xl bg-slate-900 flex items-center justify-center shadow-lg mb-6 text-brand-400">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <rect x="10" y="19" width="4" height="4" rx="1" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <h4 class="font-bold text-slate-900">The Mic</h4>
+                    <p class="text-center text-sm text-slate-500 mt-2">Literal but stylized. The classic microphone modernized.</p>
+                </div>
+
+                <!-- Logo 3: The Gem -->
+                <div class="flex flex-col items-center p-12 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center shadow-glow mb-6 text-white">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                            <polyline points="2 17 12 22 22 17" />
+                            <polyline points="2 12 12 17 22 12" />
+                        </svg>
+                    </div>
+                    <h4 class="font-bold text-slate-900">The Stack</h4>
+                    <p class="text-center text-sm text-slate-500 mt-2">Layers of context. Organized memory.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. UI SIMULATION (Light & Dark) -->
+        <section class="max-w-6xl mx-auto px-6 mb-32">
+            <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm">04</span>
+                Aesthetic Simulation
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 border border-slate-200 rounded-3xl overflow-hidden shadow-2xl">
+                
+                <!-- LIGHT MODE (Amie/Arc Style) -->
+                <div class="bg-white p-10 mesh-gradient relative">
+                    <div class="absolute top-4 left-4 text-xs font-bold tracking-widest text-slate-400 uppercase">Light Mode</div>
+                    
+                    <!-- App Window -->
+                    <div class="mt-8 bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl p-6">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-slate-400">Vesper</div>
+                            <div class="w-4"></div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="space-y-4">
+                            <!-- Active Recording State -->
+                            <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 animate-pulse">
+                                    <div class="w-3 h-3 bg-brand-600 rounded-full"></div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-bold text-slate-900">Weekly Sync</div>
+                                    <div class="text-xs text-brand-600 font-medium">Recording • 12:04</div>
+                                </div>
+                                <button class="w-8 h-8 rounded-full bg-white border border-brand-200 text-brand-600 flex items-center justify-center shadow-sm hover:bg-brand-50">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- List Item -->
+                            <div class="group p-3 rounded-xl hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer">
+                                <div class="mt-1 w-2 h-2 rounded-full bg-slate-200 group-hover:bg-brand-400 transition-colors"></div>
+                                <div>
+                                    <div class="text-sm font-medium text-slate-800">Product Roadmap Review</div>
+                                    <p class="text-xs text-slate-400 mt-1 line-clamp-2">Discussed the timeline for Q3. Sarah mentioned we need to prioritize the API integration...</p>
+                                </div>
+                            </div>
+
+                            <!-- Primary Button -->
+                            <button class="w-full py-2.5 rounded-lg bg-slate-900 text-white text-sm font-medium shadow-lg shadow-slate-200/50 hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                New Recording
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DARK MODE (Nubank/Linear Style) -->
+                <div class="bg-[#09090b] p-10 mesh-gradient-dark dark relative">
+                    <div class="absolute top-4 left-4 text-xs font-bold tracking-widest text-zinc-600 uppercase">Dark Mode</div>
+
+                    <!-- App Window -->
+                    <div class="mt-8 bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-white/20"></div>
+                                <div class="w-3 h-3 rounded-full bg-white/20"></div>
+                                <div class="w-3 h-3 rounded-full bg-white/20"></div>
+                            </div>
+                            <div class="text-xs font-semibold text-zinc-600">Vesper</div>
+                            <div class="w-4"></div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="space-y-4">
+                            <!-- Active Recording State -->
+                            <div class="bg-brand-900/30 border border-brand-500/30 rounded-xl p-4 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 animate-pulse">
+                                    <div class="w-3 h-3 bg-brand-400 rounded-full shadow-glow"></div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-sm font-bold text-white">Client Kickoff</div>
+                                    <div class="text-xs text-brand-400 font-medium">Recording • 04:21</div>
+                                </div>
+                                <button class="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-glow hover:bg-brand-400 transition-colors">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- List Item -->
+                            <div class="group p-3 rounded-xl hover:bg-white/5 transition-colors flex items-start gap-3 cursor-pointer">
+                                <div class="mt-1 w-2 h-2 rounded-full bg-zinc-700 group-hover:bg-brand-500 transition-colors"></div>
+                                <div>
+                                    <div class="text-sm font-medium text-zinc-200">Design Critique</div>
+                                    <p class="text-xs text-zinc-500 mt-1 line-clamp-2">Feedback on the new icon set was positive. Change the stroke width to 2px...</p>
+                                </div>
+                            </div>
+
+                             <!-- Primary Button -->
+                             <button class="w-full py-2.5 rounded-lg bg-brand-600 text-white text-sm font-medium shadow-glow hover:bg-brand-500 transition-all flex items-center justify-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                New Recording
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. VOICE & TONE -->
+        <section class="max-w-4xl mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-8 flex items-center gap-3">
+                <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm">05</span>
+                Voice & Tone
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">The Vibe</h3>
+                    <ul class="space-y-3 text-slate-600 text-sm">
+                        <li class="flex gap-2">
+                            <span class="text-brand-600">✓</span> 
+                            <span><strong>Smart, not robotic.</strong> We use natural language.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-brand-600">✓</span> 
+                            <span><strong>Concise, not curt.</strong> We respect the user's time.</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-brand-600">✓</span> 
+                            <span><strong>Optimistic.</strong> Errors are just bumps in the road.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-4 tracking-wider">Example: Empty State</h4>
+                    <div class="space-y-4">
+                        <div class="opacity-50">
+                            <p class="font-bold text-red-500 text-sm">Bad (Generic)</p>
+                            <p class="text-sm text-slate-600">No recordings found.</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-green-600 text-sm">Good (Brand)</p>
+                            <p class="text-sm text-slate-900">It's quiet in here.</p>
+                            <p class="text-xs text-slate-500">Start a recording or dictation to fill this space.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-200 py-12 mt-12 bg-slate-50">
+        <div class="max-w-6xl mx-auto px-6 text-center text-slate-400 text-sm">
+            Generated by Gemini CLI • Brand Identity v3
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -34,6 +34,9 @@ enum HotkeyEvent {
     case keyUp
 }
 
+/// Key code for the fn key
+let kVK_Function: CGKeyCode = 63
+
 /// Manager for global hotkey registration
 /// Uses CGEvent tap to capture key events even when app is not focused
 @MainActor
@@ -60,11 +63,27 @@ class HotkeyManager: ObservableObject {
     /// Called when hotkey is released
     var onKeyUp: (() -> Void)?
 
+    /// Called when fn key is pressed down (for quick recording)
+    var onFnKeyDown: (() -> Void)?
+
+    /// Called when fn key is released (for quick recording)
+    var onFnKeyUp: (() -> Void)?
+
+    /// Called when fn key is double-clicked (for continuous recording)
+    var onFnDoubleClick: (() -> Void)?
+
+    /// Called when Escape key is pressed (to cancel continuous recording)
+    var onEscapePressed: (() -> Void)?
+
     // MARK: - Private Properties
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var isKeyCurrentlyDown: Bool = false
+    private var isFnKeyDown: Bool = false
+    private var lastFnPressTime: Date?
+    private let doubleClickThreshold: TimeInterval = 0.4  // 400ms for double-click
+    private var pendingFnReleaseWorkItem: DispatchWorkItem?  // Debounce fn release
 
     // MARK: - Singleton
 
@@ -203,8 +222,19 @@ class HotkeyManager: ObservableObject {
 
         let isOurHotkey = (keyCode == hotkeyKeyCode) && (currentModifiers == targetModifiers)
 
+        // Escape key code is 53
+        let escapeKeyCode: CGKeyCode = 53
+
         switch type {
         case .keyDown:
+            // Handle Escape key
+            if keyCode == escapeKeyCode {
+                Task { @MainActor in
+                    self.onEscapePressed?()
+                }
+                // Don't consume - let Escape work normally
+            }
+
             if isOurHotkey && !isKeyCurrentlyDown {
                 isKeyCurrentlyDown = true
                 Task { @MainActor in
@@ -232,6 +262,47 @@ class HotkeyManager: ObservableObject {
                         self.onKeyUp?()
                     }
                 }
+            }
+
+            // Handle fn key (it's detected via flagsChanged, not keyDown/keyUp)
+            let fnKeyPressed = flags.contains(.maskSecondaryFn)
+            if fnKeyPressed && !isFnKeyDown {
+                isFnKeyDown = true
+                let now = Date()
+
+                // Cancel any pending release - user pressed again
+                pendingFnReleaseWorkItem?.cancel()
+                pendingFnReleaseWorkItem = nil
+
+                // Check for double-click
+                if let lastPress = lastFnPressTime,
+                   now.timeIntervalSince(lastPress) < doubleClickThreshold {
+                    // Double-click detected - switch to continuous mode
+                    lastFnPressTime = nil  // Reset to prevent triple-click
+                    Task { @MainActor in
+                        self.onFnDoubleClick?()
+                    }
+                } else {
+                    // Single press (might become double-click)
+                    lastFnPressTime = now
+                    Task { @MainActor in
+                        self.onFnKeyDown?()
+                    }
+                }
+                // Don't consume - let fn key work normally for other purposes
+            } else if !fnKeyPressed && isFnKeyDown {
+                isFnKeyDown = false
+
+                // Debounce the release to allow time for double-click detection
+                // If user double-clicks quickly, the second press will cancel this
+                let releaseDelay: TimeInterval = 0.15  // 150ms buffer
+                let workItem = DispatchWorkItem { [weak self] in
+                    Task { @MainActor in
+                        self?.onFnKeyUp?()
+                    }
+                }
+                pendingFnReleaseWorkItem = workItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + releaseDelay, execute: workItem)
             }
 
         default:

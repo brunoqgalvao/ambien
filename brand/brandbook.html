@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Identity: Scribe</title>
+    <style>
+        :root {
+            /* Brand Colors */
+            --color-primary: #4F46E5; /* Indigo 600 */
+            --color-primary-dark: #4338CA;
+            --color-secondary: #0F172A; /* Slate 900 */
+            --color-accent: #F43F5E; /* Rose 500 - Recording State */
+            --color-accent-subtle: #FFE4E6;
+            
+            /* Neutrals */
+            --color-bg: #FAFAFA; /* Zinc 50 */
+            --color-surface: #FFFFFF;
+            --color-surface-subtle: #F4F4F5;
+            --color-text-main: #18181B;
+            --color-text-muted: #71717A;
+            --color-border: #E4E4E7;
+
+            /* Spacing & Radius */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+            /* Typography */
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            --font-display: "SF Pro Display", var(--font-stack);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg: #09090B;
+                --color-surface: #18181B;
+                --color-surface-subtle: #27272A;
+                --color-text-main: #FAFAFA;
+                --color-text-muted: #A1A1AA;
+                --color-border: #27272A;
+            }
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 3rem;
+            letter-spacing: -0.02em;
+            margin: 0 0 1rem 0;
+            background: linear-gradient(135deg, var(--color-text-main) 0%, var(--color-text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: var(--color-text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        section {
+            margin-bottom: 5rem;
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 0.75rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; }
+
+        /* Names */
+        .name-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .name-card.featured {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px var(--color-primary-subtle);
+            background: linear-gradient(to bottom right, var(--color-surface), #EEF2FF);
+        }
+        @media (prefers-color-scheme: dark) {
+            .name-card.featured { background: linear-gradient(to bottom right, var(--color-surface), #1E1B4B); }
+        }
+        .name-card h3 { margin: 0 0 0.5rem 0; font-size: 1.5rem; }
+        .name-card .tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Logos */
+        .logo-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            text-align: center;
+        }
+        .logo-svg {
+            width: 80px;
+            height: 80px;
+        }
+
+        /* Colors */
+        .color-swatch {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+        }
+        .color-preview { height: 100px; width: 100%; }
+        .color-info {
+            padding: 1rem;
+            background: var(--color-surface);
+        }
+        .color-name { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+        .color-hex { font-family: monospace; color: var(--color-text-muted); font-size: 0.9rem; }
+
+        /* Typography */
+        .type-spec {
+            background: var(--color-surface);
+            padding: 2rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+        }
+        .type-row { margin-bottom: 1.5rem; display: flex; align-items: baseline; gap: 2rem; }
+        .type-label { width: 100px; color: var(--color-text-muted); font-size: 0.9rem; flex-shrink: 0; }
+        .type-preview { margin: 0; }
+
+        /* Voice */
+        .voice-card {
+            background: var(--color-surface);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+        }
+        .voice-card h4 { margin-top: 0; color: var(--color-primary); }
+        .dos-donts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .do-item, .dont-item { padding: 0.5rem 0; border-bottom: 1px solid var(--color-border); font-size: 0.95rem; }
+        .do-item::before { content: "✓"; color: #10B981; margin-right: 0.5rem; font-weight: bold; }
+        .dont-item::before { content: "×"; color: #EF4444; margin-right: 0.5rem; font-weight: bold; }
+
+        /* UI Components */
+        .component-stage {
+            background: #F1F5F9; /* Slate 100 pattern */
+            background-image: radial-gradient(#CBD5E1 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: flex-start;
+            border: 1px solid var(--color-border);
+        }
+        @media (prefers-color-scheme: dark) {
+            .component-stage {
+                background: #000;
+                background-image: radial-gradient(#333 1px, transparent 1px);
+            }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 0 0 1px var(--color-primary-dark) inset;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
+        
+        .btn-secondary {
+            background: var(--color-surface);
+            color: var(--color-text-main);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+        }
+        .btn-secondary:hover { background: var(--color-surface-subtle); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--color-text-muted);
+        }
+        .btn-ghost:hover { color: var(--color-text-main); background: rgba(0,0,0,0.05); }
+
+        .recording-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-accent);
+            color: var(--color-accent);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .card-ui {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: var(--shadow-lg);
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Scribe</h1>
+    <p>Brand Identity & Design System</p>
+</header>
+
+<main>
+
+    <!-- SECTION 1: NAMING -->
+    <section>
+        <h2>01. Naming Strategy</h2>
+        <div class="grid-3">
+            <div class="name-card featured">
+                <span class="tag">Recommended</span>
+                <h3>Scribe</h3>
+                <p>Professional, timeless, and literal. It implies an intelligent assistant that writes for you. High trust factor, fits "knowledge workers" perfectly.</p>
+            </div>
+            <div class="name-card">
+                <h3>Cue</h3>
+                <p>Short, punchy, action-oriented. "Right on cue." Implies the start of speech or a memory trigger.</p>
+            </div>
+            <div class="name-card">
+                <h3>Trace</h3>
+                <p>Subtle and poetic. Leaving a trace of your thoughts. Privacy-conscious vibe (trace, but only locally).</p>
+            </div>
+            <div class="name-card">
+                <h3>Hark</h3>
+                <p>Old English for "Listen." Unique, short, and memorable. Stands out against techy names.</p>
+            </div>
+            <div class="name-card">
+                <h3>Vera</h3>
+                <p>Latin for "Truth." Emphasizes the accuracy of the verbatim transcript.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: LOGO -->
+    <section>
+        <h2>02. Logo Concepts</h2>
+        <div class="grid-3">
+            <div class="logo-container">
+                <!-- Concept 1: The Pulse Pen -->
+                <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="80" height="80" rx="22" fill="#4F46E5"/>
+                    <path d="M50 25V75" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M30 40V60" stroke="white" stroke-width="6" stroke-linecap="round" stroke-opacity="0.6"/>
+                    <path d="M70 40V60" stroke="white" stroke-width="6" stroke-linecap="round" stroke-opacity="0.6"/>
+                </svg>
+                <div>
+                    <strong>The Sound Block</strong>
+                    <p class="color-text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">
+                        Minimalist macOS-style app icon. Represents a sound wave captured within a solid, trustworthy container.
+                    </p>
+                </div>
+            </div>
+
+            <div class="logo-container">
+                <!-- Concept 2: The Digital Quill -->
+                <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="80" height="80" rx="22" fill="#0F172A"/>
+                    <path d="M35 65C35 65 45 70 50 70C55 70 65 65 65 65" stroke="#F43F5E" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M50 30L50 70" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M50 30L35 45" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M50 30L65 45" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                <div>
+                    <strong>The Abstract Pen</strong>
+                    <p class="color-text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">
+                        Combines a fountain pen nib with a waveform at the bottom. Suggests transcription.
+                    </p>
+                </div>
+            </div>
+
+            <div class="logo-container">
+                <!-- Concept 3: The Record Eye -->
+                <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="80" height="80" rx="22" fill="white" stroke="#E4E4E7" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="15" fill="#F43F5E"/>
+                    <circle cx="50" cy="50" r="25" stroke="#4F46E5" stroke-width="4" stroke-dasharray="10 10"/>
+                </svg>
+                <div>
+                    <strong>The Capture Ring</strong>
+                    <p class="color-text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">
+                        Focuses on the "recording" aspect. A red recording dot surrounded by a data/processing ring.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: COLOR -->
+    <section>
+        <h2>03. Color Palette</h2>
+        <div class="grid-4">
+            <div class="color-swatch">
+                <div class="color-preview" style="background: #4F46E5;"></div>
+                <div class="color-info">
+                    <span class="color-name">Indigo 600</span>
+                    <span class="color-hex">#4F46E5</span>
+                </div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: #0F172A;"></div>
+                <div class="color-info">
+                    <span class="color-name">Slate 900</span>
+                    <span class="color-hex">#0F172A</span>
+                </div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: #F43F5E;"></div>
+                <div class="color-info">
+                    <span class="color-name">Rose 500</span>
+                    <span class="color-hex">#F43F5E</span>
+                </div>
+            </div>
+            <div class="color-swatch">
+                <div class="color-preview" style="background: #FAFAFA; border-bottom: 1px solid #eee;"></div>
+                <div class="color-info">
+                    <span class="color-name">Zinc 50</span>
+                    <span class="color-hex">#FAFAFA</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: TYPOGRAPHY -->
+    <section>
+        <h2>04. Typography</h2>
+        <div class="type-spec">
+            <div class="type-row">
+                <div class="type-label">H1 Headline</div>
+                <h1 class="type-preview" style="margin:0; font-family: var(--font-display); font-size: 2.5rem; font-weight: 700;">Your Mac's memory.</h1>
+            </div>
+            <div class="type-row">
+                <div class="type-label">H2 Headline</div>
+                <h2 class="type-preview" style="margin:0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; border:none;">Capture every conversation.</h2>
+            </div>
+            <div class="type-row">
+                <div class="type-label">Body Text</div>
+                <p class="type-preview" style="margin:0; max-width: 600px; color: var(--color-text-muted);">
+                    Scribe runs natively on your machine. It listens to system audio, transcribes locally or via your own API keys, and never sends data to a cloud we control.
+                </p>
+            </div>
+            <div class="type-row">
+                <div class="type-label">UI Caption</div>
+                <span class="type-preview" style="font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Recording in progress...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5: VOICE & TONE -->
+    <section>
+        <h2>05. Voice & Tone</h2>
+        <div class="grid-2">
+            <div class="voice-card">
+                <h4>Personality</h4>
+                <p><strong>Professional but Personal.</strong> We are the smart colleague who takes great notes. We aren't a faceless corporation.</p>
+                <p><strong>Transparent.</strong> We talk openly about data privacy and API keys.</p>
+                <p><strong>Concise.</strong> We don't use fluff. Our users are busy.</p>
+            </div>
+            <div class="voice-card">
+                <h4>Guidelines</h4>
+                <div class="dos-donts">
+                    <div>
+                        <div class="do-item">Say "Connect your API key"</div>
+                        <div class="do-item">Say "Stored locally on your Mac"</div>
+                        <div class="do-item">Use active voice</div>
+                    </div>
+                    <div>
+                        <div class="dont-item">Say "Seamless AI integration experiences"</div>
+                        <div class="dont-item">Say "We value your privacy" (Show, don't say)</div>
+                        <div class="dont-item">Use excessive jargon</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 6: UI COMPONENTS -->
+    <section>
+        <h2>06. UI Components</h2>
+        <div class="component-stage">
+            
+            <!-- Buttons -->
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                    Start Recording
+                </button>
+                <button class="btn btn-secondary">View Calendar</button>
+                <button class="btn btn-ghost">Settings</button>
+            </div>
+
+            <!-- Inputs -->
+            <div style="width: 100%; max-width: 400px;">
+                <label style="display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem;">OpenAI API Key</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="password" value="sk-xxxxxxxxxxxxxxxx" style="flex: 1; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: monospace;">
+                    <button class="btn btn-secondary" style="padding: 0.5rem;">Save</button>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.5rem;">Keys are stored securely in macOS Keychain.</p>
+            </div>
+
+            <!-- Meeting Card -->
+            <div class="card-ui">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1rem;">Product Sync</h4>
+                        <span style="font-size: 0.8rem; color: var(--color-text-muted);">Today, 10:00 AM • 45m</span>
+                    </div>
+                    <div class="recording-badge">
+                        <div class="recording-dot"></div>
+                        REC
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.4; margin-bottom: 1rem;">
+                    Bruno: Let's discuss the new brand identity features...<br>
+                    Claude: I've generated the initial concepts for Scribe...
+                </p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span style="font-size: 0.75rem; background: #F1F5F9; padding: 2px 8px; border-radius: 4px; color: #475569;">#design</span>
+                    <span style="font-size: 0.75rem; background: #F1F5F9; padding: 2px 8px; border-radius: 4px; color: #475569;">#brand</span>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<footer style="text-align: center; padding: 2rem; color: var(--color-text-muted); border-top: 1px solid var(--color-border);">
+    <p>Generated by Gemini for Scribe • 2026</p>
+</footer>
+
+</body>
+</html>

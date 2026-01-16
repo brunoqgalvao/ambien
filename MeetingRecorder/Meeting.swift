@@ -46,7 +46,38 @@ enum MeetingStatus: String, Codable, CaseIterable {
     }
 }
 
-/// A recorded meeting with transcript
+/// A participant detected in a meeting
+struct MeetingParticipant: Codable, Equatable, Identifiable {
+    var id: UUID = UUID()
+    var name: String
+    var email: String?
+    var source: ParticipantSource
+
+    enum ParticipantSource: String, Codable {
+        case screenshot      // Detected via OCR from screenshot
+        case calendar        // From calendar event
+        case manual          // Manually added by user
+        case speakerLabel    // User labeled a speaker
+    }
+}
+
+/// Speaker label mapping (speaker_0 -> "John", etc.)
+struct SpeakerLabel: Codable, Equatable, Identifiable {
+    var id: UUID = UUID()
+    var speakerId: String   // "speaker_0", "speaker_1", etc.
+    var name: String        // User-assigned name
+}
+
+/// A diarization segment from transcription
+struct DiarizationSegment: Codable, Equatable, Identifiable {
+    var id: UUID = UUID()
+    var speakerId: String   // "speaker_0", "speaker_1", etc.
+    var start: TimeInterval
+    var end: TimeInterval
+    var text: String
+}
+
+/// A recorded meeting or dictation with transcript
 struct Meeting: Identifiable, Codable, Equatable {
     let id: UUID
     var title: String
@@ -62,6 +93,53 @@ struct Meeting: Identifiable, Codable, Equatable {
     let createdAt: Date
     var errorMessage: String?
 
+    /// True if this is a quick dictation (not a meeting recording)
+    var isDictation: Bool
+
+    // MARK: - Post-Processing Fields
+
+    /// AI-generated summary (from selected template)
+    var summary: String?
+
+    /// Cleaned up transcript with speaker identification
+    var diarizedTranscript: String?
+
+    /// All processed summaries from different templates
+    var processedSummaries: [ProcessedSummary]?
+
+    /// Total cost including transcription + post-processing
+    var totalCostCents: Int? {
+        let transcriptionCost = apiCostCents ?? 0
+        let processingCost = processedSummaries?.reduce(0) { $0 + $1.costCents } ?? 0
+        return transcriptionCost + processingCost
+    }
+
+    /// Which template was used for the main summary
+    var summaryTemplateId: UUID?
+
+    /// When post-processing was completed
+    var processedAt: Date?
+
+    // MARK: - Participant & Speaker Fields
+
+    /// Window title captured at recording start
+    var windowTitle: String?
+
+    /// Path to screenshot captured at recording start
+    var screenshotPath: String?
+
+    /// Participants detected from screenshot OCR, calendar, or manual entry
+    var participants: [MeetingParticipant]?
+
+    /// Number of speakers detected by diarization
+    var speakerCount: Int?
+
+    /// User-assigned labels for speakers (speaker_0 -> "John")
+    var speakerLabels: [SpeakerLabel]?
+
+    /// Raw diarization segments from OpenAI
+    var diarizationSegments: [DiarizationSegment]?
+
     init(
         id: UUID = UUID(),
         title: String,
@@ -75,7 +153,20 @@ struct Meeting: Identifiable, Codable, Equatable {
         apiCostCents: Int? = nil,
         status: MeetingStatus = .recording,
         createdAt: Date = Date(),
-        errorMessage: String? = nil
+        errorMessage: String? = nil,
+        isDictation: Bool = false,
+        summary: String? = nil,
+        diarizedTranscript: String? = nil,
+        processedSummaries: [ProcessedSummary]? = nil,
+        summaryTemplateId: UUID? = nil,
+        processedAt: Date? = nil,
+        // Participant & speaker fields
+        windowTitle: String? = nil,
+        screenshotPath: String? = nil,
+        participants: [MeetingParticipant]? = nil,
+        speakerCount: Int? = nil,
+        speakerLabels: [SpeakerLabel]? = nil,
+        diarizationSegments: [DiarizationSegment]? = nil
     ) {
         self.id = id
         self.title = title
@@ -90,6 +181,63 @@ struct Meeting: Identifiable, Codable, Equatable {
         self.status = status
         self.createdAt = createdAt
         self.errorMessage = errorMessage
+        self.isDictation = isDictation
+        self.summary = summary
+        self.diarizedTranscript = diarizedTranscript
+        self.processedSummaries = processedSummaries
+        self.summaryTemplateId = summaryTemplateId
+        self.processedAt = processedAt
+        // Participant & speaker fields
+        self.windowTitle = windowTitle
+        self.screenshotPath = screenshotPath
+        self.participants = participants
+        self.speakerCount = speakerCount
+        self.speakerLabels = speakerLabels
+        self.diarizationSegments = diarizationSegments
+    }
+
+    /// Check if this meeting has been post-processed
+    var isProcessed: Bool {
+        processedAt != nil
+    }
+
+    /// Get a specific processed summary by template ID
+    func getSummary(for templateId: UUID) -> ProcessedSummary? {
+        processedSummaries?.first { $0.templateId == templateId }
+    }
+
+    /// Get the display name for a speaker (user label or default)
+    func speakerName(for speakerId: String) -> String {
+        if let label = speakerLabels?.first(where: { $0.speakerId == speakerId }) {
+            return label.name
+        }
+        // Convert "speaker_0" to "Speaker 1" for display
+        if speakerId.hasPrefix("speaker_") {
+            let numStr = speakerId.replacingOccurrences(of: "speaker_", with: "")
+            if let num = Int(numStr) {
+                return "Speaker \(num + 1)"
+            }
+        }
+        return speakerId
+    }
+
+    /// Get all unique speakers from diarization
+    var uniqueSpeakers: [String] {
+        guard let segments = diarizationSegments else { return [] }
+        var seen = Set<String>()
+        var speakers: [String] = []
+        for segment in segments {
+            if !seen.contains(segment.speakerId) {
+                seen.insert(segment.speakerId)
+                speakers.append(segment.speakerId)
+            }
+        }
+        return speakers
+    }
+
+    /// Check if speaker labeling is available
+    var hasSpeakerData: Bool {
+        speakerCount != nil || (diarizationSegments?.isEmpty == false)
     }
 
     /// Cost formatted as dollars

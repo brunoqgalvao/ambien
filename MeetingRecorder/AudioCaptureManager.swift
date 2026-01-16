@@ -102,6 +102,10 @@ class AudioCaptureManager: NSObject, ObservableObject {
     private var systemAudioBuffer: [CMSampleBuffer] = []
     private var micAudioBuffer: [CMSampleBuffer] = []
 
+    // Track first sample timestamp for proper session timing
+    private var firstSampleTime: CMTime?
+    private var sessionStarted: Bool = false
+
     // Activity to prevent App Nap
     private var backgroundActivity: NSObjectProtocol?
 
@@ -152,26 +156,44 @@ class AudioCaptureManager: NSObject, ObservableObject {
             // Start microphone capture
             try startMicrophoneCapture()
 
-            // Start the asset writer
+            // Start the asset writer (session will be started on first sample)
             guard let writer = assetWriter else {
                 throw AudioCaptureError.writerFailed(NSError(domain: "AudioCapture", code: -1))
             }
             writer.startWriting()
-            writer.startSession(atSourceTime: .zero)
+            // Don't start session yet - we'll start it when we get the first sample
+            // to ensure proper timestamp alignment
+            firstSampleTime = nil
+            sessionStarted = false
 
             recordingStartTime = Date()
             isRecording = true
             state = .recording(duration: 0)
             lastRecordingURL = outputURL
 
-            // Create Meeting record
-            let meeting = Meeting(
+            // Capture meeting context (screenshot + window title + participants)
+            let (screenshotPath, windowTitle, participants) = await ParticipantService.shared.captureMeetingContext(
+                bundleIdentifier: self.getSourceAppBundleId()
+            )
+
+            // Create Meeting record with context
+            var meeting = Meeting(
                 title: self.meetingTitle,
                 startTime: recordingStartTime!,
                 sourceApp: self.sourceApp,
                 audioPath: outputURL.path,
-                status: .recording
+                status: .recording,
+                windowTitle: windowTitle,
+                screenshotPath: screenshotPath,
+                participants: participants.isEmpty ? nil : participants
             )
+
+            // If we got a window title, use it as the meeting title if it's better
+            if let capturedTitle = windowTitle, capturedTitle.count > 3 {
+                meeting.title = capturedTitle
+                self.meetingTitle = capturedTitle
+            }
+
             currentMeeting = meeting
             try await DatabaseManager.shared.insert(meeting)
 
@@ -253,11 +275,21 @@ class AudioCaptureManager: NSObject, ObservableObject {
     func transcribeMeeting(_ meeting: Meeting) async {
         var updatedMeeting = meeting
         updatedMeeting.status = .transcribing
+        let meetingId = meeting.id
 
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
             transcriptionProgress = "Transcribing..."
+
+            // Show transcribing state in the notch island
+            TranscribingIslandController.shared.show(
+                meetingTitle: meeting.title,
+                meetingId: meetingId,
+                onCancel: { [weak self] in
+                    self?.cancelTranscription(meetingId: meetingId)
+                }
+            )
 
             // Perform transcription
             let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
@@ -269,11 +301,31 @@ class AudioCaptureManager: NSObject, ObservableObject {
             updatedMeeting.status = .ready
             updatedMeeting.errorMessage = nil
 
+            // Update with diarization results
+            updatedMeeting.speakerCount = result.speakerCount
+            updatedMeeting.diarizationSegments = result.diarizationSegments
+
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
             transcriptionProgress = nil
 
             print("[AudioCapture] Transcription complete. Cost: \(result.costCents) cents")
+            if let speakers = result.speakerCount, speakers > 0 {
+                print("[AudioCapture] Detected \(speakers) speakers")
+            }
+
+            // Hide transcribing island
+            TranscribingIslandController.shared.hide()
+
+            // Show success notification with View action
+            ToastController.shared.showSuccess(
+                "Transcript ready",
+                message: meeting.title,
+                duration: 4.0,
+                action: ToastAction(title: "View") {
+                    MainAppWindowController.shared.showMeeting(id: meetingId)
+                }
+            )
 
             // Export to agent-accessible JSON
             Task {
@@ -290,6 +342,40 @@ class AudioCaptureManager: NSObject, ObservableObject {
             currentMeeting = updatedMeeting
             transcriptionProgress = nil
             errorMessage = error.localizedDescription
+
+            // Hide transcribing island
+            TranscribingIslandController.shared.hide()
+
+            // Show error notification with Retry action
+            ToastController.shared.showError(
+                "Transcription failed",
+                message: error.localizedDescription,
+                action: ToastAction(title: "Retry") { [weak self] in
+                    Task { @MainActor in
+                        await self?.retryTranscription(meetingId: meetingId)
+                    }
+                }
+            )
+        }
+    }
+
+    /// Cancel an in-progress transcription
+    func cancelTranscription(meetingId: UUID) {
+        // For now, we just mark it as failed since we can't truly cancel the API call
+        Task {
+            guard var meeting = try? await DatabaseManager.shared.getMeeting(id: meetingId) else {
+                return
+            }
+            meeting.status = .failed
+            meeting.errorMessage = "Transcription cancelled"
+            try? await DatabaseManager.shared.update(meeting)
+            currentMeeting = meeting
+            transcriptionProgress = nil
+
+            ToastController.shared.showWarning(
+                "Transcription cancelled",
+                message: meeting.title
+            )
         }
     }
 
@@ -327,22 +413,25 @@ class AudioCaptureManager: NSObject, ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         let timestamp = formatter.string(from: Date())
 
-        return recordingsFolder.appendingPathComponent("meeting_\(timestamp).m4a")
+        return recordingsFolder.appendingPathComponent("meeting_\(timestamp).wav")
     }
 
     private func setupAssetWriter(url: URL) throws {
         // Remove existing file if present
         try? FileManager.default.removeItem(at: url)
 
-        assetWriter = try AVAssetWriter(outputURL: url, fileType: .m4a)
+        // Use WAV format - simpler, no codec issues, OpenAI accepts it
+        assetWriter = try AVAssetWriter(outputURL: url, fileType: .wav)
 
-        // AAC audio settings: 16kHz mono, 64kbps
+        // Linear PCM settings matching ScreenCaptureKit output (48kHz stereo)
         let audioSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatMPEG4AAC,
-            AVSampleRateKey: targetSampleRate,
-            AVNumberOfChannelsKey: targetChannels,
-            AVEncoderBitRateKey: targetBitRate,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: 48000.0,
+            AVNumberOfChannelsKey: 2,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsNonInterleaved: false
         ]
 
         // Single audio input (we'll mix system + mic)
@@ -439,13 +528,33 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
     private func handleSystemAudioBuffer(_ sampleBuffer: CMSampleBuffer) {
         guard isRecording,
-              let input = systemAudioInput,
-              input.isReadyForMoreMediaData else {
+              let writer = assetWriter,
+              let input = systemAudioInput else {
             return
         }
 
-        // Resample if needed and append
-        input.append(sampleBuffer)
+        // Start the session on the first valid sample
+        if !sessionStarted {
+            let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+            if presentationTime.isValid {
+                writer.startSession(atSourceTime: presentationTime)
+                firstSampleTime = presentationTime
+                sessionStarted = true
+                print("[AudioCapture] Session started at time: \(presentationTime.seconds)")
+            }
+        }
+
+        guard sessionStarted, input.isReadyForMoreMediaData else {
+            return
+        }
+
+        // Append the sample buffer
+        if !input.append(sampleBuffer) {
+            print("[AudioCapture] Failed to append sample buffer, writer status: \(writer.status.rawValue)")
+            if let error = writer.error {
+                print("[AudioCapture] Writer error: \(error)")
+            }
+        }
     }
 
     private func handleMicBuffer(_ buffer: AVAudioPCMBuffer, time: AVAudioTime) {
@@ -485,10 +594,32 @@ class AudioCaptureManager: NSObject, ObservableObject {
         assetWriter = nil
         systemAudioInput = nil
         micAudioInput = nil
+        firstSampleTime = nil
+        sessionStarted = false
 
         if let activity = backgroundActivity {
             ProcessInfo.processInfo.endActivity(activity)
             backgroundActivity = nil
+        }
+    }
+
+    /// Get the bundle identifier for the source app
+    private func getSourceAppBundleId() -> String? {
+        guard let app = sourceApp?.lowercased() else { return nil }
+
+        switch app {
+        case "zoom":
+            return "us.zoom.xos"
+        case "google meet":
+            return "com.google.Chrome"  // Usually in browser
+        case "microsoft teams":
+            return "com.microsoft.teams"
+        case "slack":
+            return "com.tinyspeck.slackmacgap"
+        case "facetime":
+            return "com.apple.FaceTime"
+        default:
+            return nil
         }
     }
 }
@@ -709,6 +840,7 @@ class MicRecorderWithTranscription: ObservableObject {
         var updatedMeeting = meeting
         updatedMeeting.status = .transcribing
         status = "Transcribing..."
+        let meetingId = meeting.id
 
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
@@ -722,8 +854,23 @@ class MicRecorderWithTranscription: ObservableObject {
                 updatedMeeting.errorMessage = "No API key configured"
                 try? await DatabaseManager.shared.update(updatedMeeting)
                 currentMeeting = updatedMeeting
+
+                // Show error notification
+                ToastController.shared.showError(
+                    "No API key",
+                    message: "Add your OpenAI API key in Settings",
+                    action: ToastAction(title: "Settings") {
+                        SettingsWindowController.shared.showWindow()
+                    }
+                )
                 return
             }
+
+            // Show transcribing state in the notch island (no cancel action for mic recorder)
+            TranscribingIslandController.shared.show(
+                meetingTitle: meeting.title,
+                meetingId: meetingId
+            )
 
             // Perform transcription
             let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
@@ -740,6 +887,19 @@ class MicRecorderWithTranscription: ObservableObject {
             status = "Done! Cost: $\(String(format: "%.3f", Double(result.costCents) / 100))"
 
             print("[MicRecorderWithTranscription] Transcription complete. Cost: \(result.costCents) cents")
+
+            // Hide transcribing island
+            TranscribingIslandController.shared.hide()
+
+            // Show success notification with View action
+            ToastController.shared.showSuccess(
+                "Transcript ready",
+                message: meeting.title,
+                duration: 4.0,
+                action: ToastAction(title: "View") {
+                    MainAppWindowController.shared.showMeeting(id: meetingId)
+                }
+            )
 
             // Export to agent-accessible JSON
             Task {
@@ -760,6 +920,28 @@ class MicRecorderWithTranscription: ObservableObject {
             currentMeeting = updatedMeeting
             status = nil
             errorMessage = error.localizedDescription
+
+            // Hide transcribing island
+            TranscribingIslandController.shared.hide()
+
+            // Show error notification with Retry action
+            ToastController.shared.showError(
+                "Transcription failed",
+                message: error.localizedDescription,
+                action: ToastAction(title: "Retry") { [weak self] in
+                    Task { @MainActor in
+                        await self?.retryTranscription(meetingId: meetingId)
+                    }
+                }
+            )
         }
+    }
+
+    /// Retry transcription for a failed meeting
+    func retryTranscription(meetingId: UUID) async {
+        guard let meeting = try? await DatabaseManager.shared.getMeeting(id: meetingId) else {
+            return
+        }
+        await transcribeMeeting(meeting)
     }
 }

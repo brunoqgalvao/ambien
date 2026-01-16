@@ -84,6 +84,8 @@ struct TranscriptionResult {
     let costCents: Int
     let model: TranscriptionModel
     let segments: [TranscriptionSegment]?
+    let diarizationSegments: [DiarizationSegment]?
+    let speakerCount: Int?
 }
 
 /// Result of a quick dictation transcription (optimized for latency)
@@ -100,12 +102,16 @@ actor TranscriptionService {
     /// Default model to use (whisper-1 is more reliable)
     var defaultModel: TranscriptionModel = .whisper1
 
+    /// Whether to perform speaker diarization on transcripts
+    var enableDiarization: Bool = true
+
     /// Transcribe an audio file
     /// - Parameters:
     ///   - audioPath: Path to the .m4a audio file
     ///   - model: Model to use (defaults to gpt-4o-mini-transcribe)
+    ///   - performDiarization: Whether to perform speaker diarization (default: true if enabled globally)
     /// - Returns: TranscriptionResult with text and cost
-    func transcribe(audioPath: String, model: TranscriptionModel? = nil) async throws -> TranscriptionResult {
+    func transcribe(audioPath: String, model: TranscriptionModel? = nil, performDiarization: Bool? = nil) async throws -> TranscriptionResult {
         // Get API key from Keychain
         guard let apiKey = KeychainHelper.readOpenAIKey() else {
             throw TranscriptionError.noAPIKey
@@ -199,17 +205,36 @@ actor TranscriptionService {
         // Calculate cost based on duration
         let duration = transcriptionResponse.duration ?? estimateDuration(fileSize: fileSize)
         let durationMinutes = duration / 60.0
-        let costCents = Int(ceil(durationMinutes * selectedModel.costPerMinuteCents))
+        var costCents = Int(ceil(durationMinutes * selectedModel.costPerMinuteCents))
 
         print("[TranscriptionService] Transcribed \(String(format: "%.1f", duration))s using \(selectedModel.displayName)")
         print("[TranscriptionService] Cost: \(costCents) cents (\(String(format: "%.2f", durationMinutes)) minutes)")
+
+        // Perform speaker diarization if enabled
+        let shouldDiarize = performDiarization ?? enableDiarization
+        var diarizationSegments: [DiarizationSegment]? = nil
+        var speakerCount: Int? = nil
+
+        if shouldDiarize && !transcriptionResponse.text.isEmpty {
+            print("[TranscriptionService] Performing speaker diarization...")
+            let diarizationResult = await performSpeakerDiarization(
+                transcript: transcriptionResponse.text,
+                segments: transcriptionResponse.segments
+            )
+            diarizationSegments = diarizationResult.segments
+            speakerCount = diarizationResult.speakerCount
+            costCents += diarizationResult.costCents
+            print("[TranscriptionService] Diarization complete: \(speakerCount ?? 0) speakers detected")
+        }
 
         return TranscriptionResult(
             text: transcriptionResponse.text,
             duration: duration,
             costCents: costCents,
             model: selectedModel,
-            segments: transcriptionResponse.segments
+            segments: transcriptionResponse.segments,
+            diarizationSegments: diarizationSegments,
+            speakerCount: speakerCount
         )
     }
 
@@ -380,6 +405,230 @@ actor TranscriptionService {
     private func estimateDuration(fileSize: Int64) -> TimeInterval {
         let bytesPerSecond: Double = 8000  // 64kbps / 8
         return Double(fileSize) / bytesPerSecond
+    }
+
+    // MARK: - Smart Meeting Title Generation
+
+    /// Generate a smart, relevant title from transcript using GPT-4o-mini
+    /// - Parameter transcript: The meeting transcript
+    /// - Returns: A concise, descriptive title or nil if generation fails
+    func generateMeetingTitle(from transcript: String) async -> String? {
+        guard let apiKey = KeychainHelper.readOpenAIKey() else {
+            return nil
+        }
+
+        // Take first ~2000 chars to avoid token limits
+        let truncatedTranscript = String(transcript.prefix(2000))
+
+        let prompt = """
+        Based on this meeting transcript, generate a short, descriptive title (max 6 words).
+        The title should capture the main topic or purpose of the meeting.
+        Return ONLY the title, no quotes or extra text.
+
+        Transcript:
+        \(truncatedTranscript)
+        """
+
+        let requestBody: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": [
+                ["role": "system", "content": "You are a helpful assistant that generates concise meeting titles."],
+                ["role": "user", "content": prompt]
+            ],
+            "max_tokens": 20,
+            "temperature": 0.3
+        ]
+
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
+        request.timeoutInterval = 10
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                return nil
+            }
+
+            // Parse response
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let firstChoice = choices.first,
+               let message = firstChoice["message"] as? [String: Any],
+               let content = message["content"] as? String {
+                let title = content.trimmingCharacters(in: .whitespacesAndNewlines)
+                print("[TranscriptionService] Generated title: \(title)")
+                return title.isEmpty ? nil : title
+            }
+        } catch {
+            print("[TranscriptionService] Title generation failed: \(error)")
+        }
+
+        return nil
+    }
+
+    // MARK: - Speaker Diarization
+
+    /// Result of speaker diarization
+    struct DiarizationResult {
+        let segments: [DiarizationSegment]
+        let speakerCount: Int
+        let costCents: Int
+    }
+
+    /// Perform speaker diarization using GPT-4o-mini
+    /// - Parameters:
+    ///   - transcript: The full transcript text
+    ///   - segments: Optional time-aligned segments from transcription
+    /// - Returns: DiarizationResult with speaker-labeled segments
+    private func performSpeakerDiarization(
+        transcript: String,
+        segments: [TranscriptionSegment]?
+    ) async -> DiarizationResult {
+        guard let apiKey = KeychainHelper.readOpenAIKey() else {
+            return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
+        }
+
+        // Truncate transcript if too long (keep ~8000 chars for context)
+        let maxLength = 8000
+        let truncatedTranscript = transcript.count > maxLength
+            ? String(transcript.prefix(maxLength)) + "..."
+            : transcript
+
+        let prompt = """
+        Analyze this meeting transcript and identify different speakers. For each segment of speech, assign a speaker ID (speaker_0, speaker_1, etc.).
+
+        Return a JSON array where each element has:
+        - "speakerId": string like "speaker_0", "speaker_1"
+        - "text": the text spoken by this speaker
+
+        Try to detect speaker changes based on:
+        - Topic shifts
+        - Questions and answers
+        - Different speaking styles
+        - Context clues like "thanks John" or "as I mentioned"
+
+        Return ONLY the JSON array, no explanation.
+
+        Transcript:
+        \(truncatedTranscript)
+        """
+
+        let requestBody: [String: Any] = [
+            "model": "gpt-4o-mini",
+            "messages": [
+                ["role": "system", "content": "You are an expert at speaker diarization. Analyze transcripts and identify different speakers. Always respond with valid JSON only."],
+                ["role": "user", "content": prompt]
+            ],
+            "max_tokens": 4000,
+            "temperature": 0.3,
+            "response_format": ["type": "json_object"]
+        ]
+
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
+        request.timeoutInterval = 60  // Diarization can take time
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else {
+                print("[TranscriptionService] Diarization API error")
+                return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
+            }
+
+            // Estimate cost (~500 input tokens + ~1000 output tokens for gpt-4o-mini)
+            // gpt-4o-mini: $0.15/1M input, $0.60/1M output
+            let estimatedInputTokens = truncatedTranscript.count / 4
+            let estimatedOutputTokens = 1000
+            let costCents = Int(ceil(Double(estimatedInputTokens) * 0.00015 + Double(estimatedOutputTokens) * 0.0006))
+
+            // Parse response
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let choices = json["choices"] as? [[String: Any]],
+               let firstChoice = choices.first,
+               let message = firstChoice["message"] as? [String: Any],
+               let content = message["content"] as? String {
+
+                // Parse the JSON response
+                let segments = parseDiarizationResponse(content)
+                let uniqueSpeakers = Set(segments.map { $0.speakerId })
+
+                return DiarizationResult(
+                    segments: segments,
+                    speakerCount: uniqueSpeakers.count,
+                    costCents: costCents
+                )
+            }
+        } catch {
+            print("[TranscriptionService] Diarization failed: \(error)")
+        }
+
+        return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
+    }
+
+    /// Parse the JSON response from diarization
+    private func parseDiarizationResponse(_ content: String) -> [DiarizationSegment] {
+        guard let data = content.data(using: .utf8) else { return [] }
+
+        do {
+            // Try to parse as a root object with "segments" key or as an array
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                // Handle {"segments": [...]} format
+                if let segmentsArray = json["segments"] as? [[String: Any]] {
+                    return parseSegmentsArray(segmentsArray)
+                }
+                // Handle {"speakers": [...]} format
+                if let speakersArray = json["speakers"] as? [[String: Any]] {
+                    return parseSegmentsArray(speakersArray)
+                }
+            }
+
+            // Try to parse as direct array
+            if let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                return parseSegmentsArray(array)
+            }
+        } catch {
+            print("[TranscriptionService] Failed to parse diarization JSON: \(error)")
+        }
+
+        return []
+    }
+
+    /// Parse an array of segment dictionaries
+    private func parseSegmentsArray(_ array: [[String: Any]]) -> [DiarizationSegment] {
+        var segments: [DiarizationSegment] = []
+        var currentTime: TimeInterval = 0
+
+        for item in array {
+            guard let speakerId = item["speakerId"] as? String ?? item["speaker_id"] as? String ?? item["speaker"] as? String,
+                  let text = item["text"] as? String else {
+                continue
+            }
+
+            // Estimate timing (rough: ~150 words per minute, ~5 chars per word)
+            let wordCount = Double(text.split(separator: " ").count)
+            let estimatedDuration = max(1.0, wordCount / 2.5)  // ~150 wpm
+
+            let segment = DiarizationSegment(
+                speakerId: speakerId,
+                start: currentTime,
+                end: currentTime + estimatedDuration,
+                text: text
+            )
+            segments.append(segment)
+            currentTime += estimatedDuration
+        }
+
+        return segments
     }
 }
 

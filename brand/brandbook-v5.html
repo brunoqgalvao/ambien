@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MURMUR — Brand Identity v5</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ═══════════════════════════════════════════
+               PALETTE - v5 High Voltage
+            ═══════════════════════════════════════════ */
+            --violet: #8B5CF6;
+            --violet-bright: #A78BFA;
+            --violet-deep: #5B21B6;
+            --violet-neon: #7C3AED;
+            
+            --cream: #FAF7F2;
+            --cream-dark: #EAE5DC;
+            
+            --ink: #0F0F11;
+            --ink-soft: #4A4A4A;
+            
+            --coral: #FF6B6B;
+            --coral-glow: #FF8F8F;
+
+            /* Typography */
+            --font-display: 'Syne', sans-serif;
+            --font-serif: 'Instrument Serif', serif;
+            --font-mono: 'DM Mono', monospace;
+
+            /* Spacing */
+            --space-xs: 1rem;
+            --space-sm: 2rem;
+            --space-md: 4rem;
+            --space-lg: 8rem;
+            --space-xl: 12rem;
+        }
+
+        /* ═══════════════════════════════════════════
+           RESET & BASE
+        ═══════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Custom cursor everywhere */
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--cream);
+            color: var(--ink);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        /* Noise Texture Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--violet);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        
+        .cursor-circle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--violet);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+        }
+
+        body:hover .cursor-dot {
+            opacity: 1;
+        }
+
+        /* Hover states for interactive elements */
+        a:hover ~ .cursor-dot, button:hover ~ .cursor-dot, .hover-target:hover ~ .cursor-dot {
+            width: 20px;
+            height: 20px;
+            background: var(--coral);
+        }
+
+        /* ═══════════════════════════════════════════
+           TYPOGRAPHY UTILITIES
+        ═══════════════════════════════════════════ */
+        .h1-mega {
+            font-family: var(--font-serif);
+            font-size: clamp(6rem, 15vw, 12rem);
+            line-height: 0.8;
+            letter-spacing: -0.04em;
+            font-weight: 400;
+        }
+
+        .h2-bold {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .h3-serif {
+            font-family: var(--font-serif);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .label-mono {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0.7;
+        }
+
+        /* ═══════════════════════════════════════════
+           HERO - SPLIT & SLANTED
+        ═══════════════════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-visual {
+            background: var(--violet);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Dramatic geometric shapes */
+        .hero-shape {
+            position: absolute;
+            background: linear-gradient(45deg, var(--violet-neon), var(--violet-bright));
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: orb-float 10s infinite ease-in-out alternate;
+        }
+
+        .shape-1 { width: 60vw; height: 60vw; top: -20%; left: -20%; }
+        .shape-2 { width: 40vw; height: 40vw; bottom: -10%; right: -10%; animation-delay: -2s; background: var(--violet-deep); }
+
+        @keyframes orb-float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        .hero-content {
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 10;
+        }
+
+        .brand-mark-huge {
+            width: clamp(100px, 20vw, 300px);
+            height: clamp(100px, 20vw, 300px);
+            background: white;
+            border-radius: 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+            animation: mark-enter 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transform: translateY(100px);
+            opacity: 0;
+        }
+
+        @keyframes mark-enter {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .hero-title-container {
+            margin-top: auto;
+            color: white;
+            mix-blend-mode: hard-light;
+        }
+
+        .hero-text-side {
+            background: var(--cream);
+            padding: var(--space-md);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Decorative diagonal line */
+        .hero-text-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50px;
+            width: 100px;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transform: skewX(-10deg);
+            pointer-events: none;
+        }
+
+        .intro-text {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-top: 2rem;
+            max-width: 500px;
+        }
+
+        .scroll-pill {
+            margin-top: 4rem;
+            width: fit-content;
+            padding: 1rem 2rem;
+            border: 1px solid var(--ink);
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scroll-pill:hover {
+            background: var(--ink);
+            color: white;
+        }
+
+        /* ═══════════════════════════════════════════
+           BENTO GRID LAYOUTS
+        ═══════════════════════════════════════════ */
+        .section {
+            padding: var(--space-lg) var(--space-md);
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-top: var(--space-md);
+        }
+
+        .bento-card {
+            background: white;
+            border-radius: 32px;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .bento-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            z-index: 2;
+        }
+
+        /* ═══════════════════════════════════════════
+           NAMING SECTION
+        ═══════════════════════════════════════════ */
+        .naming-hero {
+            grid-column: span 8;
+            background: var(--violet);
+            color: white;
+            min-height: 500px;
+        }
+
+        .naming-hero h2 {
+            font-family: var(--font-serif);
+            font-size: 6rem;
+            font-style: italic;
+            line-height: 0.9;
+        }
+
+        .naming-side {
+            grid-column: span 4;
+            background: var(--ink);
+            color: white;
+        }
+
+        .name-option {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .name-option:hover { opacity: 1; }
+        .name-option h4 { font-size: 2rem; font-family: var(--font-serif); font-style: italic; }
+
+        /* ═══════════════════════════════════════════
+           COLOR SECTION - OVERLAPPING
+        ═══════════════════════════════════════════ */
+        .color-stage {
+            height: 800px;
+            position: relative;
+            margin-top: var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .swatch {
+            width: 350px;
+            height: 500px;
+            border-radius: 40px;
+            position: absolute;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            color: white;
+        }
+
+        .swatch-violet {
+            background: var(--violet);
+            transform: rotate(-10deg) translateX(-150px);
+            z-index: 1;
+        }
+        
+        .swatch-cream {
+            background: var(--cream);
+            color: var(--ink);
+            transform: rotate(0deg) translateY(-50px);
+            z-index: 2;
+        }
+
+        .swatch-coral {
+            background: var(--coral);
+            transform: rotate(10deg) translateX(150px);
+            z-index: 3;
+        }
+
+        .color-stage:hover .swatch-violet { transform: rotate(-15deg) translateX(-200px); }
+        .color-stage:hover .swatch-cream { transform: rotate(0deg) translateY(-70px) scale(1.05); }
+        .color-stage:hover .swatch-coral { transform: rotate(15deg) translateX(200px); }
+
+        .hex-code {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ═══════════════════════════════════════════
+           DARK MODE - IMMERSIVE
+        ═══════════════════════════════════════════ */
+        .dark-mode-section {
+            background: var(--ink);
+            color: var(--cream);
+            padding: var(--space-xl) var(--space-md);
+            position: relative;
+            overflow: hidden;
+            margin-top: var(--space-lg);
+        }
+
+        /* Grid background for technical feel */
+        .dark-mode-bg {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .dm-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .ui-window {
+            background: #151515;
+            border: 1px solid #333;
+            border-radius: 20px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,1), 0 30px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .ui-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+        .dot.red { background: #FF5F56; }
+        .dot.yellow { background: #FFBD2E; }
+        .dot.green { background: #27C93F; }
+
+        .ui-body { padding: 2rem; }
+
+        .meeting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+
+        .meeting-row:hover { background: rgba(255,255,255,0.03); }
+
+        .rec-pill {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--coral);
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rec-dot-anim {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* ═══════════════════════════════════════════
+           TYPOGRAPHY SCALE
+        ═══════════════════════════════════════════ */
+        .type-scale {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .type-row {
+            border-top: 2px solid var(--ink);
+            padding-top: 1rem;
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            align-items: baseline;
+        }
+
+        .font-huge { font-family: var(--font-serif); font-size: 8rem; line-height: 0.9; }
+        .font-large { font-family: var(--font-display); font-size: 4rem; font-weight: 800; }
+        .font-body { font-family: var(--font-display); font-size: 1.5rem; max-width: 600px; }
+
+        /* ═══════════════════════════════════════════
+           UI KIT SECTION
+        ═══════════════════════════════════════════ */
+        .ui-kit-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .ui-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .btn-xl {
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 16px;
+            background: var(--violet);
+            color: white;
+            border: none;
+            font-family: var(--font-display);
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .btn-xl:hover { transform: translateY(-2px); }
+
+        .input-xl {
+            width: 100%;
+            padding: 1.5rem;
+            font-size: 1.2rem;
+            border: 2px solid var(--cream-dark);
+            border-radius: 16px;
+            background: var(--cream);
+        }
+
+        /* ═══════════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════════ */
+        footer {
+            background: var(--violet);
+            color: white;
+            padding: var(--space-lg) var(--space-md);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .footer-big-text {
+            font-family: var(--font-serif);
+            font-size: 15vw;
+            line-height: 0.8;
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: -5vw;
+        }
+
+        /* ═══════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-visual { min-height: 50vh; }
+            .bento-grid { display: flex; flex-direction: column; }
+            .naming-hero, .naming-side, .bento-card { grid-column: span 12; }
+            .type-row { grid-template-columns: 1fr; gap: 0.5rem; }
+            .color-stage { height: auto; flex-direction: column; gap: 2rem; padding: 4rem 0; }
+            .swatch { position: relative; transform: none !important; width: 100%; height: 300px; }
+            .dm-grid { grid-template-columns: 1fr; }
+            .ui-kit-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-circle"></div>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-visual">
+            <div class="hero-shape shape-1"></div>
+            <div class="hero-shape shape-2"></div>
+            
+            <div class="hero-content">
+                <div class="brand-mark-huge">
+                    <svg width="120" height="120" viewBox="0 0 80 80" fill="none">
+                        <circle cx="40" cy="40" r="16" fill="#8B5CF6"/>
+                        <path d="M22 40C22 40 22 16 40 16C58 16 58 40 58 40" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M40 64V72" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M26 72H54" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                
+                <div class="hero-title-container">
+                    <h1 class="h1-mega">Murmur</h1>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-text-side">
+            <span class="label-mono">Brand Identity v5.0</span>
+            <p class="intro-text">
+                The meeting recorder that doesn't join your meeting.<br>
+                <strong>Local-first. Silent. Beautiful.</strong>
+            </p>
+            
+            <div class="scroll-pill hover-target">
+                Scroll to Explore
+            </div>
+        </div>
+    </section>
+
+    <!-- NAMING GRID -->
+    <section class="section">
+        <span class="label-mono">01 — Identity</span>
+        
+        <div class="bento-grid">
+            <div class="bento-card naming-hero">
+                <span class="label-mono" style="color: rgba(255,255,255,0.7);">Primary Name</span>
+                <h2>Murmur</h2>
+                <p style="font-size: 1.5rem; max-width: 600px; margin-top: 2rem; opacity: 0.9;">
+                    A soft, continuous sound. Captures the essence of background listening. Present but unobtrusive.
+                </p>
+            </div>
+            
+            <div class="bento-card naming-side">
+                <span class="label-mono">Alternates</span>
+                
+                <div class="name-option">
+                    <h4>Sotto</h4>
+                    <p>Italian "under voice". Musical.</p>
+                </div>
+                <div class="name-option">
+                    <h4>Vesper</h4>
+                    <p>Evening quiet. Reflection.</p>
+                </div>
+                <div class="name-option" style="border-bottom: none;">
+                    <h4>Hum</h4>
+                    <p>Constant, friendly presence.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COLORS INTERACTIVE -->
+    <section class="section">
+        <span class="label-mono">02 — Chromatics</span>
+        <h2 class="h2-bold" style="margin-top: 1rem; max-width: 800px;">Electric Violet meets Warm Cream. <span style="color: var(--violet);">High voltage.</span></h2>
+        
+        <div class="color-stage hover-target">
+            <div class="swatch swatch-violet">
+                <span class="label-mono">Primary</span>
+                <h3>Electric Violet</h3>
+                <span class="hex-code">#8B5CF6</span>
+            </div>
+            <div class="swatch swatch-cream">
+                <span class="label-mono">Base</span>
+                <h3>Warm Cream</h3>
+                <span class="hex-code">#FAF7F2</span>
+            </div>
+            <div class="swatch swatch-coral">
+                <span class="label-mono">Action</span>
+                <h3>Coral Pop</h3>
+                <span class="hex-code">#FF6B6B</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- DARK MODE IMMERSIVE -->
+    <section class="dark-mode-section">
+        <div class="dark-mode-bg"></div>
+        <div class="section" style="padding-top: 0; padding-bottom: 0;">
+            <div class="dm-grid">
+                <div>
+                    <span class="label-mono" style="color: var(--violet-bright);">03 — Dark Mode</span>
+                    <h2 class="h2-bold" style="color: white; margin-top: 2rem; margin-bottom: 2rem;">Lights out.<br>Focus in.</h2>
+                    <p style="font-size: 1.25rem; opacity: 0.7; line-height: 1.6; max-width: 400px;">
+                        The interface recedes into the background. Pure data, illuminated by soft violet accents. Designed for late-night deep work.
+                    </p>
+                </div>
+                
+                <div class="ui-window hover-target">
+                    <div class="ui-header">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green"></div>
+                    </div>
+                    <div class="ui-body">
+                        <div class="meeting-row">
+                            <div>
+                                <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Q3 Product Strategy</h4>
+                                <span class="label-mono">Recording now</span>
+                            </div>
+                            <div class="rec-pill">
+                                <div class="rec-dot-anim"></div>
+                                24:10
+                            </div>
+                        </div>
+                        <div class="meeting-row">
+                            <div>
+                                <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Design Critique</h4>
+                                <span class="label-mono">Yesterday</span>
+                            </div>
+                            <span style="opacity: 0.5;">45m</span>
+                        </div>
+                        <div class="meeting-row">
+                            <div>
+                                <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Client Onboarding</h4>
+                                <span class="label-mono">Mon, Jan 12</span>
+                            </div>
+                            <span style="opacity: 0.5;">1h 10m</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TYPOGRAPHY -->
+    <section class="section">
+        <span class="label-mono">04 — Typography</span>
+        
+        <div class="type-scale">
+            <div class="type-row">
+                <span class="label-mono">Display</span>
+                <div class="font-huge">Instrument<br><em>Serif</em></div>
+            </div>
+            <div class="type-row">
+                <span class="label-mono">Headlines</span>
+                <div class="font-large">Syne Bold 800</div>
+            </div>
+            <div class="type-row">
+                <span class="label-mono">Body</span>
+                <div class="font-body">
+                    <strong>Syne Regular.</strong> Used for all interface text. Clean, geometric, but with a human touch that feels approachable yet technical.
+                </div>
+            </div>
+             <div class="type-row">
+                <span class="label-mono">Mono</span>
+                <div class="font-body" style="font-family: var(--font-mono);">
+                    DM Mono. For data, timestamps (12:00), and code.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- UI COMPONENTS -->
+    <section class="section">
+        <span class="label-mono">05 — Components</span>
+        
+        <div class="ui-kit-grid">
+            <div class="ui-card hover-target">
+                <span class="label-mono">Primary Action</span>
+                <button class="btn-xl">Start Recording</button>
+            </div>
+            
+            <div class="ui-card">
+                <span class="label-mono">Inputs</span>
+                <input class="input-xl" placeholder="Search memories..." />
+            </div>
+            
+            <div class="ui-card" style="background: var(--ink); color: white;">
+                <span class="label-mono">Visual Language</span>
+                <div style="font-family: var(--font-serif); font-size: 3rem; line-height: 1.1;">
+                    <em>Soft</em> shadows.<br>
+                    Sharp type.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-big-text">Murmur</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 4rem; border-top: 1px solid rgba(255,255,255,0.2);">
+            <div style="font-family: var(--font-mono);">
+                EST. 2025<br>
+                SAN FRANCISCO, CA
+            </div>
+            <div style="text-align: right;">
+                <p>Designed for silence.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Custom cursor logic
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorCircle = document.querySelector('.cursor-circle');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            
+            // Add a slight delay to the circle for a fluid feel
+            setTimeout(() => {
+                cursorCircle.style.left = e.clientX + 'px';
+                cursorCircle.style.top = e.clientY + 'px';
+            }, 50);
+        });
+
+        // Add hover effects via JS for more complex interactions if needed
+        // but CSS handles most of it.
+    </script>
+</body>
+</html>

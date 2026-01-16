@@ -20,6 +20,22 @@ struct MeetingListView: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
 
+            // Failed transcriptions banner
+            if viewModel.failedCount > 0 {
+                FailedTranscriptionsBanner(
+                    failedCount: viewModel.failedCount,
+                    isRetrying: viewModel.isRetrying,
+                    progress: viewModel.retryProgress,
+                    onRetryAll: {
+                        Task {
+                            await viewModel.retryAllFailed()
+                        }
+                    }
+                )
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+            }
+
             if viewModel.isLoading {
                 // Loading state
                 VStack(spacing: 12) {
@@ -39,7 +55,19 @@ struct MeetingListView: View {
                         ForEach(groupedMeetings, id: \.key) { group in
                             Section {
                                 ForEach(group.meetings) { meeting in
-                                    MeetingRowView(meeting: meeting)
+                                    MeetingRowView(
+                                        meeting: meeting,
+                                        onRetry: {
+                                            Task {
+                                                await viewModel.retryTranscription(meeting)
+                                            }
+                                        },
+                                        onRename: { newTitle in
+                                            Task {
+                                                await viewModel.renameMeeting(meeting, to: newTitle)
+                                            }
+                                        }
+                                    )
                                         .contentShape(Rectangle())
                                         .onTapGesture {
                                             selectedMeeting = meeting
@@ -101,6 +129,13 @@ class MeetingListViewModel: ObservableObject {
     @Published var meetings: [Meeting] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var isRetrying = false
+    @Published var retryProgress: String?
+
+    /// Count of failed meetings for UI display
+    var failedCount: Int {
+        meetings.filter { $0.status == .failed }.count
+    }
 
     func loadMeetings() async {
         isLoading = true
@@ -135,20 +170,101 @@ class MeetingListViewModel: ObservableObject {
         }
     }
 
+    func renameMeeting(_ meeting: Meeting, to newTitle: String) async {
+        var updatedMeeting = meeting
+        updatedMeeting.title = newTitle
+
+        do {
+            try await DatabaseManager.shared.update(updatedMeeting)
+            updateMeetingInList(updatedMeeting)
+
+            // Update agent API export if meeting is ready
+            if meeting.status == .ready {
+                Task {
+                    try? await AgentAPIManager.shared.exportMeeting(updatedMeeting)
+                }
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Retry transcription for a single failed meeting
     func retryTranscription(_ meeting: Meeting) async {
         var updatedMeeting = meeting
-        updatedMeeting.status = .pendingTranscription
+        updatedMeeting.status = .transcribing
         updatedMeeting.errorMessage = nil
 
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
-            if let index = meetings.firstIndex(where: { $0.id == meeting.id }) {
-                meetings[index] = updatedMeeting
+            updateMeetingInList(updatedMeeting)
+
+            // Perform actual transcription
+            let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
+
+            // Update with transcript
+            updatedMeeting.transcript = result.text
+            updatedMeeting.apiCostCents = result.costCents
+            updatedMeeting.duration = result.duration
+            updatedMeeting.status = .ready
+            updatedMeeting.errorMessage = nil
+
+            // Generate smart title from transcript
+            if let smartTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
+                updatedMeeting.title = smartTitle
             }
-            // Trigger transcription
-            // Note: In full implementation, this would kick off TranscriptionService
+
+            try await DatabaseManager.shared.update(updatedMeeting)
+            updateMeetingInList(updatedMeeting)
+
+            // Export to agent API
+            Task {
+                try? await AgentAPIManager.shared.exportMeeting(updatedMeeting)
+            }
+
+            print("[MeetingListViewModel] Retry successful for: \(meeting.title)")
+
         } catch {
+            // Mark as failed again
+            updatedMeeting.status = .failed
+            updatedMeeting.errorMessage = error.localizedDescription
+            try? await DatabaseManager.shared.update(updatedMeeting)
+            updateMeetingInList(updatedMeeting)
             errorMessage = error.localizedDescription
+            print("[MeetingListViewModel] Retry failed: \(error)")
+        }
+    }
+
+    /// Retry transcription for all failed meetings
+    func retryAllFailed() async {
+        let failedMeetings = meetings.filter { $0.status == .failed }
+        guard !failedMeetings.isEmpty else { return }
+
+        isRetrying = true
+        defer {
+            isRetrying = false
+            retryProgress = nil
+        }
+
+        print("[MeetingListViewModel] Retrying \(failedMeetings.count) failed transcriptions")
+
+        for (index, meeting) in failedMeetings.enumerated() {
+            retryProgress = "Retrying \(index + 1) of \(failedMeetings.count)..."
+            await retryTranscription(meeting)
+
+            // Small delay between retries to avoid rate limiting
+            if index < failedMeetings.count - 1 {
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+            }
+        }
+
+        // Reload to get fresh state
+        await loadMeetings()
+    }
+
+    private func updateMeetingInList(_ meeting: Meeting) {
+        if let index = meetings.firstIndex(where: { $0.id == meeting.id }) {
+            meetings[index] = meeting
         }
     }
 }
@@ -180,6 +296,61 @@ struct SearchBar: View {
     }
 }
 
+// MARK: - Failed Transcriptions Banner
+
+struct FailedTranscriptionsBanner: View {
+    let failedCount: Int
+    let isRetrying: Bool
+    let progress: String?
+    let onRetryAll: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
+                .font(.subheadline)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(failedCount) failed transcription\(failedCount == 1 ? "" : "s")")
+                    .font(.subheadline.weight(.medium))
+
+                if let progress = progress {
+                    Text(progress)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button(action: onRetryAll) {
+                HStack(spacing: 4) {
+                    if isRetrying {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                            .frame(width: 12, height: 12)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.caption)
+                    }
+                    Text(isRetrying ? "Retrying..." : "Retry All")
+                        .font(.caption.weight(.medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.accentColor)
+                .foregroundColor(.white)
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+            .disabled(isRetrying)
+        }
+        .padding(10)
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
 // MARK: - Day Section Header
 
 struct DaySectionHeader: View {
@@ -202,17 +373,44 @@ struct DaySectionHeader: View {
 
 struct MeetingRowView: View {
     let meeting: Meeting
+    var onRetry: (() -> Void)? = nil
+    var onRename: ((String) -> Void)? = nil
+
+    @State private var isEditing = false
+    @State private var editedTitle = ""
 
     var body: some View {
         HStack(spacing: 12) {
-            // Status indicator
-            MeetingStatusBadge(status: meeting.status)
+            // Dictation icon or status indicator
+            if meeting.isDictation {
+                Image(systemName: "text.bubble")
+                    .font(.caption)
+                    .foregroundColor(.purple)
+                    .frame(width: 20, height: 20)
+            } else if meeting.status != .ready {
+                MeetingStatusBadge(status: meeting.status)
+            }
 
             // Meeting info
             VStack(alignment: .leading, spacing: 2) {
-                Text(meeting.title)
+                if isEditing {
+                    TextField("Meeting title", text: $editedTitle, onCommit: {
+                        if !editedTitle.isEmpty && editedTitle != meeting.title {
+                            onRename?(editedTitle)
+                        }
+                        isEditing = false
+                    })
+                    .textFieldStyle(.plain)
                     .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
+                    .onExitCommand {
+                        isEditing = false
+                        editedTitle = meeting.title
+                    }
+                } else {
+                    Text(meeting.title)
+                        .font(.subheadline.weight(.medium))
+                        .lineLimit(1)
+                }
 
                 HStack(spacing: 8) {
                     Text(meeting.formattedTime)
@@ -244,6 +442,20 @@ struct MeetingRowView: View {
                     .cornerRadius(4)
             }
 
+            // Retry button for failed transcriptions
+            if meeting.status == .failed {
+                Button(action: { onRetry?() }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption)
+                        .foregroundColor(.white)
+                }
+                .buttonStyle(.plain)
+                .frame(width: 20, height: 20)
+                .background(Color.red)
+                .cornerRadius(4)
+                .help("Retry transcription")
+            }
+
             // Chevron
             Image(systemName: "chevron.right")
                 .font(.caption)
@@ -252,6 +464,11 @@ struct MeetingRowView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            // Double-click to edit
+            editedTitle = meeting.title
+            isEditing = true
+        }
     }
 }
 
@@ -261,10 +478,17 @@ struct MeetingStatusBadge: View {
     let status: MeetingStatus
 
     var body: some View {
-        Image(systemName: status.icon)
-            .font(.caption)
-            .foregroundColor(statusColor)
-            .frame(width: 20, height: 20)
+        Group {
+            if status == .transcribing {
+                ProgressView()
+                    .scaleEffect(0.6)
+            } else {
+                Image(systemName: status.icon)
+            }
+        }
+        .font(.caption)
+        .foregroundColor(statusColor)
+        .frame(width: 20, height: 20)
     }
 
     private var statusColor: Color {
@@ -272,7 +496,7 @@ struct MeetingStatusBadge: View {
         case .recording: return .red
         case .pendingTranscription: return .orange
         case .transcribing: return .blue
-        case .ready: return .green
+        case .ready: return .green  // Not shown, but kept for completeness
         case .failed: return .red
         }
     }
@@ -381,5 +605,27 @@ struct MeetingContextMenu: View {
             }
         }
     }
+    .padding()
+}
+
+#Preview("Failed Banner") {
+    FailedTranscriptionsBanner(
+        failedCount: 3,
+        isRetrying: false,
+        progress: nil,
+        onRetryAll: {}
+    )
+    .frame(width: 350)
+    .padding()
+}
+
+#Preview("Failed Banner - Retrying") {
+    FailedTranscriptionsBanner(
+        failedCount: 3,
+        isRetrying: true,
+        progress: "Retrying 2 of 3...",
+        onRetryAll: {}
+    )
+    .frame(width: 350)
     .padding()
 }

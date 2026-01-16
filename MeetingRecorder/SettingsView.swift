@@ -31,7 +31,7 @@ class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 550, height: 480))
+        window.setContentSize(NSSize(width: 600, height: 520))
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -49,6 +49,7 @@ struct FullSettingsView: View {
 
     enum SettingsTab: String, CaseIterable {
         case general = "General"
+        case templates = "Templates"
         case api = "API"
         case costs = "Costs"
         case about = "About"
@@ -56,6 +57,7 @@ struct FullSettingsView: View {
         var icon: String {
             switch self {
             case .general: return "gear"
+            case .templates: return "doc.text.magnifyingglass"
             case .api: return "key.fill"
             case .costs: return "dollarsign.circle.fill"
             case .about: return "info.circle.fill"
@@ -65,6 +67,16 @@ struct FullSettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header with title
+            HStack {
+                Text("Settings")
+                    .font(.brandDisplay(24, weight: .bold))
+                Spacer()
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 24)
+            .padding(.bottom, 16)
+
             // Toolbar-style tab selector
             HStack(spacing: 4) {
                 ForEach(SettingsTab.allCases, id: \.self) { tab in
@@ -74,10 +86,10 @@ struct FullSettingsView: View {
                         action: { selectedTab = tab }
                     )
                 }
+                Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 12)
 
             Divider()
 
@@ -87,6 +99,8 @@ struct FullSettingsView: View {
                     switch selectedTab {
                     case .general:
                         GeneralSettingsTab()
+                    case .templates:
+                        SummaryTemplatesSettingsTab()
                     case .api:
                         APISettingsTab()
                     case .costs:
@@ -95,10 +109,12 @@ struct FullSettingsView: View {
                         AboutSettingsTab()
                     }
                 }
-                .padding(24)
+                .frame(maxWidth: 600, alignment: .leading)
+                .padding(32)
             }
         }
-        .frame(width: 550, height: 480)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.brandBackground)
     }
 }
 
@@ -136,6 +152,11 @@ struct GeneralSettingsTab: View {
     @AppStorage("autoRecordSlack") private var autoRecordSlack = false
     @AppStorage("autoRecordFaceTime") private var autoRecordFaceTime = false
     @AppStorage("aiCleanupEnabled") private var aiCleanupEnabled = false
+    @AppStorage("dictationStyleConfigured") private var dictationStyleConfigured = false
+    @AppStorage("dictationAddPunctuation") private var dictationAddPunctuation = true
+    @AppStorage("dictationAddParagraphs") private var dictationAddParagraphs = true
+    @AppStorage("dictationWritingStyle") private var dictationWritingStyle = "natural"
+    @AppStorage("dictationCustomPrompt") private var dictationCustomPrompt = ""
     @AppStorage("appTheme") private var appTheme = "system"
 
     var body: some View {
@@ -190,7 +211,51 @@ struct GeneralSettingsTab: View {
                             .cornerRadius(6)
                     }
 
-                    Toggle("AI cleanup (grammar, filler words)", isOn: $aiCleanupEnabled)
+                    Toggle("AI cleanup (grammar, filler words)", isOn: Binding(
+                        get: { aiCleanupEnabled },
+                        set: { newValue in
+                            aiCleanupEnabled = newValue
+                            if newValue { dictationStyleConfigured = true }
+                        }
+                    ))
+
+                    if aiCleanupEnabled {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Add punctuation (periods, commas)", isOn: $dictationAddPunctuation)
+                                .toggleStyle(.checkbox)
+                                .padding(.leading, 16)
+
+                            Toggle("Auto-detect paragraphs", isOn: $dictationAddParagraphs)
+                                .toggleStyle(.checkbox)
+                                .padding(.leading, 16)
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Writing style")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                Picker("", selection: $dictationWritingStyle) {
+                                    Text("Natural (as spoken)").tag("natural")
+                                    Text("Professional").tag("professional")
+                                    Text("Casual").tag("casual")
+                                    Text("Technical").tag("technical")
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.radioGroup)
+                                .padding(.leading, 16)
+                            }
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Custom instructions (optional)")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                TextField("e.g., Always use British spelling", text: $dictationCustomPrompt)
+                                    .textFieldStyle(.roundedBorder)
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
                 }
             }
 
