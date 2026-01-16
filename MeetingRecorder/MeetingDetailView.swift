@@ -431,13 +431,17 @@ struct TranscriptSummarySection: View {
     var onReprocess: (() async -> Void)?
 
     enum ContentTab: String, CaseIterable {
+        case privateNotes = "Private notes"
         case summary = "Summary"
+        case actionItems = "Action Items"
         case transcript = "Transcript"
         case speakers = "Speakers"
 
         var icon: String {
             switch self {
+            case .privateNotes: return "note.text"
             case .summary: return "doc.text"
+            case .actionItems: return "checklist"
             case .transcript: return "text.alignleft"
             case .speakers: return "person.2"
             }
@@ -504,8 +508,12 @@ struct TranscriptSummarySection: View {
             ScrollView {
                 Group {
                     switch selectedTab {
+                    case .privateNotes:
+                        PrivateNotesContentView(meeting: $meeting)
                     case .summary:
                         SummaryContentView(meeting: meeting)
+                    case .actionItems:
+                        ActionItemsContentView(meeting: meeting)
                     case .transcript:
                         TranscriptContentView(meeting: meeting)
                     case .speakers:
@@ -521,7 +529,9 @@ struct TranscriptSummarySection: View {
 
     private var currentContent: String? {
         switch selectedTab {
+        case .privateNotes: return meeting.privateNotes
         case .summary: return meeting.summary ?? meeting.processedSummaries?.first?.content
+        case .actionItems: return meeting.actionItems?.joined(separator: "\n")
         case .transcript: return meeting.transcript
         case .speakers: return meeting.diarizedTranscript ?? meeting.transcript
         }
@@ -868,6 +878,147 @@ struct KeyPointsView: View {
         }
 
         return points
+    }
+}
+
+// MARK: - Private Notes Content View
+
+struct PrivateNotesContentView: View {
+    @Binding var meeting: Meeting
+    @State private var notesText: String = ""
+    @State private var saveTask: Task<Void, Never>?
+
+    private let placeholderText = "Add your private notes here. These won't be shared or sent to AI."
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack(alignment: .topLeading) {
+                // Placeholder when empty
+                if notesText.isEmpty {
+                    Text(placeholderText)
+                        .font(.body)
+                        .foregroundColor(.secondary.opacity(0.6))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 8)
+                        .allowsHitTesting(false)
+                }
+
+                TextEditor(text: $notesText)
+                    .font(.body)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .frame(minHeight: 200)
+            }
+            .padding(8)
+            .background(Color(.textBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
+
+            // Footer with character count
+            HStack {
+                Spacer()
+                Text("\(notesText.count) characters")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .onAppear {
+            notesText = meeting.privateNotes ?? ""
+        }
+        .onChange(of: notesText) { _, newValue in
+            // Debounced auto-save
+            saveTask?.cancel()
+            saveTask = Task {
+                try? await Task.sleep(for: .milliseconds(500))
+                if !Task.isCancelled {
+                    await saveNotes(newValue)
+                }
+            }
+        }
+        .onDisappear {
+            // Save immediately on disappear
+            saveTask?.cancel()
+            if notesText != (meeting.privateNotes ?? "") {
+                Task {
+                    await saveNotes(notesText)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func saveNotes(_ text: String) async {
+        meeting.privateNotes = text.isEmpty ? nil : text
+        do {
+            try await DatabaseManager.shared.update(meeting)
+            print("[PrivateNotes] Saved notes (\(text.count) chars)")
+        } catch {
+            print("[PrivateNotes] Failed to save: \(error)")
+        }
+    }
+}
+
+// MARK: - Action Items Content View (Standalone Tab)
+
+struct ActionItemsContentView: View {
+    let meeting: Meeting
+    @State private var completedItems: Set<String> = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let items = meeting.actionItems, !items.isEmpty {
+                ForEach(items, id: \.self) { item in
+                    HStack(alignment: .top, spacing: 10) {
+                        Button(action: { toggleItem(item) }) {
+                            Image(systemName: completedItems.contains(item) ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(completedItems.contains(item) ? .green : .secondary)
+                        }
+                        .buttonStyle(.plain)
+
+                        Text(item)
+                            .font(.body)
+                            .strikethrough(completedItems.contains(item))
+                            .foregroundColor(completedItems.contains(item) ? .secondary : .primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 4)
+                }
+            } else if let summaries = meeting.processedSummaries,
+                      let actionSummary = summaries.first(where: { $0.outputFormat == .actionItems }) {
+                // Parse action items from processed summary
+                ActionItemsListView(content: actionSummary.content)
+            } else {
+                // No action items
+                VStack(spacing: 12) {
+                    Image(systemName: "checklist")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    Text("No action items yet")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    if meeting.transcript != nil && !meeting.isProcessed {
+                        Text("Click \"Summarize\" to extract action items")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else if meeting.transcript == nil {
+                        Text("Transcript must be ready before extracting action items")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            }
+        }
+    }
+
+    private func toggleItem(_ item: String) {
+        if completedItems.contains(item) {
+            completedItems.remove(item)
+        } else {
+            completedItems.insert(item)
+        }
     }
 }
 
@@ -1341,14 +1492,22 @@ class AudioPlayerManager: ObservableObject {
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var progress: Double = 0
+    @Published var volume: Float = 1.0
+    @Published var playbackRate: Float = 1.0
 
     private var player: AVAudioPlayer?
     private var timer: Timer?
 
+    /// Available playback speed options
+    static let playbackRates: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+
     func prepare(url: URL) {
         do {
             player = try AVAudioPlayer(contentsOf: url)
+            player?.enableRate = true  // Required for playback rate to work
             player?.prepareToPlay()
+            player?.volume = volume
+            player?.rate = playbackRate
             duration = player?.duration ?? 0
             isReady = true
         } catch {
@@ -1361,6 +1520,8 @@ class AudioPlayerManager: ObservableObject {
             prepare(url: url)
         }
 
+        player?.volume = volume
+        player?.rate = playbackRate
         player?.play()
         isPlaying = true
         startTimer()
@@ -1391,6 +1552,38 @@ class AudioPlayerManager: ObservableObject {
         guard let player = player else { return }
         player.currentTime = progress * player.duration
         updateProgress()
+    }
+
+    func setVolume(_ newVolume: Float) {
+        volume = max(0, min(1, newVolume))
+        player?.volume = volume
+    }
+
+    func setPlaybackRate(_ rate: Float) {
+        playbackRate = rate
+        player?.rate = rate
+    }
+
+    /// Get SF Symbol name for current volume level
+    var volumeIconName: String {
+        if volume == 0 {
+            return "speaker.slash.fill"
+        } else if volume < 0.33 {
+            return "speaker.wave.1.fill"
+        } else if volume < 0.66 {
+            return "speaker.wave.2.fill"
+        } else {
+            return "speaker.wave.3.fill"
+        }
+    }
+
+    /// Format playback rate for display (e.g., "1x", "1.5x")
+    var playbackRateText: String {
+        if playbackRate == floor(playbackRate) {
+            return "\(Int(playbackRate))x"
+        } else {
+            return String(format: "%.2gx", playbackRate)
+        }
     }
 
     private func startTimer() {

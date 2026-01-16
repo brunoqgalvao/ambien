@@ -3,7 +3,7 @@
 //  MeetingRecorder
 //
 //  Captures system audio via ScreenCaptureKit and microphone via AVAudioEngine
-//  Mixes both streams and saves to AAC .m4a file
+//  Saves to AAC .m4a file (compressed for OpenAI's 25MB limit)
 //
 
 import Foundation
@@ -61,6 +61,23 @@ enum RecordingState: Equatable {
     }
 }
 
+/// Silence warning states for auto-stop feature
+enum SilenceWarning: Equatable {
+    case approaching(secondsRemaining: Int)  // Warning at threshold (default 5 min)
+    case imminent(secondsRemaining: Int)     // Countdown before auto-stop
+
+    static func == (lhs: SilenceWarning, rhs: SilenceWarning) -> Bool {
+        switch (lhs, rhs) {
+        case let (.approaching(s1), .approaching(s2)):
+            return s1 == s2
+        case let (.imminent(s1), .imminent(s2)):
+            return s1 == s2
+        default:
+            return false
+        }
+    }
+}
+
 /// Main audio capture manager - handles system audio + mic recording
 @MainActor
 class AudioCaptureManager: NSObject, ObservableObject {
@@ -73,6 +90,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
     @Published var errorMessage: String?
     @Published var currentMeeting: Meeting?
     @Published var transcriptionProgress: String?
+    @Published var silenceWarning: SilenceWarning?
 
     // MARK: - Private Properties
 
@@ -93,10 +111,11 @@ class AudioCaptureManager: NSObject, ObservableObject {
     private var meetingTitle: String = "Meeting"
     private var sourceApp: String?
 
-    // Audio format settings
+    // Audio format settings - optimized for OpenAI's 25MB limit
+    // 16kHz mono AAC at 32kbps = ~4KB/sec = ~104 min max in 25MB
     private let targetSampleRate: Double = 16000
     private let targetChannels: UInt32 = 1
-    private let targetBitRate: Int = 64000
+    private let targetBitRate: Int = 32000  // 32kbps for maximum compression while maintaining speech quality
 
     // Buffers for mixing
     private var systemAudioBuffer: [CMSampleBuffer] = []
@@ -108,6 +127,27 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
     // Activity to prevent App Nap
     private var backgroundActivity: NSObjectProtocol?
+
+    // Silence monitoring for auto-stop
+    private var silenceStartTime: Date?
+    private var silenceMonitorTimer: Timer?
+    private var currentSilenceDuration: TimeInterval = 0
+    private var silenceWarningDismissedForThisRecording: Bool = false
+    private let silenceThresholdDb: Float = -40.0  // Below this is considered silence
+
+    // Settings from UserDefaults
+    private var autoStopOnSilence: Bool {
+        let value = UserDefaults.standard.object(forKey: "autoStopOnSilence")
+        return value as? Bool ?? true  // Default to true
+    }
+    private var silenceWarningThreshold: TimeInterval {
+        let value = UserDefaults.standard.double(forKey: "silenceWarningThreshold")
+        return value > 0 ? value : 300  // Default 5 minutes (300 seconds)
+    }
+    private var silenceAutoStopThreshold: TimeInterval {
+        let value = UserDefaults.standard.double(forKey: "silenceAutoStopThreshold")
+        return value > 0 ? value : 600  // Default 10 minutes (600 seconds)
+    }
 
     // MARK: - Initialization
 
@@ -170,6 +210,9 @@ class AudioCaptureManager: NSObject, ObservableObject {
             isRecording = true
             state = .recording(duration: 0)
             lastRecordingURL = outputURL
+
+            // Reset silence tracking for new recording
+            resetSilenceTracking()
 
             // Capture meeting context (screenshot + window title + participants)
             let (screenshotPath, windowTitle, participants) = await ParticipantService.shared.captureMeetingContext(
@@ -422,25 +465,27 @@ class AudioCaptureManager: NSObject, ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
         let timestamp = formatter.string(from: Date())
 
-        return recordingsFolder.appendingPathComponent("meeting_\(timestamp).wav")
+        // Use .m4a (AAC) for smaller file sizes - fits more in OpenAI's 25MB limit
+        return recordingsFolder.appendingPathComponent("meeting_\(timestamp).m4a")
     }
 
     private func setupAssetWriter(url: URL) throws {
         // Remove existing file if present
         try? FileManager.default.removeItem(at: url)
 
-        // Use WAV format - simpler, no codec issues, OpenAI accepts it
-        assetWriter = try AVAssetWriter(outputURL: url, fileType: .wav)
+        // Use M4A (AAC) format - much smaller files, OpenAI accepts it
+        // 16kHz mono at 32kbps = ~4KB/sec = ~104 min fits in 25MB
+        assetWriter = try AVAssetWriter(outputURL: url, fileType: .m4a)
 
-        // Linear PCM settings matching ScreenCaptureKit output (48kHz stereo)
+        // AAC output settings - optimized for speech transcription
+        // Note: We still accept 48kHz stereo input from ScreenCaptureKit,
+        // but the AAC encoder will downsample/downmix automatically
         let audioSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: 48000.0,
-            AVNumberOfChannelsKey: 2,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsNonInterleaved: false
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: targetSampleRate,
+            AVNumberOfChannelsKey: Int(targetChannels),
+            AVEncoderBitRateKey: targetBitRate,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
 
         // Single audio input (we'll mix system + mic)
@@ -557,11 +602,71 @@ class AudioCaptureManager: NSObject, ObservableObject {
             return
         }
 
+        // Calculate audio power level for silence detection
+        if autoStopOnSilence {
+            let powerLevel = calculateAudioPowerLevel(sampleBuffer)
+            handleSilenceDetection(powerLevel: powerLevel)
+        }
+
         // Append the sample buffer
         if !input.append(sampleBuffer) {
             print("[AudioCapture] Failed to append sample buffer, writer status: \(writer.status.rawValue)")
             if let error = writer.error {
                 print("[AudioCapture] Writer error: \(error)")
+            }
+        }
+    }
+
+    /// Calculate RMS power level from audio sample buffer in dB
+    private func calculateAudioPowerLevel(_ sampleBuffer: CMSampleBuffer) -> Float {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
+            return -100.0  // Very quiet if we can't read
+        }
+
+        var length = 0
+        var dataPointer: UnsafeMutablePointer<Int8>?
+        CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &length, dataPointerOut: &dataPointer)
+
+        guard let data = dataPointer, length > 0 else {
+            return -100.0
+        }
+
+        // Convert to 16-bit samples (assuming 16-bit PCM or that we're working with Int16 samples)
+        let sampleCount = length / 2
+        guard sampleCount > 0 else { return -100.0 }
+
+        let samples = UnsafeBufferPointer(start: UnsafeRawPointer(data).assumingMemoryBound(to: Int16.self), count: sampleCount)
+
+        // Calculate RMS
+        var sumOfSquares: Float = 0.0
+        for sample in samples {
+            let floatSample = Float(sample) / Float(Int16.max)
+            sumOfSquares += floatSample * floatSample
+        }
+
+        let rms = sqrt(sumOfSquares / Float(sampleCount))
+
+        // Convert to dB
+        let db = 20 * log10(max(rms, 0.00001))
+        return db
+    }
+
+    /// Handle silence detection and update warning state
+    private func handleSilenceDetection(powerLevel: Float) {
+        let isSilent = powerLevel < silenceThresholdDb
+
+        if isSilent {
+            // Start tracking silence if not already
+            if silenceStartTime == nil {
+                silenceStartTime = Date()
+            }
+            currentSilenceDuration = Date().timeIntervalSince(silenceStartTime!)
+        } else {
+            // Audio detected - reset silence tracking and clear any warnings
+            silenceStartTime = nil
+            currentSilenceDuration = 0
+            if silenceWarning != nil && !silenceWarningDismissedForThisRecording {
+                silenceWarning = nil
             }
         }
     }
@@ -582,12 +687,86 @@ class AudioCaptureManager: NSObject, ObservableObject {
                 self?.updateDuration()
             }
         }
+
+        // Start silence monitor timer (checks every second)
+        if autoStopOnSilence {
+            startSilenceMonitorTimer()
+        }
+    }
+
+    private func startSilenceMonitorTimer() {
+        silenceMonitorTimer?.invalidate()
+        silenceMonitorTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            Task { @MainActor [weak self] in
+                self?.updateSilenceWarning()
+            }
+        }
+    }
+
+    private func updateSilenceWarning() {
+        guard isRecording, autoStopOnSilence, !silenceWarningDismissedForThisRecording else { return }
+
+        let warningThreshold = silenceWarningThreshold
+        let autoStopThreshold = silenceAutoStopThreshold
+        let imminentThreshold = autoStopThreshold - 60  // Start countdown 60s before auto-stop
+
+        if currentSilenceDuration >= autoStopThreshold {
+            // Auto-stop the recording
+            print("[AudioCapture] Auto-stopping due to \(Int(currentSilenceDuration))s of silence")
+            Task { @MainActor in
+                do {
+                    _ = try await self.stopRecording()
+                    ToastController.shared.showWarning(
+                        "Recording stopped",
+                        message: "No audio detected for \(Int(autoStopThreshold / 60)) minutes"
+                    )
+                } catch {
+                    print("[AudioCapture] Failed to auto-stop: \(error)")
+                }
+            }
+        } else if currentSilenceDuration >= imminentThreshold {
+            // Imminent warning with countdown
+            let secondsRemaining = Int(autoStopThreshold - currentSilenceDuration)
+            silenceWarning = .imminent(secondsRemaining: secondsRemaining)
+        } else if currentSilenceDuration >= warningThreshold {
+            // Approaching warning
+            let secondsRemaining = Int(autoStopThreshold - currentSilenceDuration)
+            silenceWarning = .approaching(secondsRemaining: secondsRemaining)
+        } else {
+            // Below threshold - clear warning if not dismissed
+            if silenceWarning != nil {
+                silenceWarning = nil
+            }
+        }
     }
 
     private func updateDuration() {
         guard let startTime = recordingStartTime else { return }
         currentDuration = Date().timeIntervalSince(startTime)
         state = .recording(duration: currentDuration)
+    }
+
+    /// Dismiss the silence warning and prevent it from showing again this recording session
+    func dismissSilenceWarning() {
+        silenceWarning = nil
+        silenceWarningDismissedForThisRecording = true
+        silenceStartTime = nil
+        currentSilenceDuration = 0
+        print("[AudioCapture] Silence warning dismissed for this recording")
+    }
+
+    /// Reset silence tracking (called when recording starts)
+    private func resetSilenceTracking() {
+        silenceStartTime = nil
+        currentSilenceDuration = 0
+        silenceWarning = nil
+        silenceWarningDismissedForThisRecording = false
+        silenceMonitorTimer?.invalidate()
+        silenceMonitorTimer = nil
     }
 
     private func cleanupResources() async {
@@ -605,6 +784,13 @@ class AudioCaptureManager: NSObject, ObservableObject {
         micAudioInput = nil
         firstSampleTime = nil
         sessionStarted = false
+
+        // Clean up silence monitoring
+        silenceMonitorTimer?.invalidate()
+        silenceMonitorTimer = nil
+        silenceStartTime = nil
+        currentSilenceDuration = 0
+        silenceWarning = nil
 
         if let activity = backgroundActivity {
             ProcessInfo.processInfo.endActivity(activity)
@@ -753,17 +939,17 @@ class MicRecorderWithTranscription: ObservableObject {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
             let timestamp = formatter.string(from: Date())
-            // Use .wav format - always supported and OpenAI accepts it
-            let url = recordingsFolder.appendingPathComponent("mic_\(timestamp).wav")
+            // Use .m4a (AAC) format - much smaller files for OpenAI's 25MB limit
+            let url = recordingsFolder.appendingPathComponent("mic_\(timestamp).m4a")
 
-            // Linear PCM (WAV) - universally supported, no codec issues
+            // AAC settings optimized for speech transcription
+            // 16kHz mono at 32kbps = ~4KB/sec = ~104 min fits in 25MB
             let settings: [String: Any] = [
-                AVFormatIDKey: kAudioFormatLinearPCM,
+                AVFormatIDKey: kAudioFormatMPEG4AAC,
                 AVSampleRateKey: 16000.0,
                 AVNumberOfChannelsKey: 1,
-                AVLinearPCMBitDepthKey: 16,
-                AVLinearPCMIsFloatKey: false,
-                AVLinearPCMIsBigEndianKey: false
+                AVEncoderBitRateKey: 32000,
+                AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
             ]
 
             audioRecorder = try AVAudioRecorder(url: url, settings: settings)
@@ -771,7 +957,7 @@ class MicRecorderWithTranscription: ObservableObject {
                 throw NSError(domain: "MicRecorder", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to prepare recorder"])
             }
             audioRecorder?.record()
-            print("[MicRecorderWithTranscription] Recording to WAV: \(url.path)")
+            print("[MicRecorderWithTranscription] Recording to AAC: \(url.path)")
 
             lastRecordingURL = url
             isRecording = true

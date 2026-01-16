@@ -50,6 +50,7 @@ struct FullSettingsView: View {
     enum SettingsTab: String, CaseIterable {
         case general = "General"
         case templates = "Templates"
+        case models = "Models"
         case api = "API"
         case costs = "Costs"
         case about = "About"
@@ -58,6 +59,7 @@ struct FullSettingsView: View {
             switch self {
             case .general: return "gear"
             case .templates: return "doc.text.magnifyingglass"
+            case .models: return "cpu"
             case .api: return "key.fill"
             case .costs: return "dollarsign.circle.fill"
             case .about: return "info.circle.fill"
@@ -101,6 +103,8 @@ struct FullSettingsView: View {
                         GeneralSettingsTab()
                     case .templates:
                         SummaryTemplatesSettingsTab()
+                    case .models:
+                        ModelsSettingsTab()
                     case .api:
                         APISettingsTab()
                     case .costs:
@@ -151,6 +155,11 @@ struct GeneralSettingsTab: View {
     @AppStorage("autoRecordTeams") private var autoRecordTeams = false
     @AppStorage("autoRecordSlack") private var autoRecordSlack = false
     @AppStorage("autoRecordFaceTime") private var autoRecordFaceTime = false
+    @AppStorage("cropLongSilences") private var cropLongSilences = false
+    @AppStorage("silenceCropThreshold") private var silenceCropThreshold = 300.0  // 5 min
+    @AppStorage("autoStopOnSilence") private var autoStopOnSilence = true
+    @AppStorage("silenceWarningThreshold") private var silenceWarningThreshold = 300.0  // 5 min
+    @AppStorage("silenceAutoStopThreshold") private var silenceAutoStopThreshold = 600.0  // 10 min
     @AppStorage("aiCleanupEnabled") private var aiCleanupEnabled = false
     @AppStorage("dictationStyleConfigured") private var dictationStyleConfigured = false
     @AppStorage("dictationAddPunctuation") private var dictationAddPunctuation = true
@@ -192,6 +201,67 @@ struct GeneralSettingsTab: View {
                             }
                             .toggleStyle(.checkbox)
                             .padding(.leading, 16)
+                        }
+                    }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    Toggle("Crop long silences before transcription", isOn: $cropLongSilences)
+
+                    if cropLongSilences {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Remove silences longer than")
+                                    .foregroundColor(.secondary)
+                                TextField("", value: $silenceCropThreshold, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 70)
+                                Text("seconds")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.leading, 16)
+
+                            Text("Reduces file size and transcription costs for long recordings with breaks.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 16)
+                        }
+                    }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    Toggle("Auto-stop after extended silence", isOn: $autoStopOnSilence)
+
+                    if autoStopOnSilence {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Show warning after")
+                                    .foregroundColor(.secondary)
+                                TextField("", value: $silenceWarningThreshold, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 70)
+                                Text("seconds of silence")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.leading, 16)
+
+                            HStack {
+                                Text("Auto-stop after")
+                                    .foregroundColor(.secondary)
+                                TextField("", value: $silenceAutoStopThreshold, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(width: 70)
+                                Text("seconds of silence")
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.leading, 16)
+
+                            Text("Prevents recordings from running forever if you forget to stop. You can dismiss the warning to keep recording.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.leading, 16)
                         }
                     }
                 }
@@ -275,145 +345,142 @@ struct GeneralSettingsTab: View {
     }
 }
 
-// MARK: - API Tab
+// MARK: - API Keys Tab
+
+/// Status of an API key
+enum KeyStatus {
+    case unknown
+    case valid
+    case invalid
+    case notSet
+}
 
 struct APISettingsTab: View {
-    @State private var openAIKey: String = ""
-    @State private var showOpenAIKey = false
+    @State private var expandedProvider: TranscriptionProvider? = nil
+    @State private var providerKeys: [TranscriptionProvider: String] = [:]
+    @State private var providerStatuses: [TranscriptionProvider: KeyStatus] = [:]
+    @State private var showKeys: [TranscriptionProvider: Bool] = [:]
+
+    // Anthropic (for chat, separate from transcription)
     @State private var anthropicKey: String = ""
     @State private var showAnthropicKey = false
-    @State private var openAIStatus: KeyStatus = .unknown
     @State private var anthropicStatus: KeyStatus = .unknown
-    @State private var isValidating = false
-    @AppStorage("transcriptionModel") private var transcriptionModel = "gpt-4o-mini-transcribe"
-
-    enum KeyStatus {
-        case unknown
-        case valid
-        case invalid
-        case notSet
-    }
+    @State private var anthropicExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // OpenAI section
-            SettingsSection(title: "OpenAI") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("API Key")
-                            .frame(width: 80, alignment: .leading)
+        VStack(alignment: .leading, spacing: 20) {
+            // Header
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Transcription Providers")
+                    .font(.headline)
+                Text("Configure API keys for speech-to-text services")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
 
-                        HStack {
-                            if showOpenAIKey {
-                                TextField("sk-...", text: $openAIKey)
-                            } else {
-                                SecureField("sk-...", text: $openAIKey)
+            // Transcription providers list
+            VStack(spacing: 0) {
+                ForEach(TranscriptionProvider.allCases) { provider in
+                    ProviderRow(
+                        provider: provider,
+                        isExpanded: expandedProvider == provider,
+                        apiKey: Binding(
+                            get: { providerKeys[provider] ?? "" },
+                            set: { providerKeys[provider] = $0 }
+                        ),
+                        showKey: Binding(
+                            get: { showKeys[provider] ?? false },
+                            set: { showKeys[provider] = $0 }
+                        ),
+                        status: providerStatuses[provider] ?? .unknown,
+                        onToggleExpand: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                expandedProvider = expandedProvider == provider ? nil : provider
                             }
+                        },
+                        onSave: {
+                            saveKey(for: provider)
+                        },
+                        onDelete: {
+                            deleteKey(for: provider)
                         }
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+                    )
 
-                        Button(action: { showOpenAIKey.toggle() }) {
-                            Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
-                        }
-                        .buttonStyle(.borderless)
-
-                        Button("Save") {
-                            saveOpenAIKey()
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(openAIKey.isEmpty)
-                    }
-
-                    HStack {
-                        Spacer()
-                        KeyStatusIndicator(status: openAIStatus)
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Transcription model")
-                            .font(.subheadline)
-
-                        Picker("", selection: $transcriptionModel) {
-                            Text("gpt-4o-mini-transcribe ($0.003/min)")
-                                .tag("gpt-4o-mini-transcribe")
-                            Text("whisper-1 ($0.006/min)")
-                                .tag("whisper-1")
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.radioGroup)
+                    if provider != TranscriptionProvider.allCases.last {
+                        Divider()
+                            .padding(.leading, 44)
                     }
                 }
             }
+            .background(Color(.controlBackgroundColor).opacity(0.5))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            )
 
             // Anthropic section (for chat)
-            SettingsSection(title: "Anthropic (for chat)") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("API Key")
-                            .frame(width: 80, alignment: .leading)
-
-                        HStack {
-                            if showAnthropicKey {
-                                TextField("sk-ant-...", text: $anthropicKey)
-                            } else {
-                                SecureField("sk-ant-...", text: $anthropicKey)
+            SettingsSection(title: "Chat Provider") {
+                VStack(spacing: 0) {
+                    AnthropicProviderRow(
+                        isExpanded: anthropicExpanded,
+                        apiKey: $anthropicKey,
+                        showKey: $showAnthropicKey,
+                        status: anthropicStatus,
+                        onToggleExpand: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                anthropicExpanded.toggle()
                             }
-                        }
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-
-                        Button(action: { showAnthropicKey.toggle() }) {
-                            Image(systemName: showAnthropicKey ? "eye.slash" : "eye")
-                        }
-                        .buttonStyle(.borderless)
-
-                        Button("Save") {
-                            saveAnthropicKey()
-                        }
-                        .buttonStyle(.bordered)
-                        .disabled(anthropicKey.isEmpty)
-                    }
-
-                    HStack {
-                        Spacer()
-                        KeyStatusIndicator(status: anthropicStatus)
-                    }
+                        },
+                        onSave: saveAnthropicKey,
+                        onDelete: deleteAnthropicKey
+                    )
                 }
+                .background(Color(.controlBackgroundColor).opacity(0.5))
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                )
             }
 
             // Info box
             HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
+                Image(systemName: "lock.shield.fill")
+                    .foregroundColor(.green)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Your API keys are stored locally in your Mac's Keychain.")
                         .font(.caption)
-                    Text("They never leave your device.")
+                    Text("They never leave your device and are encrypted by macOS.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
             .padding(12)
-            .background(Color.blue.opacity(0.05))
+            .background(Color.green.opacity(0.05))
             .cornerRadius(8)
 
             Spacer()
         }
         .onAppear {
-            loadKeys()
+            loadAllKeys()
         }
     }
 
-    private func loadKeys() {
-        if let key = KeychainHelper.read(key: KeychainHelper.openAIKeyName), !key.isEmpty {
-            openAIKey = key
-            openAIStatus = .valid  // Assume valid if exists
-        } else {
-            openAIStatus = .notSet
+    private func loadAllKeys() {
+        // Load transcription provider keys
+        for provider in TranscriptionProvider.allCases {
+            if let key = KeychainHelper.readKey(for: provider), !key.isEmpty {
+                providerKeys[provider] = key
+                providerStatuses[provider] = .valid
+            } else {
+                providerStatuses[provider] = .notSet
+            }
+            showKeys[provider] = false
         }
 
-        if let key = KeychainHelper.read(key: "anthropic-api-key"), !key.isEmpty {
+        // Load Anthropic key
+        if let key = KeychainHelper.readAnthropicKey(), !key.isEmpty {
             anthropicKey = key
             anthropicStatus = .valid
         } else {
@@ -421,27 +488,267 @@ struct APISettingsTab: View {
         }
     }
 
-    private func saveOpenAIKey() {
-        if KeychainHelper.saveOpenAIKey(openAIKey) {
-            openAIStatus = .valid
-            Task {
-                let valid = await TranscriptionService.shared.validateAPIKey()
-                await MainActor.run {
-                    openAIStatus = valid ? .valid : .invalid
-                }
-            }
+    private func saveKey(for provider: TranscriptionProvider) {
+        guard let key = providerKeys[provider], !key.isEmpty else { return }
+        if KeychainHelper.saveKey(for: provider, key: key) {
+            providerStatuses[provider] = .valid
+        }
+    }
+
+    private func deleteKey(for provider: TranscriptionProvider) {
+        if KeychainHelper.deleteKey(for: provider) {
+            providerKeys[provider] = ""
+            providerStatuses[provider] = .notSet
         }
     }
 
     private func saveAnthropicKey() {
-        if KeychainHelper.save(key: "anthropic-api-key", value: anthropicKey) {
+        if KeychainHelper.saveAnthropicKey(anthropicKey) {
             anthropicStatus = .valid
+        }
+    }
+
+    private func deleteAnthropicKey() {
+        if KeychainHelper.deleteAnthropicKey() {
+            anthropicKey = ""
+            anthropicStatus = .notSet
         }
     }
 }
 
+// MARK: - Provider Row
+
+struct ProviderRow: View {
+    let provider: TranscriptionProvider
+    let isExpanded: Bool
+    @Binding var apiKey: String
+    @Binding var showKey: Bool
+    let status: KeyStatus
+    let onToggleExpand: () -> Void
+    let onSave: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header row (always visible)
+            Button(action: onToggleExpand) {
+                HStack(spacing: 12) {
+                    // Provider icon
+                    ZStack {
+                        Circle()
+                            .fill(provider.isRecommended ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.1))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: provider.icon)
+                            .font(.system(size: 14))
+                            .foregroundColor(provider.isRecommended ? .accentColor : .secondary)
+                    }
+
+                    // Provider name and description
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(provider.displayName)
+                                .font(.body.weight(.medium))
+                                .foregroundColor(.primary)
+                            if provider.isRecommended {
+                                Text("Recommended")
+                                    .font(.caption2.weight(.medium))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.accentColor)
+                                    .cornerRadius(4)
+                            }
+                        }
+                        Text(provider.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    // Status indicator
+                    KeyStatusIndicator(status: status)
+
+                    // Expand/collapse chevron
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            // Expanded content
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    // API key field
+                    HStack(spacing: 8) {
+                        Group {
+                            if showKey {
+                                TextField("Enter API key...", text: $apiKey)
+                            } else {
+                                SecureField("Enter API key...", text: $apiKey)
+                            }
+                        }
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+
+                        Button(action: { showKey.toggle() }) {
+                            Image(systemName: showKey ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.borderless)
+                        .help(showKey ? "Hide API key" : "Show API key")
+                    }
+
+                    // Action buttons
+                    HStack(spacing: 12) {
+                        Button("Save") {
+                            onSave()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(apiKey.isEmpty)
+
+                        if status == .valid {
+                            Button("Remove", role: .destructive) {
+                                onDelete()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Spacer()
+
+                        // Get API key link
+                        if let url = provider.apiKeyURL {
+                            Link(destination: url) {
+                                HStack(spacing: 4) {
+                                    Text("Get API key")
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.caption)
+                                }
+                                .font(.caption)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+                .padding(.leading, 44)  // Align with text
+            }
+        }
+    }
+}
+
+// MARK: - Anthropic Provider Row
+
+struct AnthropicProviderRow: View {
+    let isExpanded: Bool
+    @Binding var apiKey: String
+    @Binding var showKey: Bool
+    let status: KeyStatus
+    let onToggleExpand: () -> Void
+    let onSave: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header row
+            Button(action: onToggleExpand) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.orange.opacity(0.1))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.orange)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Anthropic Claude")
+                            .font(.body.weight(.medium))
+                            .foregroundColor(.primary)
+                        Text("Powers the AI chat feature for meeting Q&A")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    KeyStatusIndicator(status: status)
+
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        Group {
+                            if showKey {
+                                TextField("sk-ant-...", text: $apiKey)
+                            } else {
+                                SecureField("sk-ant-...", text: $apiKey)
+                            }
+                        }
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(.body, design: .monospaced))
+
+                        Button(action: { showKey.toggle() }) {
+                            Image(systemName: showKey ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+
+                    HStack(spacing: 12) {
+                        Button("Save") {
+                            onSave()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(apiKey.isEmpty)
+
+                        if status == .valid {
+                            Button("Remove", role: .destructive) {
+                                onDelete()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Spacer()
+
+                        Link(destination: URL(string: "https://console.anthropic.com/settings/keys")!) {
+                            HStack(spacing: 4) {
+                                Text("Get API key")
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .font(.caption)
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+                .padding(.leading, 44)
+            }
+        }
+    }
+}
+
+// MARK: - Key Status Indicator
+
 struct KeyStatusIndicator: View {
-    let status: APISettingsTab.KeyStatus
+    let status: KeyStatus
 
     var body: some View {
         HStack(spacing: 4) {
@@ -449,29 +756,227 @@ struct KeyStatusIndicator: View {
             case .valid:
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
-                Text("Connected")
+                Text("Configured")
                     .font(.caption)
                     .foregroundColor(.green)
             case .invalid:
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.red)
-                Text("Invalid key")
+                Text("Invalid")
                     .font(.caption)
                     .foregroundColor(.red)
             case .notSet:
                 Circle()
                     .fill(Color.secondary.opacity(0.3))
-                    .frame(width: 12, height: 12)
+                    .frame(width: 10, height: 10)
                 Text("Not set")
                     .font(.caption)
                     .foregroundColor(.secondary)
             case .unknown:
                 Circle()
                     .fill(Color.secondary.opacity(0.3))
-                    .frame(width: 12, height: 12)
+                    .frame(width: 10, height: 10)
             }
         }
     }
+}
+
+// MARK: - Models Tab
+
+struct ModelsSettingsTab: View {
+    @AppStorage("selectedTranscriptionModel") private var selectedModelId = "openai:gpt-4o-mini-transcribe"
+
+    /// All providers (configured ones shown first)
+    private var allProviders: [TranscriptionProvider] {
+        TranscriptionProvider.allCases
+    }
+
+    /// Check if any provider is configured
+    private var hasConfiguredProviders: Bool {
+        allProviders.contains { $0.isConfigured }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            if hasConfiguredProviders {
+                // Header info
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(.blue)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Select the model used for transcription.")
+                            .font(.caption)
+                        Text("Providers without API keys are shown grayed out.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(12)
+                .background(Color.blue.opacity(0.05))
+                .cornerRadius(8)
+
+                // Provider sections
+                ForEach(allProviders) { provider in
+                    ProviderModelSection(
+                        provider: provider,
+                        selectedModelId: $selectedModelId
+                    )
+                }
+            } else {
+                // No providers configured
+                VStack(spacing: 16) {
+                    Image(systemName: "key.slash")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+
+                    Text("No API Keys Configured")
+                        .font(.headline)
+
+                    Text("Configure API keys in the API tab to select a transcription model.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Go to API Settings") {
+                        // This would ideally switch tabs, but for now just show a hint
+                        NotificationCenter.default.post(name: .switchToAPITab, object: nil)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.vertical, 40)
+            }
+
+            Spacer()
+        }
+    }
+}
+
+/// A section showing models for a single provider
+struct ProviderModelSection: View {
+    let provider: TranscriptionProvider
+    @Binding var selectedModelId: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Provider header
+            HStack {
+                Image(systemName: provider.icon)
+                    .foregroundColor(provider.isConfigured ? .primary : .secondary)
+                Text(provider.displayName)
+                    .font(.headline)
+                    .foregroundColor(provider.isConfigured ? .primary : .secondary)
+
+                if provider.isRecommended && provider.isConfigured {
+                    Text("Recommended")
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.2))
+                        .foregroundColor(.accentColor)
+                        .cornerRadius(4)
+                }
+
+                Spacer()
+
+                // Limits info with tooltip
+                ProviderLimitsView(provider: provider)
+            }
+
+            // Models
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(provider.models) { model in
+                    ModelRadioRow(
+                        model: model,
+                        isSelected: selectedModelId == model.fullId,
+                        isEnabled: provider.isConfigured,
+                        onSelect: {
+                            selectedModelId = model.fullId
+                        }
+                    )
+                }
+            }
+            .padding(.leading, 24)
+            .opacity(provider.isConfigured ? 1.0 : 0.5)
+        }
+        .padding(.vertical, 8)
+    }
+}
+
+/// A single model radio button row
+struct ModelRadioRow: View {
+    let model: TranscriptionModelOption
+    let isSelected: Bool
+    let isEnabled: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: {
+            if isEnabled {
+                onSelect()
+            }
+        }) {
+            HStack {
+                // Radio button
+                ZStack {
+                    Circle()
+                        .stroke(isEnabled ? Color.accentColor : Color.secondary, lineWidth: 1.5)
+                        .frame(width: 16, height: 16)
+
+                    if isSelected {
+                        Circle()
+                            .fill(isEnabled ? Color.accentColor : Color.secondary)
+                            .frame(width: 8, height: 8)
+                    }
+                }
+
+                // Model name
+                Text(model.displayName)
+                    .foregroundColor(isEnabled ? .primary : .secondary)
+
+                Spacer()
+
+                // Price
+                Text(model.formattedCost)
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundColor(isEnabled ? .secondary : .secondary.opacity(0.5))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+    }
+}
+
+/// Shows provider limits with hover tooltip
+struct ProviderLimitsView: View {
+    let provider: TranscriptionProvider
+    @State private var isHovering = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "info.circle")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Text("Max: \(provider.maxFileSizeFormatted)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(isHovering ? Color.secondary.opacity(0.1) : Color.clear)
+        .cornerRadius(4)
+        .onHover { hovering in
+            isHovering = hovering
+        }
+        .help("Max file size: \(provider.maxFileSizeFormatted)\nMax duration: \(provider.maxDurationFormatted)")
+    }
+}
+
+// Notification for switching tabs
+extension Notification.Name {
+    static let switchToAPITab = Notification.Name("switchToAPITab")
 }
 
 // MARK: - Costs Tab
@@ -700,6 +1205,12 @@ struct SettingsSection<Content: View>: View {
 
 #Preview("About") {
     AboutSettingsTab()
+        .frame(width: 500)
+        .padding()
+}
+
+#Preview("Models") {
+    ModelsSettingsTab()
         .frame(width: 500)
         .padding()
 }

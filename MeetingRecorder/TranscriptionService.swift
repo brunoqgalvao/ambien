@@ -18,6 +18,8 @@ enum TranscriptionError: LocalizedError {
     case invalidResponse
     case serverError(Int, String)
     case fileTooLarge(Int64)
+    case fileTooLargeAfterCompression(originalMB: Int, estimatedMinutes: Int, provider: String)
+    case compressionFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -37,11 +39,15 @@ enum TranscriptionError: LocalizedError {
             return "Server error (\(code)): \(message)"
         case .fileTooLarge(let size):
             return "File too large (\(size / 1_000_000)MB). Maximum is 25MB."
+        case .fileTooLargeAfterCompression(let originalMB, let estimatedMinutes, let provider):
+            return "Recording is too long for \(provider) (~\(estimatedMinutes) minutes, \(originalMB)MB). Try using AssemblyAI or Gemini for longer recordings, or enable 'Crop silences' in settings."
+        case .compressionFailed(let reason):
+            return "Audio compression failed: \(reason)"
         }
     }
 }
 
-/// Model options for transcription
+/// Model options for transcription (legacy - use TranscriptionModelOption for new code)
 enum TranscriptionModel: String, CaseIterable {
     case gpt4oMiniTranscribe = "gpt-4o-mini-transcribe"
     case whisper1 = "whisper-1"
@@ -61,6 +67,8 @@ enum TranscriptionModel: String, CaseIterable {
         }
     }
 }
+
+// Note: TranscriptionProvider and TranscriptionModelOption are defined in KeychainHelper.swift
 
 /// Response from verbose_json format including duration
 struct TranscriptionResponse: Codable {
@@ -117,21 +125,90 @@ actor TranscriptionService {
             throw TranscriptionError.noAPIKey
         }
 
+        // Determine file to transcribe (may be cropped version)
+        var effectiveAudioPath = audioPath
+
+        // Check if silence cropping is enabled
+        let cropLongSilences = UserDefaults.standard.bool(forKey: "cropLongSilences")
+        let silenceCropThreshold = UserDefaults.standard.double(forKey: "silenceCropThreshold")
+
+        if cropLongSilences && silenceCropThreshold > 0 {
+            do {
+                let result = try await SilenceProcessor.shared.cropLongSilences(
+                    audioPath: audioPath,
+                    minSilenceDuration: silenceCropThreshold,
+                    keepDuration: 1.0
+                )
+
+                if result.silencesCropped > 0 {
+                    effectiveAudioPath = result.outputPath
+                    print("[SilenceProcessor] Cropped \(result.silencesCropped) silences, saved \(String(format: "%.1f", result.timeSaved / 60)) minutes")
+                }
+            } catch {
+                // Log error but continue with original file
+                print("[SilenceProcessor] Failed to crop silences: \(error.localizedDescription)")
+                print("[SilenceProcessor] Continuing with original file")
+            }
+        }
+
         // Verify file exists
-        let fileURL = URL(fileURLWithPath: audioPath)
-        guard FileManager.default.fileExists(atPath: audioPath) else {
-            throw TranscriptionError.fileNotFound(audioPath)
+        let fileURL = URL(fileURLWithPath: effectiveAudioPath)
+        guard FileManager.default.fileExists(atPath: effectiveAudioPath) else {
+            throw TranscriptionError.fileNotFound(effectiveAudioPath)
         }
 
-        // Check file size
-        let fileAttributes = try FileManager.default.attributesOfItem(atPath: audioPath)
-        let fileSize = fileAttributes[.size] as? Int64 ?? 0
+        // Check file size and compress if needed
+        var fileAttributes = try FileManager.default.attributesOfItem(atPath: effectiveAudioPath)
+        var fileSize = fileAttributes[.size] as? Int64 ?? 0
+
+        // If file is too large, try compression
+        if fileSize > maxFileSize {
+            print("[TranscriptionService] File size \(fileSize / 1_000_000)MB exceeds limit, attempting compression...")
+
+            do {
+                // Try compression with progressive levels up to aggressive
+                effectiveAudioPath = try await AudioCompressor.shared.compress(
+                    inputPath: effectiveAudioPath,
+                    targetSizeBytes: AudioCompressor.targetSizeBytes,
+                    maxLevel: .extreme  // Try up to extreme compression
+                )
+
+                // Re-check file size after compression
+                fileAttributes = try FileManager.default.attributesOfItem(atPath: effectiveAudioPath)
+                fileSize = fileAttributes[.size] as? Int64 ?? 0
+                print("[TranscriptionService] Compressed to \(fileSize / 1_000_000)MB")
+
+            } catch let error as AudioCompressionError {
+                switch error {
+                case .fileTooLargeAfterCompression(let originalMB, let estimatedMinutes, let provider):
+                    throw TranscriptionError.fileTooLargeAfterCompression(
+                        originalMB: originalMB,
+                        estimatedMinutes: estimatedMinutes,
+                        provider: provider
+                    )
+                default:
+                    throw TranscriptionError.compressionFailed(error.localizedDescription)
+                }
+            } catch {
+                throw TranscriptionError.compressionFailed(error.localizedDescription)
+            }
+        }
+
+        // Final size check (should pass after compression)
         guard fileSize <= maxFileSize else {
-            throw TranscriptionError.fileTooLarge(fileSize)
+            // Get duration for error message
+            let duration = await AudioCompressor.shared.getAudioDuration(filePath: effectiveAudioPath) ?? 0
+            let estimatedMinutes = Int(duration / 60)
+            throw TranscriptionError.fileTooLargeAfterCompression(
+                originalMB: Int(fileSize / 1_000_000),
+                estimatedMinutes: estimatedMinutes,
+                provider: "OpenAI"
+            )
         }
 
-        // Read audio data
-        let audioData = try Data(contentsOf: fileURL)
+        // Read audio data (use effectiveAudioPath which may be the compressed version)
+        let effectiveFileURL = URL(fileURLWithPath: effectiveAudioPath)
+        let audioData = try Data(contentsOf: effectiveFileURL)
 
         let selectedModel = model ?? defaultModel
 
@@ -145,8 +222,8 @@ actor TranscriptionService {
         // Build request body
         var body = Data()
 
-        // Determine file extension and MIME type
-        let fileExtension = fileURL.pathExtension.lowercased()
+        // Determine file extension and MIME type (use effectiveFileURL which may be compressed)
+        let fileExtension = effectiveFileURL.pathExtension.lowercased()
         let mimeType: String
         let filename: String
         switch fileExtension {

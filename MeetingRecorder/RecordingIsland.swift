@@ -71,9 +71,11 @@ class RecordingIslandController {
     static let shared = RecordingIslandController()
 
     private var window: NSPanel?
+    private var silenceWarningWindow: NSPanel?
     private var audioManager: AudioCaptureManager?
     private var hoverState: IslandHoverState?
     private var recordingObserver: AnyCancellable?
+    private var silenceWarningObserver: AnyCancellable?
 
     private init() {}
 
@@ -158,6 +160,18 @@ class RecordingIslandController {
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             panel.animator().alphaValue = 1
         }
+
+        // Observe silence warning state
+        silenceWarningObserver?.cancel()
+        silenceWarningObserver = audioManager.$silenceWarning
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] warning in
+                if warning != nil {
+                    self?.showSilenceWarningWindow()
+                } else {
+                    self?.hideSilenceWarningWindow()
+                }
+            }
     }
 
     func hide() {
@@ -165,6 +179,11 @@ class RecordingIslandController {
 
         recordingObserver?.cancel()
         recordingObserver = nil
+        silenceWarningObserver?.cancel()
+        silenceWarningObserver = nil
+
+        // Hide silence warning window too
+        hideSilenceWarningWindow()
 
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.15
@@ -177,6 +196,88 @@ class RecordingIslandController {
             self?.hoverState?.isHovered = false
             self?.hoverState = nil
         })
+    }
+
+    @MainActor
+    private func showSilenceWarningWindow() {
+        guard let audioManager = audioManager, silenceWarningWindow == nil else {
+            return
+        }
+
+        let hasNotch = NotchInfo.hasNotch
+
+        let content = SilenceWarningView(audioManager: audioManager) { [weak self] in
+            self?.hide()
+        }
+
+        let hostingView = NSHostingView(rootView: content)
+
+        let windowSize = NSSize(width: 220, height: 90)
+
+        let panel = NSPanel(
+            contentRect: NSRect(origin: .zero, size: windowSize),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.level = .statusBar + 1
+        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        panel.isMovableByWindowBackground = false
+        panel.hidesOnDeactivate = false
+
+        hostingView.frame = NSRect(origin: .zero, size: windowSize)
+        panel.contentView = hostingView
+
+        // Position below the recording island
+        positionSilenceWarningWindow(panel, hasNotch: hasNotch)
+
+        self.silenceWarningWindow = panel
+
+        // Animate in
+        panel.alphaValue = 0
+        panel.orderFront(nil)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().alphaValue = 1
+        }
+    }
+
+    private func hideSilenceWarningWindow() {
+        guard let panel = silenceWarningWindow else { return }
+
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.15
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            panel.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            panel.orderOut(nil)
+            self?.silenceWarningWindow = nil
+        })
+    }
+
+    private func positionSilenceWarningWindow(_ panel: NSPanel, hasNotch: Bool) {
+        guard let screen = NSScreen.main else { return }
+
+        let screenFrame = screen.frame
+        let windowWidth = panel.frame.width
+        let windowHeight = panel.frame.height
+
+        // Position centered horizontally, below the notch/recording island
+        let x = screenFrame.midX - windowWidth / 2
+        let y: CGFloat
+
+        if hasNotch {
+            y = screenFrame.maxY - NotchInfo.notchHeight - windowHeight - 8
+        } else {
+            y = screenFrame.maxY - 60 - 36 - windowHeight - 8
+        }
+
+        panel.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     private func positionWindow(_ panel: NSPanel, hasNotch: Bool) {
@@ -327,14 +428,7 @@ struct NotchWrapperView: View {
                 Spacer(minLength: 0)
             }
         )
-        .contentShape(
-            // Hit testing matches visible area
-            HStack(spacing: 0) {
-                Rectangle()
-                    .frame(width: visibleWidth, height: NotchInfo.notchHeight)
-                Spacer(minLength: 0)
-            }
-        )
+        .contentShape(Rectangle())
         .animation(.spring(response: 0.25, dampingFraction: 0.8), value: visibleWidth)
     }
 
@@ -473,6 +567,113 @@ struct FloatingPillView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - Silence Warning View
+// Shows warning when extended silence is detected during recording
+
+struct SilenceWarningView: View {
+    @ObservedObject var audioManager: AudioCaptureManager
+    let onStop: () -> Void
+
+    var body: some View {
+        if let warning = audioManager.silenceWarning {
+            VStack(spacing: 8) {
+                switch warning {
+                case .approaching(let secondsRemaining):
+                    HStack(spacing: 6) {
+                        Image(systemName: "speaker.slash.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.orange)
+
+                        Text("No audio detected")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+
+                    Text("Auto-stop in \(formatTime(secondsRemaining))")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.6))
+
+                    Button(action: dismissWarning) {
+                        Text("Keep Recording")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(Color.orange))
+                    }
+                    .buttonStyle(.plain)
+
+                case .imminent(let secondsRemaining):
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.red)
+
+                        Text("Auto-stopping in \(secondsRemaining)s")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+
+                    HStack(spacing: 8) {
+                        Button(action: dismissWarning) {
+                            Text("Keep Recording")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(Color.green))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: stopNow) {
+                            Text("Stop Now")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(Color.red))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(white: 0.15))
+                    .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+            )
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private func dismissWarning() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            audioManager.dismissSilenceWarning()
+        }
+    }
+
+    private func stopNow() {
+        Task { @MainActor in
+            defer { onStop() }
+            do {
+                _ = try await audioManager.stopRecording()
+            } catch {
+                print("[SilenceWarning] Stop error: \(error)")
+            }
+        }
+    }
+
+    private func formatTime(_ seconds: Int) -> String {
+        let minutes = seconds / 60
+        let secs = seconds % 60
+        if minutes > 0 {
+            return "\(minutes)m \(secs)s"
+        }
+        return "\(secs)s"
     }
 }
 

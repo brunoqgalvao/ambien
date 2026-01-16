@@ -107,7 +107,7 @@ class QuickRecordingStorage: ObservableObject {
             try dbQueue?.write { db in
                 try mutableRecording.insert(db)
             }
-            recordings.insert(mutableRecording, at: 0)
+            recordings.insert(recording, at: 0)
 
             // Prune old recordings (keep last 100)
             if recordings.count > 100 {

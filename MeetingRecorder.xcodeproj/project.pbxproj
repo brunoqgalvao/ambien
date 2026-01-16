@@ -48,6 +48,8 @@
 		1A00000000000000000000FE /* TemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00000000000000000000FF /* TemplatesView.swift */; };
 		1A0000000000000000000102 /* ParticipantService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000103 /* ParticipantService.swift */; };
 		1A0000000000000000000104 /* SpeakerLabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000105 /* SpeakerLabelingView.swift */; };
+		1A0000000000000000000106 /* AudioCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000107 /* AudioCompressor.swift */; };
+		1A0000000000000000000108 /* SilenceProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000109 /* SilenceProcessor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +95,8 @@
 		1A0000000000000000000101 /* DebugTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTools.swift; sourceTree = "<group>"; };
 		1A0000000000000000000103 /* ParticipantService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParticipantService.swift; sourceTree = "<group>"; };
 		1A0000000000000000000105 /* SpeakerLabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerLabelingView.swift; sourceTree = "<group>"; };
+		1A0000000000000000000107 /* AudioCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCompressor.swift; sourceTree = "<group>"; };
+		1A0000000000000000000109 /* SilenceProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -158,6 +162,8 @@
 				1A0000000000000000000101 /* DebugTools.swift */,
 				1A0000000000000000000103 /* ParticipantService.swift */,
 				1A0000000000000000000105 /* SpeakerLabelingView.swift */,
+				1A0000000000000000000107 /* AudioCompressor.swift */,
+				1A0000000000000000000109 /* SilenceProcessor.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -286,6 +292,8 @@
 				1A0000000000000000000100 /* DebugTools.swift in Sources */,
 				1A0000000000000000000102 /* ParticipantService.swift in Sources */,
 				1A0000000000000000000104 /* SpeakerLabelingView.swift in Sources */,
+				1A0000000000000000000106 /* AudioCompressor.swift in Sources */,
+				1A0000000000000000000108 /* SilenceProcessor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

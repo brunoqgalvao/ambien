@@ -96,6 +96,23 @@ struct Meeting: Identifiable, Codable, Equatable {
     /// True if this is a quick dictation (not a meeting recording)
     var isDictation: Bool
 
+    // MARK: - Amie Feature Parity Fields
+
+    /// Meeting subtitle/description (editable by user)
+    var description: String?
+
+    /// User's private notes (local-only, not sent to AI)
+    var privateNotes: String?
+
+    /// Detected or user-selected language for transcription
+    var language: String?
+
+    /// Track when meeting was last modified (for "Updated X ago" display)
+    var lastUpdated: Date?
+
+    /// Link to calendar event
+    var calendarEventId: String?
+
     // MARK: - Post-Processing Fields
 
     /// AI-generated summary (from selected template)
@@ -155,6 +172,13 @@ struct Meeting: Identifiable, Codable, Equatable {
         createdAt: Date = Date(),
         errorMessage: String? = nil,
         isDictation: Bool = false,
+        // Amie feature parity fields
+        description: String? = nil,
+        privateNotes: String? = nil,
+        language: String? = nil,
+        lastUpdated: Date? = nil,
+        calendarEventId: String? = nil,
+        // Post-processing fields
         summary: String? = nil,
         diarizedTranscript: String? = nil,
         processedSummaries: [ProcessedSummary]? = nil,
@@ -182,6 +206,13 @@ struct Meeting: Identifiable, Codable, Equatable {
         self.createdAt = createdAt
         self.errorMessage = errorMessage
         self.isDictation = isDictation
+        // Amie feature parity fields
+        self.description = description
+        self.privateNotes = privateNotes
+        self.language = language
+        self.lastUpdated = lastUpdated
+        self.calendarEventId = calendarEventId
+        // Post-processing fields
         self.summary = summary
         self.diarizedTranscript = diarizedTranscript
         self.processedSummaries = processedSummaries
@@ -273,6 +304,19 @@ struct Meeting: Identifiable, Codable, Equatable {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
         return formatter.string(from: startTime)
+    }
+
+    /// Relative time for last updated (e.g., "Updated 1 day ago")
+    var formattedLastUpdated: String? {
+        guard let lastUpdated = lastUpdated else { return nil }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return "Updated \(formatter.localizedString(for: lastUpdated, relativeTo: Date()))"
+    }
+
+    /// Update the lastUpdated timestamp - call whenever the meeting is modified
+    mutating func touch() {
+        lastUpdated = Date()
     }
 }
 
