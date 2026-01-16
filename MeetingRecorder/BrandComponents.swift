@@ -576,7 +576,8 @@ struct BrandListRow: View {
 
 // MARK: - Brand Status Badge
 
-/// Status indicator badge with icon - for meeting status, etc.
+/// Minimal status indicator - only shows for errors or in-progress states
+/// Ready/completed meetings show nothing (clean, minimal design)
 struct BrandStatusBadge: View {
     let status: Status
     var size: CGFloat = 32
@@ -587,37 +588,41 @@ struct BrandStatusBadge: View {
         case pending
         case ready
         case failed
-
-        var icon: String {
-            switch self {
-            case .recording: return "waveform"
-            case .transcribing: return "text.bubble"
-            case .pending: return "clock"
-            case .ready: return "checkmark"
-            case .failed: return "exclamationmark"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .recording: return .brandCoral
-            case .transcribing: return .brandViolet
-            case .pending: return .brandAmber
-            case .ready: return .brandMint
-            case .failed: return .brandCoral
-            }
-        }
     }
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(status.color.opacity(0.12))
-                .frame(width: size, height: size)
-
-            Image(systemName: status.icon)
-                .font(.system(size: size * 0.4, weight: .semibold))
-                .foregroundColor(status.color)
+        Group {
+            switch status {
+            case .recording:
+                // Recording pulse indicator
+                ZStack {
+                    Circle()
+                        .fill(Color.brandCoral.opacity(0.12))
+                        .frame(width: size, height: size)
+                    Circle()
+                        .fill(Color.brandCoral)
+                        .frame(width: size * 0.25, height: size * 0.25)
+                }
+            case .transcribing:
+                // Simple spinner
+                ProgressView()
+                    .scaleEffect(size / 40)
+                    .frame(width: size, height: size)
+            case .failed:
+                // Error alert - the ONLY indicator for completed meetings with issues
+                ZStack {
+                    Circle()
+                        .fill(Color.brandCoral.opacity(0.12))
+                        .frame(width: size, height: size)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: size * 0.45, weight: .semibold))
+                        .foregroundColor(.brandCoral)
+                }
+            case .pending, .ready:
+                // No indicator - clean and minimal
+                Color.clear
+                    .frame(width: size, height: size)
+            }
         }
     }
 }

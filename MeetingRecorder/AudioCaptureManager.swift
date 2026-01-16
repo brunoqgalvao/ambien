@@ -120,9 +120,14 @@ class AudioCaptureManager: NSObject, ObservableObject {
     private let targetChannels: UInt32 = 1
     private let targetBitRate: Int = 32000  // 32kbps for maximum compression while maintaining speech quality
 
-    // Buffers for mixing
-    private var systemAudioBuffer: [CMSampleBuffer] = []
-    private var micAudioBuffer: [CMSampleBuffer] = []
+    // Audio mixing - we'll mix mic into system audio
+    private var micMixer: AVAudioMixerNode?
+    private var micConverter: AVAudioConverter?
+    private var pendingMicSamples: [Float] = []
+    private let micSamplesLock = NSLock()
+
+    // Target format for mixing (matches system audio output)
+    private var mixFormat: AVAudioFormat?
 
     // Track first sample timestamp for proper session timing
     private var firstSampleTime: CMTime?
@@ -249,7 +254,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
             // Start duration timer
             startDurationTimer()
 
-            print("[AudioCapture] Recording started: \(outputURL.path)")
+            logInfo("[AudioCapture] Recording started: \(outputURL.path)")
 
         } catch {
             await cleanupResources()
@@ -303,8 +308,8 @@ class AudioCaptureManager: NSObject, ObservableObject {
             try await DatabaseManager.shared.update(meeting)
             currentMeeting = meeting
 
-            print("[AudioCapture] Recording stopped. Duration: \(String(format: "%.1f", duration))s")
-            print("[AudioCapture] Saved to: \(outputURL.path)")
+            logInfo("[AudioCapture] Recording stopped. Duration: \(String(format: "%.1f", duration))s")
+            logInfo("[AudioCapture] Saved to: \(outputURL.path)")
 
             // Trigger transcription automatically
             if autoTranscribe {
@@ -359,7 +364,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
                 transcriptionProgress = "Generating title..."
                 if let generatedTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
                     updatedMeeting.title = generatedTitle
-                    print("[AudioCapture] Auto-generated title: \(generatedTitle)")
+                    logInfo("[AudioCapture] Auto-generated title: \(generatedTitle)")
                 }
             }
 
@@ -367,9 +372,9 @@ class AudioCaptureManager: NSObject, ObservableObject {
             currentMeeting = updatedMeeting
             transcriptionProgress = nil
 
-            print("[AudioCapture] Transcription complete. Cost: \(result.costCents) cents")
+            logInfo("[AudioCapture] Transcription complete. Cost: \(result.costCents) cents")
             if let speakers = result.speakerCount, speakers > 0 {
-                print("[AudioCapture] Detected \(speakers) speakers")
+                logInfo("[AudioCapture] Detected \(speakers) speakers")
             }
 
             // Hide transcribing island
@@ -397,15 +402,23 @@ class AudioCaptureManager: NSObject, ObservableObject {
             }
 
         } catch {
-            print("[AudioCapture] Transcription failed: \(error)")
+            logError("[AudioCapture] Transcription failed: \(error)")
+
+            // Get the best error message - prefer errorDescription for LocalizedError
+            let errorMsg: String
+            if let localizedError = error as? LocalizedError, let desc = localizedError.errorDescription {
+                errorMsg = desc
+            } else {
+                errorMsg = error.localizedDescription
+            }
 
             updatedMeeting.status = .failed
-            updatedMeeting.errorMessage = error.localizedDescription
+            updatedMeeting.errorMessage = errorMsg
 
             try? await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
             transcriptionProgress = nil
-            errorMessage = error.localizedDescription
+            errorMessage = errorMsg
 
             // Hide transcribing island
             TranscribingIslandController.shared.hide()
@@ -522,7 +535,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
             throw AudioCaptureError.noAudioSources
         }
 
-        print("[AudioCapture] Found display: \(display.width)x\(display.height)")
+        logDebug("[AudioCapture] Found display: \(display.width)x\(display.height)")
 
         // Exclude the current app to avoid capturing its own audio.
         let excludedApps = content.applications.filter { $0.bundleIdentifier == Bundle.main.bundleIdentifier }
@@ -568,9 +581,9 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
         do {
             try await currentStream.startCapture()
-            print("[AudioCapture] System audio capture started successfully")
+            logInfo("[AudioCapture] System audio capture started successfully")
         } catch {
-            print("[AudioCapture] startCapture failed: \(error)")
+            logError("[AudioCapture] startCapture failed: \(error)")
             throw AudioCaptureError.streamFailed(error)
         }
     }
@@ -582,14 +595,95 @@ class AudioCaptureManager: NSObject, ObservableObject {
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
+        // Create target format for mixing - 48kHz stereo float to match system audio
+        // ScreenCaptureKit delivers 48kHz stereo, so we convert mic to match
+        guard let targetFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: 48000,
+            channels: 2,
+            interleaved: false
+        ) else {
+            logError("[AudioCapture] Failed to create target audio format")
+            throw AudioCaptureError.writerFailed(NSError(domain: "AudioCapture", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio format"]))
+        }
+        mixFormat = targetFormat
+
+        // Create converter from mic format to target format
+        if inputFormat.sampleRate != targetFormat.sampleRate || inputFormat.channelCount != targetFormat.channelCount {
+            micConverter = AVAudioConverter(from: inputFormat, to: targetFormat)
+            logDebug("[AudioCapture] Mic converter created: \(inputFormat.sampleRate)Hz \(inputFormat.channelCount)ch → \(targetFormat.sampleRate)Hz \(targetFormat.channelCount)ch")
+        }
+
         // Install tap for mic audio
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, time in
-            Task { @MainActor in
-                self?.handleMicBuffer(buffer, time: time)
-            }
+            self?.processMicBuffer(buffer)
         }
 
         try engine.start()
+        logInfo("[AudioCapture] Microphone capture started: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount) channels")
+    }
+
+    /// Process mic buffer and queue samples for mixing
+    private func processMicBuffer(_ buffer: AVAudioPCMBuffer) {
+        guard isRecording else { return }
+
+        var samplesToQueue: [Float] = []
+
+        // Convert if needed
+        if let converter = micConverter, let targetFormat = mixFormat {
+            // Create output buffer
+            let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * targetFormat.sampleRate / buffer.format.sampleRate) + 100
+            guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity) else {
+                return
+            }
+
+            var error: NSError?
+            let inputBlock: AVAudioConverterInputBlock = { _, outStatus in
+                outStatus.pointee = .haveData
+                return buffer
+            }
+
+            let status = converter.convert(to: convertedBuffer, error: &error, withInputFrom: inputBlock)
+            if status == .error {
+                logWarning("[AudioCapture] Mic conversion error: \(error?.localizedDescription ?? "unknown")")
+                return
+            }
+
+            // Extract float samples from converted buffer (stereo interleaved for mixing)
+            if let channelData = convertedBuffer.floatChannelData {
+                let frameCount = Int(convertedBuffer.frameLength)
+                for i in 0..<frameCount {
+                    // Average channels or duplicate mono to stereo
+                    let left = channelData[0][i]
+                    let right = convertedBuffer.format.channelCount > 1 ? channelData[1][i] : left
+                    samplesToQueue.append(left)
+                    samplesToQueue.append(right)
+                }
+            }
+        } else {
+            // No conversion needed, extract samples directly
+            if let channelData = buffer.floatChannelData {
+                let frameCount = Int(buffer.frameLength)
+                for i in 0..<frameCount {
+                    let left = channelData[0][i]
+                    let right = buffer.format.channelCount > 1 ? channelData[1][i] : left
+                    samplesToQueue.append(left)
+                    samplesToQueue.append(right)
+                }
+            }
+        }
+
+        // Queue samples for mixing
+        if !samplesToQueue.isEmpty {
+            micSamplesLock.lock()
+            pendingMicSamples.append(contentsOf: samplesToQueue)
+            // Limit buffer size to ~1 second of audio (48000 * 2 channels)
+            let maxSamples = 48000 * 2
+            if pendingMicSamples.count > maxSamples {
+                pendingMicSamples.removeFirst(pendingMicSamples.count - maxSamples)
+            }
+            micSamplesLock.unlock()
+        }
     }
 
     private func handleSystemAudioBuffer(_ sampleBuffer: CMSampleBuffer) {
@@ -606,7 +700,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
                 writer.startSession(atSourceTime: presentationTime)
                 firstSampleTime = presentationTime
                 sessionStarted = true
-                print("[AudioCapture] Session started at time: \(presentationTime.seconds)")
+                logDebug("[AudioCapture] Session started at time: \(presentationTime.seconds)")
             }
         }
 
@@ -620,13 +714,70 @@ class AudioCaptureManager: NSObject, ObservableObject {
             handleSilenceDetection(powerLevel: powerLevel)
         }
 
-        // Append the sample buffer
-        if !input.append(sampleBuffer) {
-            print("[AudioCapture] Failed to append sample buffer, writer status: \(writer.status.rawValue)")
+        // Mix mic audio into system audio
+        let mixedBuffer = mixMicIntoSystemAudio(sampleBuffer)
+
+        // Append the (possibly mixed) sample buffer
+        let bufferToWrite = mixedBuffer ?? sampleBuffer
+        if !input.append(bufferToWrite) {
+            logError("[AudioCapture] Failed to append sample buffer, writer status: \(writer.status.rawValue)")
             if let error = writer.error {
-                print("[AudioCapture] Writer error: \(error)")
+                logError("[AudioCapture] Writer error: \(error)")
             }
         }
+    }
+
+    /// Mix pending mic samples into the system audio buffer
+    private func mixMicIntoSystemAudio(_ systemBuffer: CMSampleBuffer) -> CMSampleBuffer? {
+        // Get the audio buffer list from the system sample buffer
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(systemBuffer) else {
+            return nil
+        }
+
+        var length = 0
+        var dataPointer: UnsafeMutablePointer<Int8>?
+        let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &length, dataPointerOut: &dataPointer)
+
+        guard status == kCMBlockBufferNoErr, let data = dataPointer, length > 0 else {
+            return nil
+        }
+
+        // ScreenCaptureKit delivers Float32 samples (4 bytes per sample)
+        // Stereo = 2 channels, so each frame is 8 bytes
+        let bytesPerSample = 4
+        let channels = 2
+        let bytesPerFrame = bytesPerSample * channels
+        let frameCount = length / bytesPerFrame
+
+        // Get mic samples to mix
+        micSamplesLock.lock()
+        let samplesNeeded = frameCount * channels  // stereo samples
+        let micSamples: [Float]
+        if pendingMicSamples.count >= samplesNeeded {
+            micSamples = Array(pendingMicSamples.prefix(samplesNeeded))
+            pendingMicSamples.removeFirst(samplesNeeded)
+        } else {
+            // Pad with zeros if we don't have enough mic samples
+            micSamples = pendingMicSamples + Array(repeating: 0.0, count: samplesNeeded - pendingMicSamples.count)
+            pendingMicSamples.removeAll()
+        }
+        micSamplesLock.unlock()
+
+        // Mix: add mic samples to system audio samples
+        // Mic level can be adjusted here (0.8 = 80% volume)
+        let micLevel: Float = 0.8
+
+        let floatPointer = UnsafeMutableRawPointer(data).assumingMemoryBound(to: Float.self)
+        let sampleCount = length / bytesPerSample
+
+        for i in 0..<min(sampleCount, micSamples.count) {
+            // Add mic sample to system sample, clamp to prevent clipping
+            let mixed = floatPointer[i] + (micSamples[i] * micLevel)
+            floatPointer[i] = max(-1.0, min(1.0, mixed))
+        }
+
+        // Return nil to indicate we modified the buffer in place
+        return nil
     }
 
     /// Calculate RMS power level from audio sample buffer in dB
@@ -683,11 +834,6 @@ class AudioCaptureManager: NSObject, ObservableObject {
         }
     }
 
-    private func handleMicBuffer(_ buffer: AVAudioPCMBuffer, time: AVAudioTime) {
-        // For now, we're only writing system audio to keep the implementation simple
-        // In a full implementation, we'd mix mic + system audio
-        // The mic tap is here for validation and future mixing
-    }
 
     private func startDurationTimer() {
         durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
@@ -728,7 +874,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
         if currentSilenceDuration >= autoStopThreshold {
             // Auto-stop the recording
-            print("[AudioCapture] Auto-stopping due to \(Int(currentSilenceDuration))s of silence")
+            logWarning("[AudioCapture] Auto-stopping due to \(Int(currentSilenceDuration))s of silence")
             Task { @MainActor in
                 do {
                     _ = try await self.stopRecording()
@@ -737,7 +883,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
                         message: "No audio detected for \(Int(autoStopThreshold / 60)) minutes"
                     )
                 } catch {
-                    print("[AudioCapture] Failed to auto-stop: \(error)")
+                    logError("[AudioCapture] Failed to auto-stop: \(error)")
                 }
             }
         } else if currentSilenceDuration >= imminentThreshold {
@@ -768,7 +914,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
         silenceWarningDismissedForThisRecording = true
         silenceStartTime = nil
         currentSilenceDuration = 0
-        print("[AudioCapture] Silence warning dismissed for this recording")
+        logDebug("[AudioCapture] Silence warning dismissed for this recording")
     }
 
     /// Reset silence tracking (called when recording starts)
@@ -796,6 +942,14 @@ class AudioCaptureManager: NSObject, ObservableObject {
         micAudioInput = nil
         firstSampleTime = nil
         sessionStarted = false
+
+        // Clean up mic mixing resources
+        micMixer = nil
+        micConverter = nil
+        mixFormat = nil
+        micSamplesLock.lock()
+        pendingMicSamples.removeAll()
+        micSamplesLock.unlock()
 
         // Clean up silence monitoring
         silenceMonitorTimer?.invalidate()
@@ -1136,15 +1290,23 @@ class MicRecorderWithTranscription: ObservableObject {
             status = nil
 
         } catch {
-            print("[MicRecorderWithTranscription] Transcription failed: \(error)")
+            logError("[MicRecorderWithTranscription] Transcription failed: \(error)")
+
+            // Get the best error message - prefer errorDescription for LocalizedError
+            let errorMsg: String
+            if let localizedError = error as? LocalizedError, let desc = localizedError.errorDescription {
+                errorMsg = desc
+            } else {
+                errorMsg = error.localizedDescription
+            }
 
             updatedMeeting.status = .failed
-            updatedMeeting.errorMessage = error.localizedDescription
+            updatedMeeting.errorMessage = errorMsg
 
             try? await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
             status = nil
-            errorMessage = error.localizedDescription
+            errorMessage = errorMsg
 
             // Hide transcribing island
             TranscribingIslandController.shared.hide()
@@ -1152,7 +1314,7 @@ class MicRecorderWithTranscription: ObservableObject {
             // Show error notification with Retry action
             ToastController.shared.showError(
                 "Transcription failed",
-                message: error.localizedDescription,
+                message: errorMsg,
                 action: ToastAction(title: "Retry") { [weak self] in
                     Task { @MainActor in
                         await self?.retryTranscription(meetingId: meetingId)

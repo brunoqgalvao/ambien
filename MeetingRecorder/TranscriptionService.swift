@@ -13,6 +13,7 @@ enum TranscriptionError: LocalizedError {
     case noAPIKey
     case invalidAPIKey
     case networkError(Error)
+    case timeout
     case quotaExceeded
     case fileNotFound(String)
     case invalidResponse
@@ -28,14 +29,39 @@ enum TranscriptionError: LocalizedError {
         case .invalidAPIKey:
             return "Invalid API key. Please check your OpenAI API key."
         case .networkError(let error):
+            // Provide more helpful messages for common network errors
+            let nsError = error as NSError
+            if nsError.domain == NSURLErrorDomain {
+                switch nsError.code {
+                case NSURLErrorTimedOut:
+                    return "Request timed out. The file may be too large or your connection is slow. Try again or enable 'Crop silences' in settings."
+                case NSURLErrorNotConnectedToInternet:
+                    return "No internet connection. Please check your network and try again."
+                case NSURLErrorNetworkConnectionLost:
+                    return "Network connection was lost during upload. Please try again."
+                case NSURLErrorCannotConnectToHost:
+                    return "Cannot connect to OpenAI servers. Please try again later."
+                default:
+                    break
+                }
+            }
             return "Network error: \(error.localizedDescription)"
+        case .timeout:
+            return "Request timed out. The file may be too large or your connection is slow. Try enabling 'Crop silences' in settings to reduce file size."
         case .quotaExceeded:
             return "API quota exceeded. Please check your OpenAI billing."
         case .fileNotFound(let path):
             return "Audio file not found: \(path)"
         case .invalidResponse:
-            return "Invalid response from OpenAI API"
+            return "Invalid response from OpenAI API. Please try again."
         case .serverError(let code, let message):
+            // Parse common OpenAI error messages
+            if message.contains("rate_limit") || code == 429 {
+                return "Rate limit exceeded. Please wait a moment and try again."
+            }
+            if message.contains("insufficient_quota") {
+                return "Your OpenAI account has run out of credits. Please add payment method."
+            }
             return "Server error (\(code)): \(message)"
         case .fileTooLarge(let size):
             return "File too large (\(size / 1_000_000)MB). Maximum is 25MB."
@@ -142,12 +168,12 @@ actor TranscriptionService {
 
                 if result.silencesCropped > 0 {
                     effectiveAudioPath = result.outputPath
-                    print("[SilenceProcessor] Cropped \(result.silencesCropped) silences, saved \(String(format: "%.1f", result.timeSaved / 60)) minutes")
+                    logInfo("[SilenceProcessor] Cropped \(result.silencesCropped) silences, saved \(String(format: "%.1f", result.timeSaved / 60)) minutes")
                 }
             } catch {
                 // Log error but continue with original file
-                print("[SilenceProcessor] Failed to crop silences: \(error.localizedDescription)")
-                print("[SilenceProcessor] Continuing with original file")
+                logWarning("[SilenceProcessor] Failed to crop silences: \(error.localizedDescription)")
+                logWarning("[SilenceProcessor] Continuing with original file")
             }
         }
 
@@ -163,7 +189,7 @@ actor TranscriptionService {
 
         // If file is too large, try compression
         if fileSize > maxFileSize {
-            print("[TranscriptionService] File size \(fileSize / 1_000_000)MB exceeds limit, attempting compression...")
+            logInfo("[TranscriptionService] File size \(fileSize / 1_000_000)MB exceeds limit, attempting compression...")
 
             do {
                 // Try compression with progressive levels up to aggressive
@@ -176,7 +202,7 @@ actor TranscriptionService {
                 // Re-check file size after compression
                 fileAttributes = try FileManager.default.attributesOfItem(atPath: effectiveAudioPath)
                 fileSize = fileAttributes[.size] as? Int64 ?? 0
-                print("[TranscriptionService] Compressed to \(fileSize / 1_000_000)MB")
+                logInfo("[TranscriptionService] Compressed to \(fileSize / 1_000_000)MB")
 
             } catch let error as AudioCompressionError {
                 switch error {
@@ -263,8 +289,24 @@ actor TranscriptionService {
 
         request.httpBody = body
 
-        // Make request
-        let (data, response) = try await URLSession.shared.data(for: request)
+        // Set timeout based on file size (larger files need more time for upload + processing)
+        // OpenAI can take 1-2 minutes to process per hour of audio
+        // Base: 120 seconds + 30 seconds per MB (16MB file = 120 + 480 = 600s = 10 min)
+        let fileSizeMB = Double(fileSize) / 1_000_000.0
+        let timeoutSeconds = 120.0 + (fileSizeMB * 30.0)
+        request.timeoutInterval = max(180, min(timeoutSeconds, 900))  // Between 3-15 minutes
+        logInfo("[TranscriptionService] Request timeout set to \(Int(request.timeoutInterval))s for \(String(format: "%.1f", fileSizeMB))MB file")
+
+        // Make request with better error handling
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            // Wrap network errors with better descriptions
+            logError("[TranscriptionService] Network request failed: \(error)")
+            throw TranscriptionError.networkError(error)
+        }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw TranscriptionError.invalidResponse
@@ -284,8 +326,8 @@ actor TranscriptionService {
         let durationMinutes = duration / 60.0
         var costCents = Int(ceil(durationMinutes * selectedModel.costPerMinuteCents))
 
-        print("[TranscriptionService] Transcribed \(String(format: "%.1f", duration))s using \(selectedModel.displayName)")
-        print("[TranscriptionService] Cost: \(costCents) cents (\(String(format: "%.2f", durationMinutes)) minutes)")
+        logInfo("[TranscriptionService] Transcribed \(String(format: "%.1f", duration))s using \(selectedModel.displayName)")
+        logInfo("[TranscriptionService] Cost: \(costCents) cents (\(String(format: "%.2f", durationMinutes)) minutes)")
 
         // Perform speaker diarization if enabled
         let shouldDiarize = performDiarization ?? enableDiarization
@@ -293,7 +335,7 @@ actor TranscriptionService {
         var speakerCount: Int? = nil
 
         if shouldDiarize && !transcriptionResponse.text.isEmpty {
-            print("[TranscriptionService] Performing speaker diarization...")
+            logDebug("[TranscriptionService] Performing speaker diarization...")
             let diarizationResult = await performSpeakerDiarization(
                 transcript: transcriptionResponse.text,
                 segments: transcriptionResponse.segments
@@ -301,7 +343,7 @@ actor TranscriptionService {
             diarizationSegments = diarizationResult.segments
             speakerCount = diarizationResult.speakerCount
             costCents += diarizationResult.costCents
-            print("[TranscriptionService] Diarization complete: \(speakerCount ?? 0) speakers detected")
+            logInfo("[TranscriptionService] Diarization complete: \(speakerCount ?? 0) speakers detected")
         }
 
         return TranscriptionResult(
@@ -453,7 +495,7 @@ actor TranscriptionService {
 
         let latency = CFAbsoluteTimeGetCurrent() - startTime
 
-        print("[TranscriptionService] Dictation transcribed in \(String(format: "%.2f", latency))s")
+        logDebug("[TranscriptionService] Dictation transcribed in \(String(format: "%.2f", latency))s")
 
         return DictationResult(text: text, latency: latency)
     }
@@ -464,8 +506,8 @@ actor TranscriptionService {
         let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
 
         // Log the full error for debugging
-        print("[TranscriptionService] HTTP Error \(statusCode):")
-        print("[TranscriptionService] Response: \(errorMessage)")
+        logError("[TranscriptionService] HTTP Error \(statusCode):")
+        logError("[TranscriptionService] Response: \(errorMessage)")
 
         switch statusCode {
         case 401:
@@ -538,11 +580,11 @@ actor TranscriptionService {
                let message = firstChoice["message"] as? [String: Any],
                let content = message["content"] as? String {
                 let title = content.trimmingCharacters(in: .whitespacesAndNewlines)
-                print("[TranscriptionService] Generated title: \(title)")
+                logInfo("[TranscriptionService] Generated title: \(title)")
                 return title.isEmpty ? nil : title
             }
         } catch {
-            print("[TranscriptionService] Title generation failed: \(error)")
+            logWarning("[TranscriptionService] Title generation failed: \(error)")
         }
 
         return nil
@@ -618,7 +660,7 @@ actor TranscriptionService {
 
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                print("[TranscriptionService] Diarization API error")
+                logWarning("[TranscriptionService] Diarization API error")
                 return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
             }
 
@@ -646,7 +688,7 @@ actor TranscriptionService {
                 )
             }
         } catch {
-            print("[TranscriptionService] Diarization failed: \(error)")
+            logError("[TranscriptionService] Diarization failed: \(error)")
         }
 
         return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
@@ -674,7 +716,7 @@ actor TranscriptionService {
                 return parseSegmentsArray(array)
             }
         } catch {
-            print("[TranscriptionService] Failed to parse diarization JSON: \(error)")
+            logWarning("[TranscriptionService] Failed to parse diarization JSON: \(error)")
         }
 
         return []

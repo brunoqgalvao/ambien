@@ -384,6 +384,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup debug tools (Cmd+Shift+D to toggle frame inspection)
         #if DEBUG
         DebugKeyboardHandler.shared.setup()
+
+        // Start test API server if enabled
+        if TestAPIServer.shouldAutoStart {
+            TestAPIServer.shared.start()
+        }
         #endif
 
         setupStatusItem()

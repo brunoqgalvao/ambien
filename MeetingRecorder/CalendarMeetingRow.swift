@@ -200,63 +200,44 @@ struct QuickActionButton: View {
 
 // MARK: - Status Badge for Calendar
 
+/// Only shows an indicator for errors or in-progress states
+/// Ready meetings show nothing (clean, minimal)
 struct CalendarStatusBadge: View {
     let status: MeetingStatus
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(backgroundColor)
-                .frame(width: 32, height: 32)
-
-            Image(systemName: iconName)
-                .font(.caption.weight(.semibold))
-                .foregroundColor(foregroundColor)
-        }
-    }
-
-    private var iconName: String {
-        switch status {
-        case .recording:
-            return "record.circle.fill"
-        case .pendingTranscription:
-            return "clock"
-        case .transcribing:
-            return "waveform"
-        case .ready:
-            return "checkmark"
-        case .failed:
-            return "exclamationmark"
-        }
-    }
-
-    private var backgroundColor: Color {
-        switch status {
-        case .recording:
-            return Color.red.opacity(0.15)
-        case .pendingTranscription:
-            return Color.orange.opacity(0.15)
-        case .transcribing:
-            return Color.blue.opacity(0.15)
-        case .ready:
-            return Color.green.opacity(0.15)
-        case .failed:
-            return Color.red.opacity(0.15)
-        }
-    }
-
-    private var foregroundColor: Color {
-        switch status {
-        case .recording:
-            return .red
-        case .pendingTranscription:
-            return .orange
-        case .transcribing:
-            return .blue
-        case .ready:
-            return .green
-        case .failed:
-            return .red
+        Group {
+            switch status {
+            case .recording:
+                // Recording pulse indicator
+                ZStack {
+                    Circle()
+                        .fill(Color.red.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 8, height: 8)
+                }
+            case .transcribing:
+                // Simple spinner for transcribing
+                ProgressView()
+                    .scaleEffect(0.7)
+                    .frame(width: 32, height: 32)
+            case .failed:
+                // Error ribbon/alert - the ONLY colored indicator for completed meetings
+                ZStack {
+                    Circle()
+                        .fill(Color.red.opacity(0.12))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.red)
+                }
+            case .pendingTranscription, .ready:
+                // No indicator - clean and minimal
+                Color.clear
+                    .frame(width: 32, height: 32)
+            }
         }
     }
 }

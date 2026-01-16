@@ -740,10 +740,8 @@ struct MainWindowMeetingRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                // Status indicator
-                Circle()
-                    .fill(statusColor)
-                    .frame(width: 8, height: 8)
+                // Status indicator - only show for errors or in-progress
+                statusIndicator
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(meeting.title)
@@ -802,12 +800,26 @@ struct MainWindowMeetingRow: View {
         }
     }
 
-    private var statusColor: Color {
+    /// Minimal status indicator - only shows for errors or in-progress
+    @ViewBuilder
+    private var statusIndicator: some View {
         switch meeting.status {
-        case .ready: return .green
-        case .transcribing, .pendingTranscription: return .orange
-        case .recording: return .red
-        case .failed: return .red.opacity(0.6)
+        case .recording:
+            Circle()
+                .fill(Color.red)
+                .frame(width: 8, height: 8)
+        case .transcribing, .pendingTranscription:
+            ProgressView()
+                .scaleEffect(0.4)
+                .frame(width: 8, height: 8)
+        case .failed:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 10))
+                .foregroundColor(.red)
+        case .ready:
+            // No indicator for ready meetings - clean and minimal
+            Color.clear
+                .frame(width: 8, height: 8)
         }
     }
 

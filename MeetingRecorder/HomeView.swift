@@ -270,16 +270,8 @@ struct HomeMeetingRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Icon/Status
-                ZStack {
-                    Circle()
-                        .fill(statusColor.opacity(0.1))
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: meeting.sourceApp == "Dictation" ? "mic.fill" : "waveform")
-                        .font(.system(size: 14))
-                        .foregroundColor(statusColor)
-                }
+                // Icon/Status - minimal: only show error state
+                statusIndicator
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(meeting.title)
@@ -324,12 +316,45 @@ struct HomeMeetingRow: View {
         .buttonStyle(.plain)
     }
     
-    private var statusColor: Color {
+    /// Minimal status indicator - only shows for errors or in-progress
+    @ViewBuilder
+    private var statusIndicator: some View {
         switch meeting.status {
-        case .ready: return .brandMint
-        case .transcribing, .pendingTranscription: return .brandViolet
-        case .recording: return .brandCoral
-        case .failed: return .brandCoralPop
+        case .recording:
+            // Recording pulse
+            ZStack {
+                Circle()
+                    .fill(Color.brandCoral.opacity(0.1))
+                    .frame(width: 40, height: 40)
+                Circle()
+                    .fill(Color.brandCoral)
+                    .frame(width: 10, height: 10)
+            }
+        case .transcribing, .pendingTranscription:
+            // Spinner for in-progress
+            ProgressView()
+                .scaleEffect(0.8)
+                .frame(width: 40, height: 40)
+        case .failed:
+            // Error indicator
+            ZStack {
+                Circle()
+                    .fill(Color.brandCoral.opacity(0.1))
+                    .frame(width: 40, height: 40)
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.brandCoral)
+            }
+        case .ready:
+            // Clean neutral icon - no status color
+            ZStack {
+                Circle()
+                    .fill(Color.brandCreamDark.opacity(0.5))
+                    .frame(width: 40, height: 40)
+                Image(systemName: meeting.sourceApp == "Dictation" ? "mic.fill" : "waveform")
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandTextSecondary)
+            }
         }
     }
     

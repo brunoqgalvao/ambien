@@ -61,7 +61,12 @@ struct MeetingDetailView: View {
                         selectedTab: $selectedContentTab,
                         onReprocess: {
                             await processMeeting()
-                        }
+                        },
+                        onRetryTranscription: meeting.status == .failed ? {
+                            Task {
+                                await retryTranscription()
+                            }
+                        } : nil
                     )
                     .frame(minHeight: 300)
 
@@ -132,39 +137,13 @@ struct MeetingDetailView: View {
     }
 
     private func retryTranscription() async {
-        // Update meeting status to pending
-        var updated = meeting
-        updated.status = .pendingTranscription
-        updated.errorMessage = nil
+        // Use AudioCaptureManager's retryTranscription which handles UI feedback properly
+        // (shows transcribing island, toast notifications, etc.)
+        await AudioCaptureManager.shared.retryTranscription(meetingId: meeting.id)
 
-        do {
-            try await DatabaseManager.shared.update(updated)
-            meeting = updated
-
-            // Update to transcribing status
-            meeting.status = .transcribing
-            try await DatabaseManager.shared.update(meeting)
-
-            // Trigger transcription
-            let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
-
-            // Update with transcript
-            meeting.transcript = result.text
-            meeting.apiCostCents = result.costCents
-            meeting.status = .ready
-            meeting.errorMessage = nil
-
-            // Generate smart title from transcript
-            if let smartTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
-                meeting.title = smartTitle
-            }
-
-            try await DatabaseManager.shared.update(meeting)
-        } catch {
-            // Mark as failed
-            meeting.status = .failed
-            meeting.errorMessage = error.localizedDescription
-            try? await DatabaseManager.shared.update(meeting)
+        // Refresh meeting from database to get updated state
+        if let updatedMeeting = try? await DatabaseManager.shared.getMeeting(id: meeting.id) {
+            meeting = updatedMeeting
         }
 
         // Also call the parent callback if provided
@@ -1006,6 +985,7 @@ struct TranscriptSummarySection: View {
     @Binding var meeting: Meeting
     @Binding var selectedTab: ContentTab
     var onReprocess: (() async -> Void)?
+    var onRetryTranscription: (() -> Void)?
 
     enum ContentTab: String, CaseIterable {
         case privateNotes = "Private notes"
@@ -1079,7 +1059,7 @@ struct TranscriptSummarySection: View {
                     case .actionItems:
                         ActionItemsContentView(meeting: meeting)
                     case .transcript:
-                        TranscriptContentView(meeting: meeting)
+                        TranscriptContentView(meeting: meeting, onRetry: onRetryTranscription)
                     case .speakers:
                         SpeakersContentView(meeting: $meeting)
                     }
@@ -1598,6 +1578,7 @@ struct ActionItemsContentView: View {
 
 struct TranscriptContentView: View {
     let meeting: Meeting
+    var onRetry: (() -> Void)?
 
     var body: some View {
         if let transcript = meeting.transcript {
@@ -1607,7 +1588,7 @@ struct TranscriptContentView: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            TranscriptPlaceholder(status: meeting.status)
+            TranscriptPlaceholder(status: meeting.status, onRetry: onRetry)
         }
     }
 }
@@ -1862,6 +1843,7 @@ struct FlowLayout: Layout {
 
 struct TranscriptSection: View {
     let meeting: Meeting
+    var onRetry: (() -> Void)?
 
     var body: some View {
         BrandCard(padding: 16) {
@@ -1889,7 +1871,7 @@ struct TranscriptSection: View {
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    TranscriptPlaceholder(status: meeting.status)
+                    TranscriptPlaceholder(status: meeting.status, onRetry: onRetry)
                 }
             }
         }
@@ -1904,31 +1886,51 @@ struct TranscriptSection: View {
 
 struct TranscriptPlaceholder: View {
     let status: MeetingStatus
+    var onRetry: (() -> Void)?
+    @State private var isRetrying = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            switch status {
-            case .recording:
-                ProgressView()
-                    .scaleEffect(0.8)
-                Text("Recording in progress...")
-            case .pendingTranscription:
-                Image(systemName: "clock")
-                Text("Waiting for transcription...")
-            case .transcribing:
-                ProgressView()
-                    .scaleEffect(0.8)
-                Text("Transcribing...")
-            case .ready:
-                Image(systemName: "doc.text")
-                Text("No transcript available")
-            case .failed:
-                Image(systemName: "exclamationmark.triangle")
-                Text("Transcription failed")
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                switch status {
+                case .recording:
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Recording in progress...")
+                case .pendingTranscription:
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Waiting for transcription...")
+                case .transcribing:
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Transcribing...")
+                case .ready:
+                    Image(systemName: "doc.text")
+                    Text("No transcript available")
+                case .failed:
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundColor(.brandCoral)
+                    Text("Transcription failed")
+                }
+            }
+            .font(.brandDisplay(13))
+            .foregroundColor(.brandTextSecondary)
+
+            // Show retry button for failed status
+            if status == .failed, let onRetry = onRetry {
+                BrandPrimaryButton(
+                    title: isRetrying ? "Retrying..." : "Retry",
+                    icon: isRetrying ? nil : "arrow.clockwise",
+                    isDisabled: isRetrying,
+                    size: .small,
+                    action: {
+                        isRetrying = true
+                        onRetry()
+                    }
+                )
             }
         }
-        .font(.brandDisplay(13))
-        .foregroundColor(.brandTextSecondary)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
     }
@@ -2221,6 +2223,13 @@ class AudioPlayerManager: ObservableObject {
     TranscriptPlaceholder(status: .transcribing)
         .frame(width: 400)
         .padding()
+}
+
+#Preview("Transcript Placeholder - Failed with Retry") {
+    TranscriptPlaceholder(status: .failed, onRetry: { print("Retry tapped") })
+        .frame(width: 400)
+        .padding()
+        .background(Color.brandSurface)
 }
 
 #Preview("Error Section") {
