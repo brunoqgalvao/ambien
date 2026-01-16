@@ -20,24 +20,27 @@ struct MeetingDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            DetailHeader(meeting: meeting, showBackButton: showBackButton, onDismiss: { dismiss() })
+            // Rich Amie-style header with editable title/description
+            MeetingHeaderSection(
+                meeting: $meeting,
+                showBackButton: showBackButton,
+                onDismiss: { dismiss() }
+            )
 
             Divider()
 
             // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Meeting info card
-                    MeetingInfoCard(meeting: meeting)
+                    // Audio player - show immediately once recording is done
+                    // User can listen while transcription happens in background
+                    AudioPlayerCard(
+                        audioPath: meeting.audioPath,
+                        player: audioPlayer
+                    )
 
-                    // Audio player (if file exists)
-                    if FileManager.default.fileExists(atPath: meeting.audioPath) {
-                        AudioPlayerCard(
-                            audioPath: meeting.audioPath,
-                            player: audioPlayer
-                        )
-                    }
+                    // Share bar (Amie-style export/share buttons)
+                    MeetingShareBar(meeting: meeting)
 
                     // Processing indicator
                     if isProcessing {
@@ -112,8 +115,13 @@ struct MeetingDetailView: View {
             return .handled
         }
         .onKeyPress(.escape) {
-            dismiss()
-            return .handled
+            // Only handle escape if we're showing our own back button
+            // Otherwise, let the parent NavigationStack handle it
+            if showBackButton {
+                dismiss()
+                return .handled
+            }
+            return .ignored
         }
     }
 
@@ -243,7 +251,7 @@ struct MeetingDetailView: View {
     }
 }
 
-// MARK: - Header
+// MARK: - Header (Legacy - kept for compatibility)
 
 struct DetailHeader: View {
     let meeting: Meeting
@@ -292,6 +300,476 @@ struct DetailHeader: View {
             // .ready = no indicator
         }
         .padding()
+    }
+}
+
+// MARK: - Meeting Header Section (Amie-style)
+
+/// Rich header section with editable title, description, and metadata (Amie-inspired design)
+struct MeetingHeaderSection: View {
+    @Binding var meeting: Meeting
+    var showBackButton: Bool = true
+    var onDismiss: (() -> Void)?
+
+    @State private var isEditingTitle = false
+    @State private var isEditingDescription = false
+    @State private var editedTitle: String = ""
+    @State private var editedDescription: String = ""
+    @FocusState private var titleFieldFocused: Bool
+    @FocusState private var descriptionFieldFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Top row: Back button + Updated indicator
+            HStack {
+                if showBackButton {
+                    Button(action: { onDismiss?() }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.body.weight(.medium))
+                            Text("Back")
+                                .font(.subheadline)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .help("Back (Esc)")
+                }
+
+                Spacer()
+
+                // Status indicator for non-ready states
+                if meeting.status == .failed {
+                    HStack(spacing: 4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundColor(.red)
+                        Text("Failed")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                } else if meeting.status == .transcribing {
+                    HStack(spacing: 4) {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                        Text("Transcribing...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else if meeting.status == .recording {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                        Text("Recording")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                } else {
+                    // "Updated X ago" indicator
+                    if let lastUpdatedText = meeting.formattedLastUpdated {
+                        Text("Updated \(lastUpdatedText)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            // Editable Title
+            if isEditingTitle {
+                TextField("Meeting title", text: $editedTitle)
+                    .font(.title2.weight(.bold))
+                    .textFieldStyle(.plain)
+                    .focused($titleFieldFocused)
+                    .onSubmit { saveTitle() }
+                    .onChange(of: titleFieldFocused) { _, focused in
+                        if !focused { saveTitle() }
+                    }
+            } else {
+                Text(meeting.title)
+                    .font(.title2.weight(.bold))
+                    .lineLimit(2)
+                    .onTapGesture {
+                        editedTitle = meeting.title
+                        isEditingTitle = true
+                        titleFieldFocused = true
+                    }
+                    .help("Click to edit title")
+            }
+
+            // Editable Description
+            if isEditingDescription {
+                TextField("Add a description...", text: $editedDescription)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .textFieldStyle(.plain)
+                    .focused($descriptionFieldFocused)
+                    .onSubmit { saveDescription() }
+                    .onChange(of: descriptionFieldFocused) { _, focused in
+                        if !focused { saveDescription() }
+                    }
+            } else {
+                let descriptionText = meeting.description ?? ""
+                Text(descriptionText.isEmpty ? "Add a description..." : descriptionText)
+                    .font(.subheadline)
+                    .foregroundColor(descriptionText.isEmpty ? .secondary.opacity(0.6) : .secondary)
+                    .lineLimit(3)
+                    .onTapGesture {
+                        editedDescription = meeting.description ?? ""
+                        isEditingDescription = true
+                        descriptionFieldFocused = true
+                    }
+                    .help("Click to edit description")
+            }
+
+            // Metadata row
+            MeetingMetadataRow(meeting: meeting)
+        }
+        .padding()
+    }
+
+    private func saveTitle() {
+        guard isEditingTitle else { return }
+        isEditingTitle = false
+
+        let newTitle = editedTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !newTitle.isEmpty, newTitle != meeting.title else { return }
+
+        meeting.title = newTitle
+        meeting.touch()
+
+        Task {
+            do {
+                try await DatabaseManager.shared.update(meeting)
+            } catch {
+                print("[MeetingHeaderSection] Failed to save title: \(error)")
+            }
+        }
+    }
+
+    private func saveDescription() {
+        guard isEditingDescription else { return }
+        isEditingDescription = false
+
+        let newDescription = editedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        let oldDescription = meeting.description ?? ""
+        guard newDescription != oldDescription else { return }
+
+        meeting.description = newDescription.isEmpty ? nil : newDescription
+        meeting.touch()
+
+        Task {
+            do {
+                try await DatabaseManager.shared.update(meeting)
+            } catch {
+                print("[MeetingHeaderSection] Failed to save description: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Meeting Metadata Row
+
+/// Displays created date/time and meeting source with colored indicator
+struct MeetingMetadataRow: View {
+    let meeting: Meeting
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Created date/time row
+            HStack(spacing: 8) {
+                Text("Created")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(width: 60, alignment: .leading)
+
+                Text(formattedDateTimeRange)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.primary)
+            }
+
+            // Meeting source row
+            if let sourceApp = meeting.sourceApp {
+                HStack(spacing: 8) {
+                    Text("Meeting")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 60, alignment: .leading)
+
+                    HStack(spacing: 6) {
+                        // Colored dot indicator
+                        Circle()
+                            .fill(sourceColor(for: sourceApp))
+                            .frame(width: 8, height: 8)
+
+                        Text(meeting.windowTitle ?? sourceApp)
+                            .font(.caption.weight(.medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        // Change button (placeholder)
+                        Button(action: {}) {
+                            HStack(spacing: 2) {
+                                Text("Change")
+                                    .font(.caption)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Link to calendar event (coming soon)")
+                    }
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    /// Formats the date and time range like "Tue, 13 Jan, 16:41 → 16:44"
+    private var formattedDateTimeRange: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEE, d MMM"
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+
+        let dateStr = dateFormatter.string(from: meeting.startTime)
+        let startTimeStr = timeFormatter.string(from: meeting.startTime)
+
+        if let endTime = meeting.endTime {
+            let endTimeStr = timeFormatter.string(from: endTime)
+            return "\(dateStr), \(startTimeStr) → \(endTimeStr)"
+        } else if meeting.duration > 0 {
+            let endDate = meeting.startTime.addingTimeInterval(meeting.duration)
+            let endTimeStr = timeFormatter.string(from: endDate)
+            return "\(dateStr), \(startTimeStr) → \(endTimeStr)"
+        } else {
+            return "\(dateStr), \(startTimeStr)"
+        }
+    }
+
+    /// Returns the brand color for different meeting apps
+    private func sourceColor(for app: String) -> Color {
+        let lowercased = app.lowercased()
+        if lowercased.contains("zoom") {
+            return .blue
+        } else if lowercased.contains("meet") || lowercased.contains("google") {
+            return .green
+        } else if lowercased.contains("teams") || lowercased.contains("microsoft") {
+            return .purple
+        } else if lowercased.contains("slack") {
+            return .pink
+        } else if lowercased.contains("discord") {
+            return .indigo
+        } else {
+            return .gray
+        }
+    }
+}
+
+// MARK: - Meeting Share Bar
+
+struct MeetingShareBar: View {
+    let meeting: Meeting
+    @State private var showingExportOptions = false
+    @State private var copiedFeedback: String? = nil
+    @State private var showingComingSoon = false
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // Email
+                ShareButton(
+                    icon: "envelope",
+                    label: "Email",
+                    action: openEmailClient
+                )
+
+                // Copy link
+                ShareButton(
+                    icon: "link",
+                    label: copiedFeedback == "link" ? "Copied!" : "Copy link",
+                    action: copyLink
+                )
+
+                // Copy summary
+                ShareButton(
+                    icon: "doc.on.doc",
+                    label: copiedFeedback == "summary" ? "Copied!" : "Copy summary",
+                    action: copySummary
+                )
+                .disabled(meeting.summary == nil && meeting.transcript == nil)
+
+                // Export PDF
+                ShareButton(
+                    icon: "arrow.down.doc",
+                    label: "Export PDF",
+                    action: { showingComingSoon = true }
+                )
+
+                // Export Markdown
+                ShareButton(
+                    icon: "text.document",
+                    label: "Export MD",
+                    action: exportMarkdown
+                )
+            }
+            .padding(.horizontal, 4)
+        }
+        .padding(.vertical, 8)
+        .alert("Coming Soon", isPresented: $showingComingSoon) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("PDF export will be available in a future update.")
+        }
+    }
+
+    // MARK: - Actions
+
+    private func openEmailClient() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .short
+        let dateStr = dateFormatter.string(from: meeting.startTime)
+
+        let subject = "Meeting Notes: \(meeting.title)"
+        var body = "Meeting: \(meeting.title)\nDate: \(dateStr)\nDuration: \(meeting.formattedDuration)\n\n"
+
+        if let summary = meeting.summary {
+            body += "Summary:\n\(summary)\n\n"
+        }
+
+        if let transcript = meeting.transcript {
+            let preview = String(transcript.prefix(500))
+            body += "Transcript Preview:\n\(preview)..."
+        }
+
+        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        if let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    private func copyLink() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateStr = dateFormatter.string(from: meeting.startTime)
+
+        let reference = "meeting://\(meeting.id.uuidString)\n\(meeting.title) - \(dateStr)"
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(reference, forType: .string)
+
+        withAnimation {
+            copiedFeedback = "link"
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation {
+                if copiedFeedback == "link" {
+                    copiedFeedback = nil
+                }
+            }
+        }
+    }
+
+    private func copySummary() {
+        let content = meeting.summary ?? meeting.transcript ?? ""
+        guard !content.isEmpty else { return }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(content, forType: .string)
+
+        withAnimation {
+            copiedFeedback = "summary"
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation {
+                if copiedFeedback == "summary" {
+                    copiedFeedback = nil
+                }
+            }
+        }
+    }
+
+    private func exportMarkdown() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.nameFieldStringValue = "\(meeting.title.replacingOccurrences(of: " ", with: "_")).md"
+
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .full
+            dateFormatter.timeStyle = .short
+            let dateStr = dateFormatter.string(from: meeting.startTime)
+
+            var markdown = """
+            # \(meeting.title)
+
+            **Date:** \(dateStr)
+            **Duration:** \(meeting.formattedDuration)
+            """
+
+            if let app = meeting.sourceApp {
+                markdown += "\n**Source:** \(app)"
+            }
+
+            markdown += "\n\n---\n\n"
+
+            if let summary = meeting.summary {
+                markdown += "## Summary\n\n\(summary)\n\n"
+            }
+
+            if let actionItems = meeting.actionItems, !actionItems.isEmpty {
+                markdown += "## Action Items\n\n"
+                for item in actionItems {
+                    markdown += "- [ ] \(item)\n"
+                }
+                markdown += "\n"
+            }
+
+            if let transcript = meeting.transcript {
+                markdown += "## Transcript\n\n\(transcript)\n"
+            }
+
+            try? markdown.write(to: url, atomically: true, encoding: .utf8)
+        }
+    }
+}
+
+// MARK: - Share Button
+
+struct ShareButton: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption)
+                Text(label)
+                    .font(.caption)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(isHovering ? Color(.textBackgroundColor) : Color(.textBackgroundColor).opacity(0.6))
+            .foregroundColor(.primary)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovering = hovering
+        }
     }
 }
 
@@ -356,70 +834,190 @@ struct InfoItem: View {
 struct AudioPlayerCard: View {
     let audioPath: String
     @ObservedObject var player: AudioPlayerManager
+    @State private var isDragging = false
+    @State private var showVolumeSlider = false
+    @State private var tick = 0  // Forces re-evaluation
+
+    /// Check if audio file exists (re-evaluated on tick changes)
+    private var audioFileExists: Bool {
+        FileManager.default.fileExists(atPath: audioPath)
+    }
 
     var body: some View {
-        VStack(spacing: 12) {
-            // Progress bar
-            ProgressView(value: player.progress)
-                .progressViewStyle(.linear)
+        Group {
+            if audioFileExists {
+                playerContent
+            } else {
+                // Audio file not ready yet (still recording or processing)
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Preparing audio...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.textBackgroundColor).opacity(0.5))
+                .cornerRadius(8)
+            }
+        }
+        .onAppear {
+            if audioFileExists {
+                player.prepare(url: URL(fileURLWithPath: audioPath))
+            }
+        }
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+            // Increment tick to force view re-evaluation if file doesn't exist yet
+            if !audioFileExists {
+                tick += 1
+            } else if !player.isReady {
+                // File exists but player not ready - prepare it
+                player.prepare(url: URL(fileURLWithPath: audioPath))
+            }
+        }
+    }
 
-            HStack {
-                // Time display
+    @ViewBuilder
+    private var playerContent: some View {
+        VStack(spacing: 12) {
+            // Row 1: Play controls + Scrubber + Time
+            HStack(spacing: 12) {
+                // Play/Pause button
+                Button(action: {
+                    if player.isPlaying {
+                        player.pause()
+                    } else {
+                        player.play(url: URL(fileURLWithPath: audioPath))
+                    }
+                }) {
+                    Image(systemName: player.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.accentColor)
+                }
+                .buttonStyle(.plain)
+
+                // Skip backward
+                Button(action: { player.skip(seconds: -15) }) {
+                    Image(systemName: "gobackward.15")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .disabled(!player.isReady)
+
+                // Current time
                 Text(formatTime(player.currentTime))
                     .font(.caption.monospacedDigit())
                     .foregroundColor(.secondary)
+                    .frame(width: 40, alignment: .trailing)
 
-                Spacer()
-
-                // Controls
-                HStack(spacing: 16) {
-                    Button(action: { player.skip(seconds: -15) }) {
-                        Image(systemName: "gobackward.15")
-                            .font(.title3)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!player.isReady)
-
-                    Button(action: {
-                        if player.isPlaying {
-                            player.pause()
-                        } else {
-                            player.play(url: URL(fileURLWithPath: audioPath))
+                // Interactive scrubber
+                Slider(
+                    value: Binding(
+                        get: { player.progress },
+                        set: { newValue in
+                            player.seek(to: newValue)
                         }
-                    }) {
-                        Image(systemName: player.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.title)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button(action: { player.skip(seconds: 15) }) {
-                        Image(systemName: "goforward.15")
-                            .font(.title3)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!player.isReady)
-                }
-
-                Spacer()
+                    ),
+                    in: 0...1
+                )
+                .controlSize(.small)
 
                 // Duration
                 Text(formatTime(player.duration))
                     .font(.caption.monospacedDigit())
                     .foregroundColor(.secondary)
+                    .frame(width: 40, alignment: .leading)
+
+                // Skip forward
+                Button(action: { player.skip(seconds: 15) }) {
+                    Image(systemName: "goforward.15")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .disabled(!player.isReady)
+            }
+
+            // Row 2: Volume + Speed controls
+            HStack(spacing: 16) {
+                // Volume control
+                HStack(spacing: 6) {
+                    Button(action: {
+                        if player.volume > 0 {
+                            player.setVolume(0)
+                        } else {
+                            player.setVolume(1.0)
+                        }
+                    }) {
+                        Image(systemName: player.volumeIconName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .frame(width: 16)
+                    }
+                    .buttonStyle(.plain)
+                    .help(player.volume > 0 ? "Mute" : "Unmute")
+
+                    Slider(
+                        value: Binding(
+                            get: { Double(player.volume) },
+                            set: { player.setVolume(Float($0)) }
+                        ),
+                        in: 0...1
+                    )
+                    .controlSize(.mini)
+                    .frame(width: 70)
+                }
+
+                Spacer()
+
+                // Playback speed selector
+                Menu {
+                    ForEach(AudioPlayerManager.playbackRates, id: \.self) { rate in
+                        Button(action: { player.setPlaybackRate(rate) }) {
+                            HStack {
+                                Text(formatRate(rate))
+                                if rate == player.playbackRate {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(player.playbackRateText)
+                            .font(.caption.weight(.medium))
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(.textBackgroundColor))
+                    .cornerRadius(4)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
             }
         }
         .padding()
         .background(Color(.textBackgroundColor).opacity(0.5))
         .cornerRadius(8)
-        .onAppear {
-            player.prepare(url: URL(fileURLWithPath: audioPath))
-        }
     }
 
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func formatRate(_ rate: Float) -> String {
+        if rate == floor(rate) {
+            return "\(Int(rate))x"
+        } else {
+            return String(format: "%.2gx", rate)
+        }
     }
 }
 
@@ -1638,6 +2236,12 @@ class AudioPlayerManager: ObservableObject {
         .padding()
 }
 
+#Preview("Share Bar") {
+    MeetingShareBar(meeting: Meeting.sampleMeetings[0])
+        .frame(width: 450)
+        .padding()
+}
+
 #Preview("Action Items") {
     ActionItemsSection(items: [
         "Review API documentation",
@@ -1656,6 +2260,50 @@ class AudioPlayerManager: ObservableObject {
 
 #Preview("Error Section") {
     ErrorSection(message: "API key invalid. Please check your settings.")
+        .frame(width: 400)
+        .padding()
+}
+
+#Preview("Meeting Header Section") {
+    struct PreviewWrapper: View {
+        @State private var meeting = Meeting.sampleMeetings[0]
+
+        var body: some View {
+            MeetingHeaderSection(
+                meeting: $meeting,
+                showBackButton: true,
+                onDismiss: {}
+            )
+        }
+    }
+    return PreviewWrapper()
+        .frame(width: 450)
+        .background(Color(.windowBackgroundColor))
+}
+
+#Preview("Meeting Header - Recording") {
+    struct PreviewWrapper: View {
+        @State private var meeting: Meeting = {
+            var m = Meeting.sampleMeetings[0]
+            m.status = .recording
+            return m
+        }()
+
+        var body: some View {
+            MeetingHeaderSection(
+                meeting: $meeting,
+                showBackButton: true,
+                onDismiss: {}
+            )
+        }
+    }
+    return PreviewWrapper()
+        .frame(width: 450)
+        .background(Color(.windowBackgroundColor))
+}
+
+#Preview("Metadata Row") {
+    MeetingMetadataRow(meeting: Meeting.sampleMeetings[0])
         .frame(width: 400)
         .padding()
 }

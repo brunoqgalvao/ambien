@@ -21,58 +21,73 @@ struct CalendarView: View {
     @State private var selectedFilter: MeetingFilter = .all
     @State private var searchText = ""
     @State private var isSearching = false
-    @State private var selectedMeeting: Meeting?
+    @State private var navigationPath = NavigationPath()
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Date picker header
-            DatePickerHeader(
-                selectedDate: $viewModel.selectedDate,
-                onTodayTapped: { viewModel.goToToday() }
-            )
-
-            Divider()
-
-            // Filter pills and search bar
-            FilterBar(
-                selectedFilter: $selectedFilter,
-                searchText: $searchText,
-                isSearching: $isSearching
-            )
-
-            Divider()
-
-            // Content area
-            if isSearching && !searchText.isEmpty {
-                SearchResultsView(
-                    searchText: searchText,
-                    results: viewModel.searchResults,
-                    onSelect: { meeting in
-                        selectedMeeting = meeting
-                        isSearching = false
-                        searchText = ""
-                    },
-                    onClose: {
-                        isSearching = false
-                        searchText = ""
-                    }
+        NavigationStack(path: $navigationPath) {
+            VStack(spacing: 0) {
+                // Date picker header
+                DatePickerHeader(
+                    selectedDate: $viewModel.selectedDate,
+                    onTodayTapped: { viewModel.goToToday() }
                 )
-            } else {
-                // Meeting list
-                MeetingListContent(
-                    meetings: filteredMeetings,
-                    selectedMeeting: $selectedMeeting,
-                    viewModel: viewModel
+
+                Divider()
+
+                // Filter pills and search bar
+                FilterBar(
+                    selectedFilter: $selectedFilter,
+                    searchText: $searchText,
+                    isSearching: $isSearching
                 )
+
+                Divider()
+
+                // Content area
+                if isSearching && !searchText.isEmpty {
+                    SearchResultsView(
+                        searchText: searchText,
+                        results: viewModel.searchResults,
+                        onSelect: { meeting in
+                            navigationPath.append(meeting)
+                            isSearching = false
+                            searchText = ""
+                        },
+                        onClose: {
+                            isSearching = false
+                            searchText = ""
+                        }
+                    )
+                } else {
+                    // Meeting list
+                    MeetingListContent(
+                        meetings: filteredMeetings,
+                        navigationPath: $navigationPath,
+                        viewModel: viewModel
+                    )
+                }
+
+                Divider()
+
+                // Keyboard shortcuts footer
+                KeyboardShortcutsFooter()
             }
-
-            Divider()
-
-            // Keyboard shortcuts footer
-            KeyboardShortcutsFooter()
+            .background(Color(.windowBackgroundColor))
+            .navigationDestination(for: Meeting.self) { meeting in
+                MeetingDetailView(meeting: meeting, showBackButton: false)
+                    .toolbar {
+                        ToolbarItem(placement: .navigation) {
+                            Button(action: { navigationPath.removeLast() }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                    Text("Back")
+                                }
+                            }
+                        }
+                    }
+            }
         }
         .frame(minWidth: 500, idealWidth: 600, minHeight: 500, idealHeight: 700)
-        .background(Color(.windowBackgroundColor))
         .task {
             await viewModel.loadMeetings()
         }
@@ -86,27 +101,40 @@ struct CalendarView: View {
                 await viewModel.loadMeetings()
             }
         }
-        .sheet(item: $selectedMeeting) { meeting in
-            MeetingDetailView(meeting: meeting)
-        }
         // Keyboard navigation
         .onKeyPress(.leftArrow) {
-            viewModel.previousDay()
-            return .handled
+            if navigationPath.isEmpty {
+                viewModel.previousDay()
+                return .handled
+            }
+            return .ignored
         }
         .onKeyPress(.rightArrow) {
-            viewModel.nextDay()
-            return .handled
+            if navigationPath.isEmpty {
+                viewModel.nextDay()
+                return .handled
+            }
+            return .ignored
         }
         .onKeyPress("t") {
-            viewModel.goToToday()
-            return .handled
+            if navigationPath.isEmpty {
+                viewModel.goToToday()
+                return .handled
+            }
+            return .ignored
         }
         .onKeyPress("/") {
-            isSearching = true
-            return .handled
+            if navigationPath.isEmpty {
+                isSearching = true
+                return .handled
+            }
+            return .ignored
         }
         .onKeyPress(.escape) {
+            if !navigationPath.isEmpty {
+                navigationPath.removeLast()
+                return .handled
+            }
             if isSearching {
                 isSearching = false
                 searchText = ""
@@ -282,7 +310,7 @@ struct FilterPill: View {
 
 struct MeetingListContent: View {
     let meetings: [Meeting]
-    @Binding var selectedMeeting: Meeting?
+    @Binding var navigationPath: NavigationPath
     let viewModel: CalendarViewModel
 
     var body: some View {
@@ -297,8 +325,8 @@ struct MeetingListContent: View {
                             ForEach(group.meetings) { meeting in
                                 CalendarMeetingRow(
                                     meeting: meeting,
-                                    isSelected: selectedMeeting?.id == meeting.id,
-                                    onSelect: { selectedMeeting = meeting },
+                                    isSelected: false,
+                                    onSelect: { navigationPath.append(meeting) },
                                     onDelete: {
                                         Task { await viewModel.deleteMeeting(meeting) }
                                     },

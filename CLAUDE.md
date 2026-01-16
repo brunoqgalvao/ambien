@@ -129,6 +129,101 @@ When creating new Swift files:
 
 ---
 
+## ⚠️ SwiftUI Reactivity Best Practices
+
+SwiftUI's reactivity is NOT like Svelte - it requires explicit wiring. Follow these rules to avoid bugs:
+
+### 1. Single Source of Truth
+Never duplicate state. If `AudioCaptureManager` has `isRecording`, don't create another `isRecording` in ViewModel.
+
+```swift
+// ❌ BAD - two sources of truth
+class ViewModel {
+    @Published var isRecording = false  // disconnected copy
+}
+class AudioManager {
+    @Published var isRecording = false  // real state
+}
+
+// ✅ GOOD - one source, computed access
+class ViewModel {
+    let audioManager: AudioCaptureManager
+    var isRecording: Bool { audioManager.isRecording }
+}
+```
+
+### 2. Dependency Injection Over Global Access
+Pass dependencies explicitly via init. Avoid `NSApp.delegate as? AppDelegate` buried in functions.
+
+```swift
+// ❌ BAD - hidden dependency
+func toggleRecording() {
+    guard let appDelegate = NSApp.delegate as? AppDelegate else { return }
+    // ...
+}
+
+// ✅ GOOD - explicit dependency
+class ViewModel {
+    private let audioManager: AudioCaptureManager
+    init(audioManager: AudioCaptureManager) {
+        self.audioManager = audioManager
+    }
+}
+```
+
+### 3. Combine Bindings for State Sync
+If state must exist in multiple places, wire them up explicitly at init:
+
+```swift
+class ViewModel: ObservableObject {
+    @Published var isRecording = false
+    private var cancellables = Set<AnyCancellable>()
+
+    init(audioManager: AudioCaptureManager) {
+        audioManager.$isRecording
+            .assign(to: &$isRecording)
+    }
+}
+```
+
+### 4. Always Add `.contentShape(Rectangle())` on Custom Buttons
+SwiftUI's hit testing is weird with complex backgrounds. Always make the full area tappable:
+
+```swift
+Button(action: { ... }) {
+    HStack { /* complex content */ }
+        .padding()
+        .background(RoundedRectangle(...))
+        .contentShape(Rectangle())  // ← REQUIRED for reliable clicks
+}
+.buttonStyle(.plain)
+```
+
+### 5. Use `@StateObject` for View-Owned Objects
+```swift
+// ❌ BAD - recreated on every parent re-render
+@ObservedObject var vm = ViewModel()
+
+// ✅ GOOD - survives re-renders
+@StateObject var vm = ViewModel()
+```
+
+### 6. Async Actions Should Provide Feedback
+```swift
+// ❌ BAD - fire and forget
+func toggleRecording() {
+    Task { /* stuff happens... somewhere */ }
+}
+
+// ✅ GOOD - caller knows outcome
+func toggleRecording() async throws -> Bool {
+    try await audioManager.startRecording()
+    return audioManager.isRecording
+}
+```
+
+---
+
 ## Build Milestones
 
 ### M1: Audio Capture PoC

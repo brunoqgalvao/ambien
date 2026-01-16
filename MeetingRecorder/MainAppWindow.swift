@@ -13,6 +13,8 @@ import AppKit
 
 extension Notification.Name {
     static let navigateToSettings = Notification.Name("navigateToSettings")
+    static let navigateToMeeting = Notification.Name("navigateToMeeting")
+    static let meetingsDidChange = Notification.Name("meetingsDidChange")
 }
 
 // MARK: - Main App Window Controller
@@ -63,6 +65,10 @@ class MainAppWindowController {
     func showMeeting(id: UUID) {
         pendingMeetingSelection = id
         showWindow()
+        // Post notification to navigate (works even if window already open)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NotificationCenter.default.post(name: .navigateToMeeting, object: id)
+        }
     }
     
     func openSettings() {
@@ -126,6 +132,17 @@ struct MainAppView: View {
         .onReceive(NotificationCenter.default.publisher(for: .navigateToSettings)) { _ in
             selectedItem = .settings
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToMeeting)) { notification in
+            if let meetingId = notification.object as? UUID {
+                selectedItem = .meetings
+                selectedMeetingId = meetingId
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .meetingsDidChange)) { _ in
+            Task {
+                await viewModel.loadData()
+            }
+        }
     }
 }
 
@@ -147,7 +164,11 @@ struct DetailView: View {
             case .calendar:
                 VStack(spacing: 0) {
                     DetailToolbar(title: "Calendar", searchText: $searchText)
-                    CalendarContentView(viewModel: viewModel)
+                    CalendarContentView(viewModel: viewModel) { meeting in
+                        // Navigate to Meetings tab with this meeting selected
+                        selectedMeetingId = meeting.id
+                        selectedItem = .meetings
+                    }
                 }
                 
             case .meetings:
@@ -482,7 +503,7 @@ struct MeetingsListView: View {
             .frame(minWidth: 300, idealWidth: 350)
             .background(Color.white)
 
-            // Detail
+            // Detail - use .id() to force re-render when selection changes
             if let meeting = selectedMeeting {
                 MeetingDetailContentView(
                     meeting: meeting,
@@ -495,6 +516,7 @@ struct MeetingsListView: View {
                         Task { await viewModel.loadData() }
                     }
                 )
+                .id(meeting.id) // Force view recreation on selection change
             } else {
                 EmptyDetailView(
                     icon: "waveform",
@@ -517,7 +539,7 @@ struct MeetingsListView: View {
                 }
             )
         }
-        .onChange(of: initialMeetingId) { newId in
+        .onChange(of: initialMeetingId) { _, newId in
             if let id = newId, let meeting = filteredMeetings.first(where: { $0.id == id }) {
                 selectedMeeting = meeting
                 initialMeetingId = nil
@@ -527,6 +549,13 @@ struct MeetingsListView: View {
             if let id = initialMeetingId, let meeting = filteredMeetings.first(where: { $0.id == id }) {
                 selectedMeeting = meeting
                 initialMeetingId = nil
+            }
+        }
+        // Refresh selectedMeeting when viewModel.meetings changes (e.g., after transcription)
+        .onChange(of: viewModel.meetings) { _, newMeetings in
+            if let currentId = selectedMeeting?.id,
+               let updated = newMeetings.first(where: { $0.id == currentId }) {
+                selectedMeeting = updated
             }
         }
     }
@@ -556,6 +585,10 @@ struct RenameMeetingSheet: View {
     let onCancel: () -> Void
     @FocusState private var isFocused: Bool
 
+    private var isValidTitle: Bool {
+        !newTitle.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             Text("Rename Meeting")
@@ -565,29 +598,153 @@ struct RenameMeetingSheet: View {
                 .textFieldStyle(.roundedBorder)
                 .focused($isFocused)
                 .onSubmit {
-                    if !newTitle.trimmingCharacters(in: .whitespaces).isEmpty {
+                    if isValidTitle {
                         onSave(newTitle)
                     }
                 }
 
             HStack(spacing: 12) {
-                Button("Cancel") {
-                    onCancel()
-                }
-                .keyboardShortcut(.escape)
+                SecondaryActionButton(title: "Cancel", action: onCancel)
+                    .keyboardShortcut(.escape)
 
-                Button("Save") {
-                    onSave(newTitle)
-                }
+                PrimaryActionButton(
+                    title: "Save",
+                    isDisabled: !isValidTitle,
+                    action: { onSave(newTitle) }
+                )
                 .keyboardShortcut(.return)
-                .disabled(newTitle.trimmingCharacters(in: .whitespaces).isEmpty)
-                .buttonStyle(.borderedProminent)
             }
         }
         .padding(24)
         .frame(width: 350)
         .onAppear {
             isFocused = true
+        }
+    }
+}
+
+// MARK: - Custom Action Buttons (On-Brand)
+
+/// Primary action button - filled accent color, used for Save/Confirm actions
+struct PrimaryActionButton: View {
+    let title: String
+    var icon: String? = nil
+    var isDisabled: Bool = false
+    let action: () -> Void
+
+    @State private var isHovered = false
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.subheadline.weight(.medium))
+                }
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(backgroundColor)
+            )
+            .opacity(isDisabled ? 0.5 : 1)
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+        .scaleEffect(isPressed ? 0.97 : 1)
+    }
+
+    private var backgroundColor: Color {
+        if isDisabled {
+            return Color.accentColor.opacity(0.6)
+        } else if isHovered {
+            return Color.accentColor.opacity(0.85)
+        } else {
+            return Color.accentColor
+        }
+    }
+}
+
+/// Secondary action button - outlined/subtle, used for Cancel/Back actions
+struct SecondaryActionButton: View {
+    let title: String
+    var icon: String? = nil
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.subheadline.weight(.medium))
+                }
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+            }
+            .foregroundColor(.primary.opacity(0.8))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHovered ? Color(.textBackgroundColor) : Color(.textBackgroundColor).opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+/// Destructive action button - red tinted, used for Delete actions
+struct DestructiveActionButton: View {
+    let title: String
+    var icon: String? = nil
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.subheadline.weight(.medium))
+                }
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHovered ? Color.red.opacity(0.85) : Color.red)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
         }
     }
 }
@@ -823,6 +980,7 @@ struct MeetingDetailContentView: View {
 
 struct CalendarContentView: View {
     @ObservedObject var viewModel: MainAppViewModel
+    var onMeetingSelect: ((Meeting) -> Void)? = nil
     @State private var selectedDate = Date()
     @State private var displayedMonth = Date()
 
@@ -879,7 +1037,9 @@ struct CalendarContentView: View {
                     ScrollView {
                         LazyVStack(spacing: 8) {
                             ForEach(meetingsForDate) { meeting in
-                                CalendarMeetingCard(meeting: meeting)
+                                CalendarMeetingCard(meeting: meeting) {
+                                    onMeetingSelect?(meeting)
+                                }
                             }
                         }
                         .padding(.horizontal, 24)
@@ -1070,8 +1230,12 @@ struct CalendarDayCell: View {
 
 struct CalendarMeetingCard: View {
     let meeting: Meeting
+    var onSelect: (() -> Void)? = nil
+
+    @State private var isHovered = false
 
     var body: some View {
+        Button(action: { onSelect?() }) {
         HStack(spacing: 12) {
             // Time
             VStack(alignment: .trailing, spacing: 2) {
@@ -1106,16 +1270,28 @@ struct CalendarMeetingCard: View {
             }
 
             Spacer()
+
+            // Chevron indicator
+            Image(systemName: "chevron.right")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.secondary.opacity(isHovered ? 0.8 : 0.3))
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
-        .background(Color.white)
+        .background(isHovered ? Color.brandViolet.opacity(0.03) : Color.white)
         .cornerRadius(10)
         .shadow(color: Color.black.opacity(0.02), radius: 2, y: 1)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.brandBorder, lineWidth: 1)
+                .stroke(isHovered ? Color.brandViolet.opacity(0.3) : Color.brandBorder, lineWidth: 1)
         )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
     }
 }
 
@@ -1218,7 +1394,79 @@ class MainAppViewModel: ObservableObject {
     }
 
     func toggleRecording() {
-        // This would connect to AudioCaptureManager
-        isRecording.toggle()
+        print("[HomeView] toggleRecording called")
+        Task { @MainActor in
+            guard let appDelegate = NSApp.delegate as? AppDelegate else {
+                print("[HomeView] ERROR: Could not get AppDelegate")
+                return
+            }
+            let audioManager = appDelegate.audioManager
+            print("[HomeView] Got audioManager, isRecording: \(audioManager.isRecording)")
+
+            if audioManager.isRecording {
+                // Stop recording
+                print("[HomeView] Stopping recording...")
+                _ = try? await audioManager.stopRecording()
+                RecordingIslandController.shared.hide()
+                isRecording = false
+            } else {
+                // Start recording and show the Recording Island
+                print("[HomeView] Starting recording...")
+                do {
+                    try await audioManager.startRecording()
+                    print("[HomeView] Recording started, showing island")
+                    RecordingIslandController.shared.show(audioManager: audioManager)
+                    isRecording = true
+                } catch {
+                    print("[HomeView] ERROR starting recording: \(error)")
+                }
+            }
+        }
     }
+}
+
+// MARK: - Previews
+
+#Preview("Custom Action Buttons") {
+    VStack(spacing: 20) {
+        Text("On-Brand Action Buttons")
+            .font(.headline)
+
+        HStack(spacing: 12) {
+            SecondaryActionButton(title: "Cancel", action: {})
+            PrimaryActionButton(title: "Save", action: {})
+        }
+
+        HStack(spacing: 12) {
+            SecondaryActionButton(title: "Cancel", icon: "xmark") {}
+            PrimaryActionButton(title: "Confirm", icon: "checkmark") {}
+        }
+
+        HStack(spacing: 12) {
+            SecondaryActionButton(title: "Keep") {}
+            DestructiveActionButton(title: "Delete", icon: "trash") {}
+        }
+
+        PrimaryActionButton(title: "Disabled", isDisabled: true) {}
+    }
+    .padding(40)
+    .frame(width: 400)
+    .background(Color(.windowBackgroundColor))
+}
+
+#Preview("Rename Meeting Sheet") {
+    struct PreviewWrapper: View {
+        @State private var title = "Team Standup Meeting"
+
+        var body: some View {
+            RenameMeetingSheet(
+                meeting: Meeting.sampleMeetings[0],
+                newTitle: $title,
+                onSave: { _ in },
+                onCancel: {}
+            )
+        }
+    }
+    return PreviewWrapper()
+        .background(Color(.windowBackgroundColor))
 }

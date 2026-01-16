@@ -78,8 +78,17 @@ struct DiarizationSegment: Codable, Equatable, Identifiable {
 }
 
 /// A recorded meeting or dictation with transcript
-struct Meeting: Identifiable, Codable, Equatable {
+struct Meeting: Identifiable, Codable, Hashable {
     let id: UUID
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: Meeting, rhs: Meeting) -> Bool {
+        lhs.id == rhs.id
+    }
+
     var title: String
     let startTime: Date
     var endTime: Date?

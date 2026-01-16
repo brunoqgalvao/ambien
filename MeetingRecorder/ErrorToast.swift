@@ -28,10 +28,19 @@ enum ToastType {
 
     var iconColor: Color {
         switch self {
-        case .error: return .red
-        case .warning: return .orange
-        case .success: return .green
-        case .info: return .blue
+        case .error: return .brandCoral
+        case .warning: return .brandAmber
+        case .success: return .brandMint
+        case .info: return .brandViolet
+        }
+    }
+
+    var accentColor: Color {
+        switch self {
+        case .error: return .brandCoral
+        case .warning: return .brandAmber
+        case .success: return .brandMint
+        case .info: return .brandViolet
         }
     }
 }
@@ -52,25 +61,27 @@ struct ToastData: Identifiable, Equatable {
     let message: String?
     let duration: TimeInterval
     let action: ToastAction?
+    /// Called when the toast body is tapped (not just the action button)
+    let onTap: (() -> Void)?
 
     static func == (lhs: ToastData, rhs: ToastData) -> Bool {
         lhs.id == rhs.id
     }
 
-    static func error(_ title: String, message: String? = nil, duration: TimeInterval = 4.0, action: ToastAction? = nil) -> ToastData {
-        ToastData(type: .error, title: title, message: message, duration: duration, action: action)
+    static func error(_ title: String, message: String? = nil, duration: TimeInterval = 4.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) -> ToastData {
+        ToastData(type: .error, title: title, message: message, duration: duration, action: action, onTap: onTap)
     }
 
-    static func warning(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil) -> ToastData {
-        ToastData(type: .warning, title: title, message: message, duration: duration, action: action)
+    static func warning(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) -> ToastData {
+        ToastData(type: .warning, title: title, message: message, duration: duration, action: action, onTap: onTap)
     }
 
-    static func success(_ title: String, message: String? = nil, duration: TimeInterval = 2.0, action: ToastAction? = nil) -> ToastData {
-        ToastData(type: .success, title: title, message: message, duration: duration, action: action)
+    static func success(_ title: String, message: String? = nil, duration: TimeInterval = 2.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) -> ToastData {
+        ToastData(type: .success, title: title, message: message, duration: duration, action: action, onTap: onTap)
     }
 
-    static func info(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil) -> ToastData {
-        ToastData(type: .info, title: title, message: message, duration: duration, action: action)
+    static func info(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) -> ToastData {
+        ToastData(type: .info, title: title, message: message, duration: duration, action: action, onTap: onTap)
     }
 }
 
@@ -127,15 +138,19 @@ class ToastController: ObservableObject {
             onAction: { [weak self] in
                 self?.currentToast?.action?.action()
                 self?.dismiss()
+            },
+            onTap: { [weak self] in
+                self?.currentToast?.onTap?()
+                self?.dismiss()
             }
         )
 
         let hostingView = NSHostingView(rootView: toastView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 360, height: 72)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 80)
         self.hostingView = hostingView
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 72),
+            contentRect: NSRect(x: 0, y: 0, width: 380, height: 80),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -202,63 +217,111 @@ struct ToastView: View {
     @Binding var toast: ToastData?
     let onDismiss: () -> Void
     var onAction: (() -> Void)?
+    var onTap: (() -> Void)?
+
+    @State private var isHovered = false
 
     var body: some View {
         if let toast = toast {
-            HStack(spacing: 12) {
-                // Icon
-                Image(systemName: toast.type.icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(toast.type.iconColor)
+            HStack(spacing: 14) {
+                // Accent bar on left edge
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(toast.type.accentColor)
+                    .frame(width: 4)
+                    .padding(.vertical, 4)
+
+                // Icon in colored circle
+                ZStack {
+                    Circle()
+                        .fill(toast.type.iconColor.opacity(0.12))
+                        .frame(width: 36, height: 36)
+
+                    Image(systemName: toast.type.icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(toast.type.iconColor)
+                }
 
                 // Text content
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(toast.title)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(.brandDisplay(14, weight: .semibold))
+                        .foregroundColor(.brandTextPrimary)
 
                     if let message = toast.message {
                         Text(message)
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12))
+                            .foregroundColor(.brandTextSecondary)
                             .lineLimit(2)
                     }
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                // Action button (if present)
+                // Action button (on-brand style)
                 if let action = toast.action {
                     Button(action: { onAction?() }) {
                         Text(action.title)
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.brandDisplay(12, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(
+                                RoundedRectangle(cornerRadius: BrandRadius.small)
+                                    .fill(toast.type.accentColor)
+                            )
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                    .buttonStyle(.plain)
                 }
 
                 // Dismiss button
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.brandTextSecondary)
+                        .frame(width: 24, height: 24)
+                        .background(
+                            Circle()
+                                .fill(Color.brandInk.opacity(isHovered ? 0.08 : 0.04))
+                        )
                 }
                 .buttonStyle(.plain)
-                .padding(6)
-                .contentShape(Rectangle())
+                .contentShape(Circle())
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 4)
+            .padding(.trailing, 16)
             .padding(.vertical, 14)
-            .frame(minWidth: 320)
+            .frame(minWidth: 340)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.regularMaterial)
-                    .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 4)
+                RoundedRectangle(cornerRadius: BrandRadius.medium)
+                    .fill(Color.brandSurface)
+                    .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: 8)
+                    .shadow(color: toast.type.accentColor.opacity(0.15), radius: 24, x: 0, y: 4)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.primary.opacity(0.08), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: BrandRadius.medium)
+                    .stroke(
+                        isHovered && toast.onTap != nil
+                            ? toast.type.accentColor.opacity(0.4)
+                            : Color.brandBorder,
+                        lineWidth: isHovered && toast.onTap != nil ? 1.5 : 1
+                    )
             )
+            .contentShape(Rectangle())
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    isHovered = hovering
+                }
+                if toast.onTap != nil {
+                    if hovering {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+            }
+            .onTapGesture {
+                onTap?()
+            }
         }
     }
 }
@@ -266,20 +329,20 @@ struct ToastView: View {
 // MARK: - Convenience Extensions
 
 extension ToastController {
-    func showError(_ title: String, message: String? = nil, duration: TimeInterval = 4.0, action: ToastAction? = nil) {
-        show(.error(title, message: message, duration: duration, action: action))
+    func showError(_ title: String, message: String? = nil, duration: TimeInterval = 4.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) {
+        show(.error(title, message: message, duration: duration, action: action, onTap: onTap))
     }
 
-    func showWarning(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil) {
-        show(.warning(title, message: message, duration: duration, action: action))
+    func showWarning(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) {
+        show(.warning(title, message: message, duration: duration, action: action, onTap: onTap))
     }
 
-    func showSuccess(_ title: String, message: String? = nil, duration: TimeInterval = 2.0, action: ToastAction? = nil) {
-        show(.success(title, message: message, duration: duration, action: action))
+    func showSuccess(_ title: String, message: String? = nil, duration: TimeInterval = 2.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) {
+        show(.success(title, message: message, duration: duration, action: action, onTap: onTap))
     }
 
-    func showInfo(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil) {
-        show(.info(title, message: message, duration: duration, action: action))
+    func showInfo(_ title: String, message: String? = nil, duration: TimeInterval = 3.0, action: ToastAction? = nil, onTap: (() -> Void)? = nil) {
+        show(.info(title, message: message, duration: duration, action: action, onTap: onTap))
     }
 }
 
@@ -292,7 +355,7 @@ extension ToastController {
         onAction: nil
     )
     .padding(40)
-    .background(Color.gray.opacity(0.3))
+    .background(Color.brandCreamDark)
 }
 
 #Preview("Error Toast with Retry") {
@@ -306,7 +369,7 @@ extension ToastController {
         onAction: {}
     )
     .padding(40)
-    .background(Color.gray.opacity(0.3))
+    .background(Color.brandCreamDark)
 }
 
 #Preview("Warning Toast") {
@@ -316,15 +379,52 @@ extension ToastController {
         onAction: nil
     )
     .padding(40)
-    .background(Color.gray.opacity(0.3))
+    .background(Color.brandCreamDark)
 }
 
 #Preview("Success Toast") {
     ToastView(
-        toast: .constant(.success("Copied to clipboard")),
+        toast: .constant(.success("Transcript ready", message: "Team Standup Meeting")),
+        onDismiss: {},
+        onAction: nil,
+        onTap: {}
+    )
+    .padding(40)
+    .background(Color.brandCreamDark)
+}
+
+#Preview("Success Toast with Action") {
+    ToastView(
+        toast: .constant(.success(
+            "Transcript ready",
+            message: "Weekly Planning Session",
+            action: ToastAction(title: "View", action: {})
+        )),
+        onDismiss: {},
+        onAction: {},
+        onTap: {}
+    )
+    .padding(40)
+    .background(Color.brandCreamDark)
+}
+
+#Preview("Info Toast") {
+    ToastView(
+        toast: .constant(.info("Recording started", message: "Capturing mic + system audio")),
         onDismiss: {},
         onAction: nil
     )
     .padding(40)
-    .background(Color.gray.opacity(0.3))
+    .background(Color.brandCreamDark)
+}
+
+#Preview("All Toast Types") {
+    VStack(spacing: 16) {
+        ToastView(toast: .constant(.success("Transcript ready", message: "Meeting notes")), onDismiss: {})
+        ToastView(toast: .constant(.info("Processing...", message: "Transcribing audio")), onDismiss: {})
+        ToastView(toast: .constant(.warning("Low storage", message: "5GB remaining")), onDismiss: {})
+        ToastView(toast: .constant(.error("Upload failed", message: "Check connection")), onDismiss: {})
+    }
+    .padding(40)
+    .background(Color.brandCreamDark)
 }

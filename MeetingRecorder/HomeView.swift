@@ -70,12 +70,15 @@ struct HomeView: View {
                 // Quick Actions
                 HStack(spacing: 16) {
                     // Record Action
-                    Button(action: { viewModel.toggleRecording() }) {
+                    Button(action: {
+                        print("[HomeView] Record button tapped!")
+                        toggleRecordingDirect()
+                    }) {
                         HStack {
                             Image(systemName: viewModel.isRecording ? "stop.fill" : "circle.fill")
                                 .foregroundColor(viewModel.isRecording ? .white : .brandCoral)
                                 .font(.system(size: 12))
-                            
+
                             VStack(alignment: .leading) {
                                 Text(viewModel.isRecording ? "Stop Recording" : "Start Recording")
                                     .font(.brandDisplay(16, weight: .semibold))
@@ -96,33 +99,42 @@ struct HomeView: View {
                             RoundedRectangle(cornerRadius: BrandRadius.medium)
                                 .stroke(Color.brandBorder, lineWidth: viewModel.isRecording ? 0 : 1)
                         )
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     
-                    // Dictation Hint
-                    HStack {
-                        Image(systemName: "mic.fill")
-                            .foregroundColor(.brandViolet)
-                        
-                        VStack(alignment: .leading) {
-                            Text("Quick Dictation")
-                                .font(.brandDisplay(16, weight: .semibold))
-                            Text("⌃⌘D")
-                                .font(.brandMono(12))
-                                .opacity(0.6)
+                    // Dictation Action
+                    Button(action: {
+                        print("[HomeView] Dictation button tapped!")
+                        startDictation()
+                    }) {
+                        HStack {
+                            Image(systemName: "mic.fill")
+                                .foregroundColor(.brandViolet)
+
+                            VStack(alignment: .leading) {
+                                Text("Quick Dictation")
+                                    .font(.brandDisplay(16, weight: .semibold))
+                                Text("⌃⌘D")
+                                    .font(.brandMono(12))
+                                    .opacity(0.6)
+                            }
                         }
+                        .foregroundColor(.brandTextPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: BrandRadius.medium)
+                                .fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: BrandRadius.medium)
+                                .stroke(Color.brandBorder, lineWidth: 1)
+                        )
+                        .contentShape(Rectangle())
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: BrandRadius.medium)
-                            .fill(Color.white)
-                            .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: BrandRadius.medium)
-                            .stroke(Color.brandBorder, lineWidth: 1)
-                    )
+                    .buttonStyle(.plain)
                 }
                 
                 // Recent Activity
@@ -168,6 +180,35 @@ struct HomeView: View {
     private func isDictationStyleConfigured() -> Bool {
         // Check if user has configured their dictation style preferences
         return UserDefaults.standard.bool(forKey: "dictationStyleConfigured")
+    }
+
+    private func startDictation() {
+        // Start continuous dictation mode (like double-click fn)
+        // This shows the pill and starts recording until user presses Escape
+        QuickRecordingManager.shared.startContinuousRecording()
+    }
+
+    private func toggleRecordingDirect() {
+        print("[HomeView] toggleRecordingDirect called")
+        Task { @MainActor in
+            // Access AudioCaptureManager via shared instance
+            let audioManager = AudioCaptureManager.shared
+
+            if audioManager.isRecording {
+                print("[HomeView] Stopping recording...")
+                _ = try? await audioManager.stopRecording()
+                RecordingIslandController.shared.hide()
+            } else {
+                print("[HomeView] Starting recording...")
+                do {
+                    try await audioManager.startRecording()
+                    print("[HomeView] Recording started, showing island")
+                    RecordingIslandController.shared.show(audioManager: audioManager)
+                } catch {
+                    print("[HomeView] ERROR starting recording: \(error)")
+                }
+            }
+        }
     }
 }
 

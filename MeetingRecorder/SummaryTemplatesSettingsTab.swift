@@ -270,8 +270,7 @@ struct TemplateEditorSheet: View {
                 Text(isEditing ? "Edit Template" : "New Template")
                     .font(.headline)
                 Spacer()
-                Button("Cancel") { dismiss() }
-                    .buttonStyle(.plain)
+                SecondaryActionButton(title: "Cancel") { dismiss() }
             }
             .padding()
 
@@ -396,11 +395,13 @@ struct TemplateEditorSheet: View {
 
                 Spacer()
 
-                Button("Save") {
+                PrimaryActionButton(
+                    title: "Save",
+                    icon: "checkmark",
+                    isDisabled: name.isEmpty || systemPrompt.isEmpty || userPromptTemplate.isEmpty
+                ) {
                     saveTemplate()
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(name.isEmpty || systemPrompt.isEmpty || userPromptTemplate.isEmpty)
             }
             .padding()
         }

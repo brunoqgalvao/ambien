@@ -81,6 +81,9 @@ enum SilenceWarning: Equatable {
 /// Main audio capture manager - handles system audio + mic recording
 @MainActor
 class AudioCaptureManager: NSObject, ObservableObject {
+    // MARK: - Shared Instance
+    static let shared = AudioCaptureManager()
+
     // MARK: - Published Properties
 
     @Published var state: RecordingState = .idle
@@ -240,6 +243,9 @@ class AudioCaptureManager: NSObject, ObservableObject {
             currentMeeting = meeting
             try await DatabaseManager.shared.insert(meeting)
 
+            // Notify UI of new meeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+
             // Start duration timer
             startDurationTimer()
 
@@ -369,15 +375,21 @@ class AudioCaptureManager: NSObject, ObservableObject {
             // Hide transcribing island
             TranscribingIslandController.shared.hide()
 
-            // Show success notification with View action
+            // Show success notification - clicking anywhere opens the meeting
             ToastController.shared.showSuccess(
                 "Transcript ready",
                 message: meeting.title,
                 duration: 4.0,
                 action: ToastAction(title: "View") {
                     MainAppWindowController.shared.showMeeting(id: meetingId)
+                },
+                onTap: {
+                    MainAppWindowController.shared.showMeeting(id: meetingId)
                 }
             )
+
+            // Notify UI to refresh meeting list
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             // Export to agent-accessible JSON
             Task {
@@ -978,6 +990,9 @@ class MicRecorderWithTranscription: ObservableObject {
             currentMeeting = meeting
             try await DatabaseManager.shared.insert(meeting)
 
+            // Notify UI of new meeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+
             // Start duration timer
             durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
                 guard self != nil else {
@@ -1095,15 +1110,21 @@ class MicRecorderWithTranscription: ObservableObject {
             // Hide transcribing island
             TranscribingIslandController.shared.hide()
 
-            // Show success notification with View action
+            // Show success notification - clicking anywhere opens the meeting
             ToastController.shared.showSuccess(
                 "Transcript ready",
                 message: meeting.title,
                 duration: 4.0,
                 action: ToastAction(title: "View") {
                     MainAppWindowController.shared.showMeeting(id: meetingId)
+                },
+                onTap: {
+                    MainAppWindowController.shared.showMeeting(id: meetingId)
                 }
             )
+
+            // Notify UI to refresh meeting list
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             // Export to agent-accessible JSON
             Task {
