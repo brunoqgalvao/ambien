@@ -30,10 +30,15 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 
-# Swift Package Manager
+# Swift Package Manager (don't use standalone SPM - use Xcode project)
 .build/
 Packages/
 Package.resolved
+# Uncomment below if you want to prevent accidental SPM setup in source folder
+# MeetingRecorder/Package.swift
+
+# Xcode build products in source folder (shouldn't be there)
+MeetingRecorder/*.app/
 
 # Environment
 .env
