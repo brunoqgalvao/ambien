@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>MeetingRecorder Updates</title>
+    <link>https://brunogalvao.github.io/ami-like/appcast.xml</link>
+    <description>Most recent updates to MeetingRecorder</description>
+    <language>en</language>
+
+    <item>
+      <title>Version 1.0.1</title>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[
+        <h2>What's New in 1.0.1</h2>
+        <ul>
+          <li>Bug fixes and improvements</li>
+        </ul>
+      ]]></description>
+      <pubDate>Sat, 17 Jan 2026 06:21:17 -0300</pubDate>
+      <enclosure
+        url="https://brunogalvao.github.io/ami-like/releases/MeetingRecorder-1.0.1.zip"
+        sparkle:edSignature="Ki00CM0t2HTGA6U3a9iyq3+bKAibuetGEd7u7vKXerUSrtswL4XnEDV7qAw4cvRvwZVztV7xtEtCTr7I7zAmDA=="
+        length="4662102"
+        type="application/octet-stream"/>
+    </item>
+
+  </channel>
+</rss>

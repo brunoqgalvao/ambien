@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetingRecorder - Download</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 600px;
+        }
+        .icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px;
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.3);
+        }
+        .icon svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+        .tagline {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 40px;
+        }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            padding: 18px 36px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.4);
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(255, 107, 53, 0.5);
+        }
+        .version {
+            margin-top: 16px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
+        .features {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            text-align: left;
+        }
+        .feature {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature h3 {
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+        .feature p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        .requirements {
+            margin-top: 40px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3C11.4 3 11 3.4 11 4V12C11 12.6 11.4 13 12 13C12.6 13 13 12.6 13 12V4C13 3.4 12.6 3 12 3ZM8 6C7.4 6 7 6.4 7 7V12C7 12.6 7.4 13 8 13C8.6 13 9 12.6 9 12V7C9 6.4 8.6 6 8 6ZM16 6C15.4 6 15 6.4 15 7V12C15 12.6 15.4 13 16 13C16.6 13 17 12.6 17 12V7C17 6.4 16.6 6 16 6ZM4 9C3.4 9 3 9.4 3 10V12C3 12.6 3.4 13 4 13C4.6 13 5 12.6 5 12V10C5 9.4 4.6 9 4 9ZM20 9C19.4 9 19 9.4 19 10V12C19 12.6 19.4 13 20 13C20.6 13 21 12.6 21 12V10C21 9.4 20.6 9 20 9ZM12 15C6.5 15 2 16.1 2 17.5V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V17.5C22 16.1 17.5 15 12 15Z"/>
+            </svg>
+        </div>
+
+        <h1>MeetingRecorder</h1>
+        <p class="tagline">Your Mac's memory for everything you say and hear.</p>
+
+        <a href="releases/MeetingRecorder-1.0.1.zip" class="download-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            Download for macOS
+        </a>
+        <p class="version">Version 1.0.0 &middot; macOS 14.0+</p>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🎙️ Record Everything</h3>
+                <p>Capture system audio from Zoom, Meet, Teams plus your microphone.</p>
+            </div>
+            <div class="feature">
+                <h3>📝 Auto Transcribe</h3>
+                <p>Powered by OpenAI. Bring your own API key.</p>
+            </div>
+            <div class="feature">
+                <h3>🔍 Search Instantly</h3>
+                <p>Full-text search across all your meeting transcripts.</p>
+            </div>
+            <div class="feature">
+                <h3>🔄 Auto Updates</h3>
+                <p>Get the latest features automatically via Sparkle.</p>
+            </div>
+        </div>
+
+        <p class="requirements">Requires macOS Sonoma (14.0) or later. Screen Recording permission required.</p>
+    </div>
+</body>
+</html>
