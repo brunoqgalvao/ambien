@@ -15,6 +15,7 @@
   <a href="#features">Features</a> •
   <a href="#usage">Usage</a> •
   <a href="#agent-api">Agent API</a> •
+  <a href="#roadmap">Roadmap</a> •
   <a href="#contributing">Contributing</a>
 </p>
 
@@ -36,7 +37,14 @@
 
 ---
 
-## vs. Otter, Fireflies, etc.
+## Why Ambien?
+
+- **Lightweight** — Native Swift app. ~15MB. No Electron bloat.
+- **Automatic speaker identification** — Knows who said what using voice embeddings.
+- **Customizable post-processing** — Templates for summaries, action items, briefs. Make it output whatever you need.
+- **Agent-native** — Built from day one to work with Claude Code, Codex, and AI agents.
+
+### vs. Otter, Fireflies, etc.
 
 | | Ambien | Others |
 |---|--------|--------|
@@ -74,9 +82,10 @@ open MeetingRecorder.xcodeproj
 
 - **Invisible Recording** — Captures system audio via ScreenCaptureKit. No one knows you're recording.
 - **AI Transcription** — OpenAI Whisper API with your own key. ~$0.006/minute.
-- **Meeting Detection** — Auto-detects Zoom, Google Meet, Microsoft Teams, Slack Huddles.
+- **Speaker Identification** — Automatic speaker labels using voice embeddings.
+- **Meeting Detection** — Auto-detects Zoom, Google Meet, Microsoft Teams, Slack Huddles, WhatsApp.
 - **Full-Text Search** — SQLite with FTS5. Search across all your transcripts instantly.
-- **Calendar View** — Browse recordings by date.
+- **Custom Templates** — Configure how summaries and briefs are generated.
 - **Dictation Mode** — Hold `Ctrl+Cmd+D` anywhere, speak, release → text appears at cursor.
 - **Agent API** — Expose meetings as JSON for Claude Code, Codex, or any AI agent.
 
@@ -145,6 +154,28 @@ ambien get 2024-01-15-standup
 
 ---
 
+## Roadmap
+
+What we're thinking about next:
+
+### Near-term
+- [ ] **Local Whisper** — Run transcription locally, no API needed
+- [ ] **Export to Notion/Obsidian** — One-click export to your note-taking app
+- [ ] **Calendar integration** — Auto-name meetings from your calendar
+
+### Medium-term
+- [ ] **Real-time meeting assistant** — Live suggestions and context during calls
+- [ ] **Always-on screen capture** — Rewind-style, ultra-lightweight background recording
+- [ ] **Integrations** — Slack, Linear, Jira, GitHub for auto-creating tickets from action items
+
+### Long-term
+- [ ] **Linux port** — PipeWire audio capture
+- [ ] **Team features** — Shared meeting libraries (still local-first)
+
+Have ideas? [Open an issue](https://github.com/brunoqgalvao/ambien/issues) or [submit a PR](CONTRIBUTING.md).
+
+---
+
 ## Contributing
 
 We'd love your help! See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -155,14 +186,6 @@ cd ambien
 open MeetingRecorder.xcodeproj
 # Make changes, test, submit PR
 ```
-
-### Ideas
-
-- [ ] Speaker diarization (who said what)
-- [ ] Local Whisper (no API needed)
-- [ ] Export to Notion/Obsidian
-- [ ] Calendar integration
-- [ ] Linux port
 
 ---
 
