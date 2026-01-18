@@ -85,3 +85,43 @@ benchmark/results/
 
 # Benchmark venv specifically
 benchmark/venv/
+
+# ============================================
+# EXCLUDE FROM PUBLIC REPO
+# ============================================
+
+# Claude session artifacts (pasted images, skills)
+.claude/pasted_images/
+.claude/skills/
+
+# Internal documentation (not for public)
+PRD.md
+WIREFRAMES.md
+WIREFRAMES-V3.md
+ARCHITECTURE.md
+research-reports/
+docs/
+
+# Voice embedding service (separate deployment)
+voice-embedding-service/
+
+# Benchmark tool (internal testing)
+benchmark/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Temporary files
+.tmp/
+*.xcresult
+
+# Screenshots (dev artifacts)
+Screenshot*.png
+
+# Dev scripts (internal)
+scripts/
+benchmark_transcription.swift
+
+# Release artifacts
+releases/

@@ -1,7 +1,0 @@
-{
-  "model": "whisper-1",
-  "timestamp": "20260117_121034",
-  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
-  "error": "File too large (32.8MB). OpenAI limit is 25MB.",
-  "result": null
-}

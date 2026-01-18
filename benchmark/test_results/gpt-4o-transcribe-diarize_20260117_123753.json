@@ -1,7 +1,0 @@
-{
-  "model": "gpt-4o-transcribe-diarize",
-  "timestamp": "20260117_123753",
-  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
-  "error": "Error code: 400 - {'error': {'message': \"response_format 'verbose_json' is not compatible with model 'gpt-4o-transcribe-diarize-api-ev3'. Use 'json' or 'text' instead.\", 'type': 'invalid_request_error', 'param': 'response_format', 'code': 'unsupported_value'}}",
-  "result": null
-}

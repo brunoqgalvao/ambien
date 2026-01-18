@@ -1,7 +1,0 @@
-{
-  "model": "gpt-4o-transcribe",
-  "timestamp": "20260117_123621",
-  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
-  "error": "Error code: 400 - {'error': {'message': 'audio duration 2792.826 seconds is longer than 1400 seconds which is the maximum for this model', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_value'}}",
-  "result": null
-}

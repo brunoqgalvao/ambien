@@ -1,6 +1,6 @@
 # Development Guide
 
-Technical documentation for building, running, and contributing to Ambien.
+Technical documentation for contributors and developers.
 
 ## Build from Source
 
@@ -10,7 +10,7 @@ Technical documentation for building, running, and contributing to Ambien.
 - Xcode 15+
 - OpenAI API key (for testing transcription)
 
-### Clone and Build
+### Setup
 
 ```bash
 git clone https://github.com/brunoqgalvao/ambien.git
@@ -18,17 +18,17 @@ cd ambien
 open MeetingRecorder.xcodeproj
 ```
 
-In Xcode, press `Cmd+R` to build and run.
+Press `Cmd+R` to build and run.
 
 ### Permissions
 
-On first run, macOS will prompt for:
+On first run, you'll need to grant:
 
 1. **Screen Recording** — Required for system audio capture
 2. **Microphone** — Required for mic audio and dictation
 3. **Accessibility** — Required for dictation text insertion
 
-If permissions aren't working, check System Settings → Privacy & Security.
+Check System Settings → Privacy & Security if things aren't working.
 
 ---
 
@@ -41,14 +41,18 @@ ambien/
 │   ├── AudioCaptureManager.swift # ScreenCaptureKit for system audio
 │   ├── TranscriptionManager.swift# OpenAI Whisper API
 │   ├── DatabaseManager.swift     # SQLite via GRDB
-│   ├── AgentAPIManager.swift     # JSON export for AI agents
+│   ├── AgentAPIManager.swift     # JSON export for Claude Code
 │   ├── MeetingDetector.swift     # Detects Zoom/Meet/Teams
-│   ├── SpeakerIdentification/    # Voice embedding & clustering
-│   └── Views/                    # SwiftUI views
+│   ├── SpeakerIdentifier.swift   # Voice embeddings for speaker ID
+│   └── Views/
+│       ├── ContentView.swift     # Main calendar view
+│       ├── SettingsView.swift    # Settings panel
+│       └── ...
 ├── MeetingRecorder.xcodeproj/
 ├── AmbientCLI/                   # CLI tool (Swift Package)
+│   └── Sources/ambient/main.swift
 ├── brand/                        # Logos and brand assets
-└── voice-embedding-service/      # Python service for speaker ID
+└── landing-page/                 # Marketing site (Svelte)
 ```
 
 ---
@@ -57,152 +61,145 @@ ambien/
 
 ### Audio Capture
 
-Uses Apple's **ScreenCaptureKit** to capture system audio without joining calls as a bot.
+Uses Apple's **ScreenCaptureKit** (macOS 12.3+) to capture system audio without joining calls as a bot.
 
-```swift
-// AudioCaptureManager.swift
-let filter = SCContentFilter(desktopIndependentWindow: window)
-let stream = SCStream(filter: filter, configuration: config, delegate: self)
 ```
+AudioCaptureManager
+├── SCStream (system audio)
+├── AVAudioEngine (microphone)
+└── AVAssetWriter (AAC encoding)
+```
+
+Audio is encoded as AAC in .m4a container (16kHz mono, 64kbps).
 
 ### Transcription
 
-OpenAI Whisper API via chunked uploads:
+Sends audio to **OpenAI Whisper API** (`whisper-1` model).
 
-```swift
-// TranscriptionManager.swift
-POST https://api.openai.com/v1/audio/transcriptions
-Content-Type: multipart/form-data
-model: whisper-1
-```
-
-Cost: ~$0.006/minute ($0.36/hour)
+Cost: ~$0.006/minute (~$0.36/hour)
 
 ### Speaker Identification
 
-Voice embeddings generated locally, then clustered to identify speakers:
+Uses voice embeddings to identify speakers:
 
-1. Audio segmented by voice activity detection
-2. Embeddings extracted using speechbrain
-3. Agglomerative clustering groups similar voices
-4. User can label speakers post-hoc
+1. Extract audio segments by voice activity detection
+2. Generate embeddings using a local model
+3. Cluster embeddings to identify unique speakers
+4. Match against known speaker profiles
 
 ### Database
 
-SQLite with **GRDB.swift** and FTS5 for full-text search:
+**SQLite** with **GRDB.swift**. Full-text search via FTS5.
 
 ```
 ~/Library/Application Support/Ambien/
-├── ambien.sqlite          # Main database
-└── recordings/            # Audio files (.m4a)
+├── ambien.db          # Main database
+└── recordings/        # Audio files
 ```
 
 ### Agent API
 
-Meetings exported as JSON to `~/.ambien/meetings/`:
+Exports meetings as JSON for AI agents:
 
-```json
-{
-  "id": "uuid",
-  "title": "Team Standup",
-  "date": "2024-01-15T10:00:00Z",
-  "duration": 1847,
-  "participants": ["Alice", "Bob"],
-  "transcript": [
-    { "speaker": "Alice", "timestamp": 0.0, "text": "Good morning..." }
-  ],
-  "summary": "...",
-  "action_items": ["..."]
-}
+```
+~/.ambien/meetings/
+├── index.json
+├── 2024-01-15-standup.json
+└── ...
 ```
 
-CLI tool for querying:
-
-```bash
-ambien list --limit 5
-ambien search "action items"
-ambien get 2024-01-15-standup
-```
+Uses atomic writes + lock files to prevent race conditions with concurrent agent access.
 
 ---
 
-## Key Technologies
+## Key Files
 
-| Component | Technology |
-|-----------|------------|
-| UI | SwiftUI |
-| Audio capture | ScreenCaptureKit |
-| Database | SQLite + GRDB.swift |
-| Search | FTS5 |
-| Transcription | OpenAI Whisper API |
-| Speaker ID | speechbrain embeddings |
-| API key storage | macOS Keychain |
+| File | Purpose |
+|------|---------|
+| `AudioCaptureManager.swift` | ScreenCaptureKit integration, audio encoding |
+| `TranscriptionManager.swift` | OpenAI Whisper API client |
+| `DatabaseManager.swift` | SQLite operations, FTS5 search |
+| `MeetingDetector.swift` | Detects running meeting apps |
+| `AgentAPIManager.swift` | JSON export for Claude Code |
+| `SpeakerIdentifier.swift` | Voice embedding and clustering |
+| `BrandComponents.swift` | Reusable UI components |
+| `BrandAssets.swift` | Colors, typography constants |
 
 ---
 
 ## Code Style
 
-- SwiftUI for all new UI
-- Follow existing patterns (see `BrandComponents.swift` for UI)
+- SwiftUI for all UI
+- Use components from `BrandComponents.swift`
 - Prefer `async/await` over completion handlers
-- No force unwraps unless absolutely necessary
+- No force unwraps (`!`) unless absolutely necessary
+
+### Commits
+
+```
+feat: add speaker diarization
+fix: prevent crash on audio disconnect
+docs: update README
+```
 
 ---
 
 ## Testing
 
-Currently no automated tests. Manual testing workflow:
+No automated tests yet (contributions welcome!).
 
+Manual testing:
 1. Build and run
-2. Test your changes
-3. Test adjacent features
+2. Start a Zoom/Meet/Teams call
+3. Test recording, transcription, search
 4. Check debug console for errors
 
-Automated test contributions welcome!
+---
+
+## CLI Tool
+
+The CLI is a Swift Package in `AmbientCLI/`:
+
+```bash
+cd AmbientCLI
+swift build
+swift run ambient list
+```
+
+Install globally:
+```bash
+sudo ln -s $(pwd)/.build/debug/ambient /usr/local/bin/ambien
+```
 
 ---
 
-## Making a Release
+## Debugging
 
-1. Update version in Xcode (General → Version)
-2. Archive: Product → Archive
-3. Export as Developer ID signed app
-4. Create `.dmg` with create-dmg or similar
-5. Create GitHub release, attach `.dmg`
+### Screen Recording permission not sticking?
 
----
+1. Clean Build Folder (`Cmd+Shift+K`)
+2. System Settings → Privacy → Screen Recording → Remove app
+3. Delete `~/Library/Developer/Xcode/DerivedData/MeetingRecorder-*`
+4. Rebuild
 
-## Common Issues
+### Audio not capturing?
 
-### Screen Recording permission doesn't persist
+Check that the correct audio source is selected. ScreenCaptureKit captures from the system default output device.
 
-Inconsistent code signing. Clean build folder (`Cmd+Shift+K`), remove app from Screen Recording permissions, delete DerivedData, rebuild.
+### Transcription failing?
 
-### Audio not capturing
-
-Check that ScreenCaptureKit permission is granted. The app needs Screen Recording permission even though it's capturing audio.
-
-### Transcription failing
-
-Verify OpenAI API key in Settings. Check console for API errors. Ensure audio file isn't corrupted.
+1. Check API key in Settings
+2. Check network connection
+3. Look at debug console for error messages
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for PR guidelines.
+1. Fork the repo
+2. Create a feature branch
+3. Make changes
+4. Test thoroughly
+5. Submit a PR
 
-Quick start:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/ambien.git
-cd ambien
-open MeetingRecorder.xcodeproj
-# Make changes, test, submit PR
-```
-
----
-
-## Questions?
-
-[Open an issue](https://github.com/brunoqgalvao/ambien/issues) or check existing discussions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.

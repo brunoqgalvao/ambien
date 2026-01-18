@@ -1,7 +1,0 @@
-{
-  "model": "gpt-4o-mini-transcribe",
-  "timestamp": "20260117_123510",
-  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
-  "error": "Error code: 400 - {'error': {'message': 'Total number of tokens in instructions + audio is too large for this model', 'type': 'invalid_request_error', 'param': None, 'code': 'input_too_large'}}",
-  "result": null
-}
