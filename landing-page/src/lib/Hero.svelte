@@ -18,7 +18,7 @@
       </h1>
 
       <p class="hero-subtitle">
-        Whisp captures system audio from Zoom, Meet, and Teams directly on your Mac.
+        Ambien captures system audio from Zoom, Meet, and Teams directly on your Mac.
         No bot joins your call. No one knows you're recording. Just pure, local-first transcription.
       </p>
 
@@ -71,7 +71,7 @@
             <span class="dot yellow"></span>
             <span class="dot green"></span>
           </div>
-          <span class="window-title">Whisp</span>
+          <span class="window-title">Ambien</span>
         </div>
         <div class="window-content">
           <div class="recording-card" class:active={isHovered}>

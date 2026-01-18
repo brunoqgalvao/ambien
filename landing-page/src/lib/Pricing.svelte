@@ -72,7 +72,7 @@
       <div class="comparison-table">
         <div class="compare-row header">
           <span></span>
-          <span>Whisp</span>
+          <span>Ambien</span>
           <span>Others</span>
         </div>
         <div class="compare-row">

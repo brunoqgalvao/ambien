@@ -3,19 +3,19 @@
     {
       number: '01',
       title: 'Start Recording',
-      description: 'Click the menu bar icon or use the keyboard shortcut. Whisp automatically detects if Zoom, Meet, or Teams is running.',
+      description: 'Click the menu bar icon or use the keyboard shortcut. Ambien automatically detects if Zoom, Meet, or Teams is running.',
       visual: 'menubar'
     },
     {
       number: '02',
       title: 'Have Your Meeting',
-      description: 'Whisp captures system audio silently in the background. No one in your call knows you\'re recording. No awkward "Recorder Bot joined."',
+      description: 'Ambien captures system audio silently in the background. No one in your call knows you\'re recording. No awkward "Recorder Bot joined."',
       visual: 'recording'
     },
     {
       number: '03',
       title: 'Auto-Transcribe',
-      description: 'When you stop recording, Whisp sends audio to OpenAI for transcription. Get a searchable transcript in minutes.',
+      description: 'When you stop recording, Ambien sends audio to OpenAI for transcription. Get a searchable transcript in minutes.',
       visual: 'transcribe'
     },
     {

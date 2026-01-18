@@ -467,6 +467,34 @@ struct SpeakerNamingPrompt: View {
         return max(0, speakers.count - userLabeled)
     }
 
+    private var namedCount: Int {
+        meeting.speakerLabels?.filter { $0.isUserAssigned }.count ?? 0
+    }
+
+    private var totalSpeakers: Int {
+        meeting.uniqueSpeakers.count
+    }
+
+    private var headerTitle: String {
+        if namedCount == 0 {
+            return "Name your speakers"
+        } else if unnamedCount == 0 {
+            return "Speakers"
+        } else {
+            return "Speakers"
+        }
+    }
+
+    private var headerSubtitle: String {
+        if namedCount == 0 {
+            return "\(totalSpeakers) speaker\(totalSpeakers == 1 ? "" : "s") detected • click avatars to hear voices"
+        } else if unnamedCount == 0 {
+            return "\(namedCount) speaker\(namedCount == 1 ? "" : "s") named"
+        } else {
+            return "\(namedCount) of \(totalSpeakers) speakers named"
+        }
+    }
+
     var body: some View {
         BrandCard(padding: 0) {
             VStack(spacing: 0) {
@@ -484,11 +512,11 @@ struct SpeakerNamingPrompt: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Name your speakers")
+                        Text(headerTitle)
                             .font(.brandDisplay(13, weight: .semibold))
                             .foregroundColor(.brandTextPrimary)
 
-                        Text("\(unnamedCount) speaker\(unnamedCount == 1 ? "" : "s") detected • click avatars to hear voices")
+                        Text(headerSubtitle)
                             .font(.brandDisplay(11))
                             .foregroundColor(.brandTextSecondary)
                     }

@@ -1142,6 +1142,19 @@ struct ProviderConfigRow: View {
     let onDelete: () -> Void
 
     @State private var isHovered = false
+    @State private var originalKey: String = ""
+    @State private var testState: TestState = .idle
+
+    enum TestState: Equatable {
+        case idle
+        case testing
+        case success
+        case error(String)
+    }
+
+    private var hasChanges: Bool {
+        apiKey != originalKey && !apiKey.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1230,11 +1243,54 @@ struct ProviderConfigRow: View {
 
                     // Actions
                     HStack(spacing: 10) {
-                        BrandPrimaryButton(title: "Save", size: .small, action: onSave)
-                            .opacity(apiKey.isEmpty ? 0.5 : 1)
-                            .disabled(apiKey.isEmpty)
+                        // Test button with feedback
+                        Button(action: testConfiguration) {
+                            HStack(spacing: 6) {
+                                switch testState {
+                                case .idle:
+                                    Image(systemName: "checkmark.circle")
+                                        .font(.system(size: 12))
+                                    Text("Test")
+                                case .testing:
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .frame(width: 14, height: 14)
+                                    Text("Testing...")
+                                case .success:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.brandMint)
+                                    Text("Valid!")
+                                        .foregroundColor(.brandMint)
+                                case .error:
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.brandCoral)
+                                    Text("Failed")
+                                        .foregroundColor(.brandCoral)
+                                }
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(testState == .idle ? .brandViolet : .brandTextPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.brandViolet.opacity(testState == .idle ? 0.1 : 0.05))
+                            .cornerRadius(BrandRadius.small)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(apiKey.isEmpty || testState == .testing)
+                        .opacity(apiKey.isEmpty ? 0.5 : 1)
 
-                        if status == .valid {
+                        // Save only shown when there are changes
+                        if hasChanges {
+                            BrandPrimaryButton(title: "Save", size: .small) {
+                                onSave()
+                                originalKey = apiKey
+                                testState = .idle
+                            }
+                        }
+
+                        if status == .valid && !hasChanges {
                             BrandDestructiveButton(title: "Remove", size: .small, action: onDelete)
                         }
 
@@ -1251,6 +1307,21 @@ struct ProviderConfigRow: View {
                                 .foregroundColor(.brandViolet)
                             }
                         }
+                    }
+
+                    // Test error message
+                    if case .error(let message) = testState {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                            Text(message)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.brandCoral)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.brandCoral.opacity(0.1))
+                        .cornerRadius(BrandRadius.small)
                     }
 
                     // Model selection (only if configured)
@@ -1276,7 +1347,102 @@ struct ProviderConfigRow: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 16)
                 .padding(.leading, 32)
+                .onAppear {
+                    originalKey = apiKey
+                    testState = .idle
+                }
             }
+        }
+        .onChange(of: isExpanded) { _, expanded in
+            if expanded {
+                originalKey = apiKey
+                testState = .idle
+            }
+        }
+    }
+
+    private func testConfiguration() {
+        guard !apiKey.isEmpty else { return }
+
+        testState = .testing
+
+        Task {
+            do {
+                let isValid = try await validateAPIKey(provider: provider, key: apiKey)
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        testState = isValid ? .success : .error("Invalid API key")
+                    }
+                    // Reset to idle after 3 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        if testState == .success || testState != .testing {
+                            withAnimation { testState = .idle }
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        testState = .error(error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+
+    private func validateAPIKey(provider: TranscriptionProvider, key: String) async throws -> Bool {
+        // Each provider has different validation endpoints
+        switch provider {
+        case .openai:
+            // Test with models endpoint
+            guard let url = URL(string: "https://api.openai.com/v1/models") else {
+                throw URLError(.badURL)
+            }
+            var request = URLRequest(url: url)
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+
+        case .gemini:
+            // Test with models list endpoint
+            guard let url = URL(string: "https://generativelanguage.googleapis.com/v1/models?key=\(key)") else {
+                throw URLError(.badURL)
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+
+        case .deepgram:
+            // Test with projects endpoint
+            guard let url = URL(string: "https://api.deepgram.com/v1/projects") else {
+                throw URLError(.badURL)
+            }
+            var request = URLRequest(url: url)
+            request.setValue("Token \(key)", forHTTPHeaderField: "Authorization")
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+
+        case .assemblyai:
+            // Test with transcript list endpoint
+            guard let url = URL(string: "https://api.assemblyai.com/v2/transcript") else {
+                throw URLError(.badURL)
+            }
+            var request = URLRequest(url: url)
+            request.setValue(key, forHTTPHeaderField: "Authorization")
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
         }
     }
 }
@@ -1293,6 +1459,19 @@ struct AnthropicConfigRow: View {
     let onDelete: () -> Void
 
     @State private var isHovered = false
+    @State private var originalKey: String = ""
+    @State private var testState: AnthropicTestState = .idle
+
+    enum AnthropicTestState: Equatable {
+        case idle
+        case testing
+        case success
+        case error(String)
+    }
+
+    private var hasChanges: Bool {
+        apiKey != originalKey && !apiKey.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1370,11 +1549,54 @@ struct AnthropicConfigRow: View {
                     }
 
                     HStack(spacing: 10) {
-                        BrandPrimaryButton(title: "Save", size: .small, action: onSave)
-                            .opacity(apiKey.isEmpty ? 0.5 : 1)
-                            .disabled(apiKey.isEmpty)
+                        // Test button with feedback
+                        Button(action: testConfiguration) {
+                            HStack(spacing: 6) {
+                                switch testState {
+                                case .idle:
+                                    Image(systemName: "checkmark.circle")
+                                        .font(.system(size: 12))
+                                    Text("Test")
+                                case .testing:
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .frame(width: 14, height: 14)
+                                    Text("Testing...")
+                                case .success:
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.brandMint)
+                                    Text("Valid!")
+                                        .foregroundColor(.brandMint)
+                                case .error:
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.brandCoral)
+                                    Text("Failed")
+                                        .foregroundColor(.brandCoral)
+                                }
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(testState == .idle ? .brandViolet : .brandTextPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.brandViolet.opacity(testState == .idle ? 0.1 : 0.05))
+                            .cornerRadius(BrandRadius.small)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(apiKey.isEmpty || testState == .testing)
+                        .opacity(apiKey.isEmpty ? 0.5 : 1)
 
-                        if status == .valid {
+                        // Save only shown when there are changes
+                        if hasChanges {
+                            BrandPrimaryButton(title: "Save", size: .small) {
+                                onSave()
+                                originalKey = apiKey
+                                testState = .idle
+                            }
+                        }
+
+                        if status == .valid && !hasChanges {
                             BrandDestructiveButton(title: "Remove", size: .small, action: onDelete)
                         }
 
@@ -1390,12 +1612,95 @@ struct AnthropicConfigRow: View {
                             .foregroundColor(.brandViolet)
                         }
                     }
+
+                    // Test error message
+                    if case .error(let message) = testState {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                            Text(message)
+                                .font(.caption)
+                        }
+                        .foregroundColor(.brandCoral)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.brandCoral.opacity(0.1))
+                        .cornerRadius(BrandRadius.small)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 16)
                 .padding(.leading, 32)
+                .onAppear {
+                    originalKey = apiKey
+                    testState = .idle
+                }
             }
         }
+        .onChange(of: isExpanded) { _, expanded in
+            if expanded {
+                originalKey = apiKey
+                testState = .idle
+            }
+        }
+    }
+
+    private func testConfiguration() {
+        guard !apiKey.isEmpty else { return }
+
+        testState = .testing
+
+        Task {
+            do {
+                let isValid = try await validateAnthropicKey(key: apiKey)
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        testState = isValid ? .success : .error("Invalid API key")
+                    }
+                    // Reset to idle after 3 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        if testState == .success || testState != .testing {
+                            withAnimation { testState = .idle }
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        testState = .error(error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+
+    private func validateAnthropicKey(key: String) async throws -> Bool {
+        // Test with a minimal messages request
+        guard let url = URL(string: "https://api.anthropic.com/v1/messages") else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
+        request.setValue(key, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "POST"
+        request.timeoutInterval = 10
+
+        // Minimal valid request body
+        let body: [String: Any] = [
+            "model": "claude-3-haiku-20240307",
+            "max_tokens": 1,
+            "messages": [["role": "user", "content": "hi"]]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+
+        if let httpResponse = response as? HTTPURLResponse {
+            // 401 = bad key, anything else means key is valid
+            return httpResponse.statusCode != 401
+        }
+        return false
     }
 }
 

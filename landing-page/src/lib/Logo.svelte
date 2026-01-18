@@ -19,7 +19,7 @@
     </svg>
   </div>
   {#if showText}
-    <span class="logo-text">whisp</span>
+    <span class="logo-text">ambien</span>
   {/if}
 </a>
 

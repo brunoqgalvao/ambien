@@ -67,3 +67,15 @@ venv/
 **/venv/
 **/.venv/
 voice-embedding-service/venv/
+
+# Vercel
+.vercel/
+
+# Landing page build (rebuild from source)
+landing-page/dist/
+
+# Claude skills with node_modules
+.claude/skills/*/node_modules/
+
+# Benchmark results (local testing data)
+benchmark/results/

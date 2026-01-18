@@ -25,6 +25,17 @@ struct SpeakerProfilesSettingsView: View {
     @State private var serviceAPIKey = ""
     @State private var isServiceHealthy = false
     @State private var isCheckingHealth = false
+    @State private var testResult: TestConnectionResult? = nil
+
+    enum TestConnectionResult {
+        case success
+        case failure(String)
+
+        var isSuccess: Bool {
+            if case .success = self { return true }
+            return false
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -166,21 +177,47 @@ struct SpeakerProfilesSettingsView: View {
                             .tint(.brandViolet)
 
                             Button(action: {
-                                Task { await checkServiceHealth() }
+                                testResult = nil
+                                Task { await testConnectionWithFeedback() }
                             }) {
                                 HStack(spacing: 4) {
                                     if isCheckingHealth {
                                         ProgressView()
                                             .scaleEffect(0.6)
+                                    } else if let result = testResult {
+                                        Image(systemName: result.isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                            .foregroundColor(result.isSuccess ? .brandMint : .brandCoral)
                                     } else {
                                         Image(systemName: "antenna.radiowaves.left.and.right")
                                     }
-                                    Text("Test Connection")
+                                    Text(isCheckingHealth ? "Testing..." : "Test Connection")
                                 }
                                 .font(.brandDisplay(12))
                             }
                             .buttonStyle(.plain)
-                            .foregroundColor(.brandViolet)
+                            .foregroundColor(testResult?.isSuccess == true ? .brandMint : (testResult?.isSuccess == false ? .brandCoral : .brandViolet))
+                            .disabled(isCheckingHealth)
+                        }
+
+                        // Test result feedback
+                        if let result = testResult {
+                            HStack(spacing: 6) {
+                                Image(systemName: result.isSuccess ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                    .font(.system(size: 12))
+                                switch result {
+                                case .success:
+                                    Text("Connection successful!")
+                                case .failure(let message):
+                                    Text(message)
+                                }
+                            }
+                            .font(.brandDisplay(11))
+                            .foregroundColor(result.isSuccess ? .brandMint : .brandCoral)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background((result.isSuccess ? Color.brandMint : Color.brandCoral).opacity(0.1))
+                            .cornerRadius(BrandRadius.small)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
                     .padding(.top, 8)
@@ -324,6 +361,48 @@ struct SpeakerProfilesSettingsView: View {
 
         await VoiceEmbeddingClient.shared.loadConfiguration()
         isServiceHealthy = await VoiceEmbeddingClient.shared.healthCheck()
+    }
+
+    private func testConnectionWithFeedback() async {
+        isCheckingHealth = true
+        defer { isCheckingHealth = false }
+
+        // First validate inputs
+        guard !serviceURL.isEmpty else {
+            withAnimation {
+                testResult = .failure("Enter a service URL")
+            }
+            return
+        }
+
+        guard !serviceAPIKey.isEmpty else {
+            withAnimation {
+                testResult = .failure("Enter an API key")
+            }
+            return
+        }
+
+        // Configure and test
+        await VoiceEmbeddingClient.shared.configure(baseURL: serviceURL, apiKey: serviceAPIKey)
+        let healthy = await VoiceEmbeddingClient.shared.healthCheck()
+
+        withAnimation {
+            if healthy {
+                isServiceHealthy = true
+                testResult = .success
+            } else {
+                isServiceHealthy = false
+                testResult = .failure("Could not connect. Check URL and API key.")
+            }
+        }
+
+        // Auto-clear success message after 3 seconds
+        if testResult?.isSuccess == true {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            withAnimation {
+                testResult = nil
+            }
+        }
     }
 }
 
