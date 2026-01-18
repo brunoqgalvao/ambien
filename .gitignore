@@ -59,3 +59,10 @@ benchmark/.env
 
 # Releases (large zip files)
 releases/*.zip
+
+# Python virtual environments
+venv/
+.venv/
+**/venv/
+**/.venv/
+voice-embedding-service/venv/
