@@ -79,3 +79,9 @@ landing-page/dist/
 
 # Benchmark results (local testing data)
 benchmark/results/
+
+# Xcode home cache
+.xcodehome/
+
+# Benchmark venv specifically
+benchmark/venv/
