@@ -16,7 +16,7 @@ import AVFoundation
 import Combine
 import os.log
 
-private let logger = Logger(subsystem: "com.meetingrecorder.app", category: "WhatsAppCallDetector")
+private let logger = Logger(subsystem: "com.ambient.app", category: "WhatsAppCallDetector")
 
 /// Detects WhatsApp calls by monitoring audio activity
 @MainActor

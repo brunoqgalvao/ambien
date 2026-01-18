@@ -622,21 +622,115 @@ struct BriefContentView: View {
 
 // MARK: - Markdown Text View
 
-/// Renders markdown text with proper styling
+/// Renders markdown text with proper styling - handles full markdown including headers and lists
 struct MarkdownTextView: View {
     let text: String
 
     var body: some View {
-        Text(attributedText)
-            .textSelection(.enabled)
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(parseMarkdownBlocks().enumerated()), id: \.offset) { _, block in
+                renderBlock(block)
+            }
+        }
+        .textSelection(.enabled)
     }
 
-    private var attributedText: AttributedString {
+    private enum MarkdownBlock {
+        case heading2(String)
+        case heading3(String)
+        case paragraph(String)
+        case bulletList([String])
+        case bold(String)
+    }
+
+    private func parseMarkdownBlocks() -> [MarkdownBlock] {
+        var blocks: [MarkdownBlock] = []
+        var currentList: [String] = []
+        let lines = text.components(separatedBy: "\n")
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+            // Flush any pending list
+            if !trimmed.hasPrefix("- ") && !currentList.isEmpty {
+                blocks.append(.bulletList(currentList))
+                currentList = []
+            }
+
+            if trimmed.isEmpty {
+                continue
+            } else if trimmed.hasPrefix("## ") {
+                let content = String(trimmed.dropFirst(3))
+                blocks.append(.heading2(content))
+            } else if trimmed.hasPrefix("### ") {
+                let content = String(trimmed.dropFirst(4))
+                blocks.append(.heading3(content))
+            } else if trimmed.hasPrefix("- ") {
+                let content = String(trimmed.dropFirst(2))
+                currentList.append(content)
+            } else if trimmed.hasPrefix("**") && trimmed.hasSuffix("**") && trimmed.count > 4 {
+                // Standalone bold line
+                let content = String(trimmed.dropFirst(2).dropLast(2))
+                blocks.append(.bold(content))
+            } else {
+                blocks.append(.paragraph(trimmed))
+            }
+        }
+
+        // Flush any remaining list
+        if !currentList.isEmpty {
+            blocks.append(.bulletList(currentList))
+        }
+
+        return blocks
+    }
+
+    @ViewBuilder
+    private func renderBlock(_ block: MarkdownBlock) -> some View {
+        switch block {
+        case .heading2(let text):
+            Text(renderInlineMarkdown(text))
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+                .padding(.top, 8)
+
+        case .heading3(let text):
+            Text(renderInlineMarkdown(text))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+                .padding(.top, 4)
+
+        case .paragraph(let text):
+            Text(renderInlineMarkdown(text))
+                .font(.system(size: 14))
+                .foregroundColor(.brandTextPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+
+        case .bulletList(let items):
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("•")
+                            .font(.system(size: 14))
+                            .foregroundColor(.brandTextSecondary)
+                        Text(renderInlineMarkdown(item))
+                            .font(.system(size: 14))
+                            .foregroundColor(.brandTextPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+        case .bold(let text):
+            Text(text)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.brandTextSecondary)
+        }
+    }
+
+    private func renderInlineMarkdown(_ text: String) -> AttributedString {
         do {
             var result = try AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            // Apply base styling
-            result.font = .system(size: 14)
-            result.foregroundColor = .brandTextPrimary
             return result
         } catch {
             return AttributedString(text)

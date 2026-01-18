@@ -34,7 +34,7 @@ enum LogLevel: Int, Comparable {
 final class AppLogger {
     static let shared = AppLogger()
 
-    private let logQueue = DispatchQueue(label: "com.meetingrecorder.logger", qos: .utility)
+    private let logQueue = DispatchQueue(label: "com.ambient.logger", qos: .utility)
     private var logFileHandle: FileHandle?
     private let logDirectory: URL
     private let maxLogFileSize: Int64 = 10 * 1024 * 1024  // 10MB
@@ -117,7 +117,7 @@ final class AppLogger {
         do {
             try FileManager.default.createDirectory(at: logDirectory, withIntermediateDirectories: true)
 
-            let logFileName = "meetingrecorder.log"
+            let logFileName = "ambient.log"
             let logFilePath = logDirectory.appendingPathComponent(logFileName)
 
             // Rotate if needed
@@ -132,7 +132,7 @@ final class AppLogger {
             logFileHandle?.seekToEndOfFile()
 
             // Write startup marker
-            let startupMessage = "\n\n========== MeetingRecorder Started at \(Date()) ==========\n"
+            let startupMessage = "\n\n========== Ambient Started at \(Date()) ==========\n"
             if let data = startupMessage.data(using: .utf8) {
                 logFileHandle?.write(data)
             }
@@ -166,8 +166,8 @@ final class AppLogger {
 
                 // Rotate existing files
                 for i in (1..<maxLogFiles).reversed() {
-                    let oldPath = logDirectory.appendingPathComponent("meetingrecorder.\(i).log")
-                    let newPath = logDirectory.appendingPathComponent("meetingrecorder.\(i + 1).log")
+                    let oldPath = logDirectory.appendingPathComponent("ambient.\(i).log")
+                    let newPath = logDirectory.appendingPathComponent("ambient.\(i + 1).log")
                     if FileManager.default.fileExists(atPath: oldPath.path) {
                         if i + 1 >= maxLogFiles {
                             try? FileManager.default.removeItem(at: oldPath)
@@ -178,7 +178,7 @@ final class AppLogger {
                 }
 
                 // Move current to .1
-                let rotatedPath = logDirectory.appendingPathComponent("meetingrecorder.1.log")
+                let rotatedPath = logDirectory.appendingPathComponent("ambient.1.log")
                 try FileManager.default.moveItem(at: currentFile, to: rotatedPath)
 
                 print("[AppLogger] Rotated log file")
@@ -192,14 +192,14 @@ final class AppLogger {
 
     /// Get the path to the current log file
     var currentLogPath: URL {
-        return logDirectory.appendingPathComponent("meetingrecorder.log")
+        return logDirectory.appendingPathComponent("ambient.log")
     }
 
     /// Get all log file paths
     var allLogPaths: [URL] {
         var paths = [currentLogPath]
         for i in 1..<maxLogFiles {
-            let path = logDirectory.appendingPathComponent("meetingrecorder.\(i).log")
+            let path = logDirectory.appendingPathComponent("ambient.\(i).log")
             if FileManager.default.fileExists(atPath: path.path) {
                 paths.append(path)
             }

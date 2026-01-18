@@ -3,7 +3,7 @@ import Security
 
 /// Helper for storing and retrieving API keys from macOS Keychain
 enum KeychainHelper {
-    private static let service = "com.meetingrecorder.app"
+    private static let service = "com.ambient.app"
 
     /// Save a value to the keychain
     /// - Parameters:

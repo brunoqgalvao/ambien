@@ -282,11 +282,15 @@ enum DueDateGroup: String, CaseIterable {
 /// Structured summary generated from a meeting transcript
 struct MeetingBrief: Codable, Equatable {
     var purpose: String
-    var participants: [String]
+    var participants: [String]           // People who SPOKE in the meeting
+    var peopleMentioned: [String]?       // People discussed but not present
+    var summary: String?                 // Full markdown summary
     var discussionPoints: [String]
+    var keyInsights: [String]?           // Important realizations
     var decisionsMade: [String]
     var decisionsPending: [String]
     var blockers: [String]?
+    var followUpsNeeded: [String]?       // Things needing follow-up
 
     let generatedAt: Date
     let model: String
@@ -296,23 +300,48 @@ struct MeetingBrief: Codable, Equatable {
     var markdown: String {
         var md = ""
 
+        // Purpose
         md += "## 📌 Purpose\n\n"
         md += "\(purpose)\n\n"
 
+        // Participants (who spoke)
         if !participants.isEmpty {
             md += "## 👥 Participants\n\n"
             md += participants.joined(separator: ", ")
             md += "\n\n"
         }
 
+        // People mentioned (not in call)
+        if let mentioned = peopleMentioned, !mentioned.isEmpty {
+            md += "**People mentioned:** \(mentioned.joined(separator: ", "))\n\n"
+        }
+
+        // Full summary (already in markdown)
+        if let summary = summary, !summary.isEmpty {
+            md += "## 📋 Summary\n\n"
+            md += summary
+            md += "\n\n"
+        }
+
+        // Key Insights
+        if let insights = keyInsights, !insights.isEmpty {
+            md += "## 💡 Key Insights\n\n"
+            for insight in insights {
+                md += "- \(insight)\n"
+            }
+            md += "\n"
+        }
+
+        // Discussion Points
         if !discussionPoints.isEmpty {
-            md += "## 📝 Key Discussion Points\n\n"
+            md += "## 📝 Discussion Points\n\n"
             for point in discussionPoints {
                 md += "- \(point)\n"
             }
             md += "\n"
         }
 
+        // Decisions Made
         if !decisionsMade.isEmpty {
             md += "## ✅ Decisions Made\n\n"
             for decision in decisionsMade {
@@ -321,6 +350,7 @@ struct MeetingBrief: Codable, Equatable {
             md += "\n"
         }
 
+        // Pending Decisions
         if !decisionsPending.isEmpty {
             md += "## ⏳ Pending Decisions\n\n"
             for decision in decisionsPending {
@@ -329,10 +359,20 @@ struct MeetingBrief: Codable, Equatable {
             md += "\n"
         }
 
+        // Blockers
         if let blockers = blockers, !blockers.isEmpty {
-            md += "## ⚠️ Blockers Identified\n\n"
+            md += "## ⚠️ Blockers\n\n"
             for blocker in blockers {
                 md += "- \(blocker)\n"
+            }
+            md += "\n"
+        }
+
+        // Follow-ups
+        if let followUps = followUpsNeeded, !followUps.isEmpty {
+            md += "## 📞 Follow-ups Needed\n\n"
+            for followUp in followUps {
+                md += "- \(followUp)\n"
             }
             md += "\n"
         }

@@ -129,7 +129,7 @@ struct WelcomeStepView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Welcome to MeetingRecorder")
+                Text("Welcome to Ambient")
                     .font(.title.weight(.semibold))
 
                 Text("Your Mac's memory for everything\nyou say and hear.")

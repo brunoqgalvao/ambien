@@ -127,6 +127,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     // Services group
     case aiProviders = "AI Providers"
     case templates = "Templates"
+    case speakers = "Speakers"
 
     // Audit group
     case usage = "Usage"
@@ -143,6 +144,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .dictation: return "mic.fill"
         case .aiProviders: return "cpu"
         case .templates: return "doc.text.magnifyingglass"
+        case .speakers: return "person.2.fill"
         case .usage: return "chart.bar.fill"
         case .about: return "info.circle.fill"
         }
@@ -151,7 +153,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     var group: SettingsSectionGroup {
         switch self {
         case .general, .recording, .dictation: return .app
-        case .aiProviders, .templates: return .services
+        case .aiProviders, .templates, .speakers: return .services
         case .usage: return .audit
         case .about: return .support
         }
@@ -226,6 +228,8 @@ struct FullSettingsView: View {
             AIProvidersSettingsContent()
         case .templates:
             SummaryTemplatesSettingsTab()
+        case .speakers:
+            SpeakerProfilesSettingsView()
         case .usage:
             UsageSettingsContent()
         case .about:
@@ -1835,7 +1839,7 @@ struct AboutSettingsContent: View {
             VStack(spacing: 12) {
                 BrandLogo(size: 48, showText: false)
 
-                Text("MeetingRecorder")
+                Text("Ambient")
                     .font(.brandDisplay(20, weight: .bold))
                     .foregroundColor(.brandTextPrimary)
 
@@ -1849,9 +1853,9 @@ struct AboutSettingsContent: View {
 
             // Links
             VStack(spacing: 8) {
-                AboutLinkRow(icon: "globe", title: "Website", url: "https://meetingrecorder.app")
-                AboutLinkRow(icon: "doc.text", title: "Documentation", url: "https://meetingrecorder.app/docs")
-                AboutLinkRow(icon: "envelope", title: "Contact Support", url: "mailto:support@meetingrecorder.app")
+                AboutLinkRow(icon: "globe", title: "Website", url: "https://ambient.app")
+                AboutLinkRow(icon: "doc.text", title: "Documentation", url: "https://ambient.app/docs")
+                AboutLinkRow(icon: "envelope", title: "Contact Support", url: "mailto:support@ambient.app")
                 AboutLinkRow(icon: "star", title: "Rate on App Store", url: "macappstore://")
             }
 
@@ -1869,7 +1873,7 @@ struct AboutSettingsContent: View {
 
             Spacer()
 
-            Text("© 2025 MeetingRecorder. All rights reserved.")
+            Text("© 2025 Ambient. All rights reserved.")
                 .font(.caption2)
                 .foregroundColor(.brandTextSecondary)
         }

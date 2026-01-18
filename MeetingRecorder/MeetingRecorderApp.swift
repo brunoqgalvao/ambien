@@ -61,7 +61,7 @@ struct MeetingRecorderApp: App {
 
             // About menu
             CommandGroup(replacing: .appInfo) {
-                Button("About MeetingRecorder") {
+                Button("About Ambient") {
                     AboutWindowController.shared.showWindow()
                 }
             }
@@ -457,7 +457,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem?.button else { return }
 
         // Always use waveform icon - simple and consistent
-        let image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "MeetingRecorder")
+        let image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Ambient")
         image?.isTemplate = true
         button.image = image
         button.contentTintColor = nil
@@ -529,7 +529,7 @@ class AboutWindowController {
 
         let hostingController = NSHostingController(rootView: aboutView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "About MeetingRecorder"
+        window.title = "About Ambient"
         window.styleMask = [.titled, .closable]
         window.setContentSize(NSSize(width: 400, height: 480))
         window.center()
@@ -570,7 +570,7 @@ struct AboutView: View {
             }
 
             VStack(spacing: 8) {
-                Text("MeetingRecorder")
+                Text("Ambient")
                     .font(.system(size: 24, weight: .bold))
 
                 Text("Version \(appVersion) (\(buildNumber))")
@@ -591,7 +591,7 @@ struct AboutView: View {
 
             // Links
             VStack(spacing: 12) {
-                Link(destination: URL(string: "https://meetingrecorder.app")!) {
+                Link(destination: URL(string: "https://ambient.app")!) {
                     HStack {
                         Image(systemName: "globe")
                         Text("Website")
@@ -607,7 +607,7 @@ struct AboutView: View {
                     .cornerRadius(8)
                 }
 
-                Link(destination: URL(string: "mailto:support@meetingrecorder.app")!) {
+                Link(destination: URL(string: "mailto:support@ambient.app")!) {
                     HStack {
                         Image(systemName: "envelope")
                         Text("Contact Support")
@@ -638,7 +638,7 @@ struct AboutView: View {
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
 
-                Text(" 2025 MeetingRecorder")
+                Text("© 2025 Ambient")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
             }

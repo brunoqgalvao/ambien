@@ -1239,7 +1239,7 @@ struct BrandLogo: View {
             .scaleEffect(animated && isAnimating ? 1.05 : 1)
 
             if showText {
-                Text("murmur")
+                Text("ambient")
                     .font(.brandDisplay(size * 0.5, weight: .bold))
                     .foregroundColor(.brandInk)
             }

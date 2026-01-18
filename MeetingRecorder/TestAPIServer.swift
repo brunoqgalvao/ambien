@@ -26,7 +26,7 @@ class TestAPIServer: ObservableObject {
 
     private var listener: NWListener?
     private let port: UInt16 = 8765
-    private let queue = DispatchQueue(label: "com.meetingrecorder.testapi")
+    private let queue = DispatchQueue(label: "com.ambient.testapi")
 
     // MARK: - Server Control
 
@@ -443,7 +443,7 @@ class TestAPIServer: ObservableObject {
         let keychainKey = provider.keychainKey
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.meetingrecorder.app",
+            kSecAttrService as String: "com.ambient.app",
             kSecAttrAccount as String: keychainKey,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne

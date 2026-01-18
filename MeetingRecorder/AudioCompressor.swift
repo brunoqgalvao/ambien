@@ -310,7 +310,7 @@ actor AudioCompressor {
         writer.startSession(atSourceTime: .zero)
 
         // Process samples
-        let processingQueue = DispatchQueue(label: "com.meetingrecorder.audiocompression")
+        let processingQueue = DispatchQueue(label: "com.ambient.audiocompression")
 
         return try await withCheckedThrowingContinuation { continuation in
             writerInput.requestMediaDataWhenReady(on: processingQueue) {

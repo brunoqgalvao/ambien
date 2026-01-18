@@ -6,12 +6,71 @@
 //
 
 import SwiftUI
+import AVFoundation
+
+// MARK: - Speaker Audio Preview Manager
+
+/// Manages audio playback for speaker sample previews
+@MainActor
+class SpeakerAudioPreviewManager: ObservableObject {
+    @Published var isPlaying = false
+    @Published var currentSpeakerId: String?
+
+    private var player: AVAudioPlayer?
+    private var stopTimer: Timer?
+
+    /// Play a segment of audio for speaker identification
+    /// - Parameters:
+    ///   - audioPath: Path to the full meeting audio file
+    ///   - startTime: Start time of the segment in seconds
+    ///   - duration: How long to play (default 5 seconds)
+    ///   - speakerId: The speaker ID being previewed
+    func playSample(audioPath: String, startTime: TimeInterval, duration: TimeInterval = 5.0, speakerId: String) {
+        // Stop any current playback
+        stop()
+
+        let url = URL(fileURLWithPath: audioPath)
+
+        do {
+            player = try AVAudioPlayer(contentsOf: url)
+            player?.currentTime = startTime
+            player?.prepareToPlay()
+            player?.play()
+
+            isPlaying = true
+            currentSpeakerId = speakerId
+
+            // Auto-stop after duration
+            stopTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { _ in
+                Task { @MainActor [weak self] in
+                    self?.stop()
+                }
+            }
+        } catch {
+            print("[SpeakerAudioPreview] Failed to play: \(error)")
+        }
+    }
+
+    func stop() {
+        stopTimer?.invalidate()
+        stopTimer = nil
+        player?.stop()
+        player = nil
+        isPlaying = false
+        currentSpeakerId = nil
+    }
+
+    func isPlayingSpeaker(_ speakerId: String) -> Bool {
+        isPlaying && currentSpeakerId == speakerId
+    }
+}
 
 /// View for labeling speakers in a meeting
 struct SpeakerLabelingView: View {
     @Binding var meeting: Meeting
     @State private var editingLabel: SpeakerLabel?
     @State private var isExpanded: Bool = true
+    @StateObject private var audioPreview = SpeakerAudioPreviewManager()
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -38,6 +97,9 @@ struct SpeakerLabelingView: View {
                             speakerId: speakerId,
                             currentLabel: meeting.speakerName(for: speakerId),
                             isLabeled: meeting.speakerLabels?.contains(where: { $0.speakerId == speakerId }) ?? false,
+                            sampleSegment: firstSegment(for: speakerId),
+                            audioPath: meeting.audioPath,
+                            audioPreview: audioPreview,
                             onLabelChanged: { newName in
                                 updateSpeakerLabel(speakerId: speakerId, name: newName)
                             }
@@ -62,6 +124,20 @@ struct SpeakerLabelingView: View {
         .padding()
         .background(Color.brandCreamDark.opacity(0.5))
         .cornerRadius(8)
+        .onDisappear {
+            audioPreview.stop()
+        }
+    }
+
+    /// Get the first (or best) segment for a speaker to use as a sample
+    private func firstSegment(for speakerId: String) -> DiarizationSegment? {
+        guard let segments = meeting.diarizationSegments else { return nil }
+
+        // Find segments for this speaker, prefer longer ones (more recognizable voice)
+        let speakerSegments = segments.filter { $0.speakerId == speakerId }
+
+        // Return the longest segment (up to 10 seconds is ideal for identification)
+        return speakerSegments.max(by: { ($0.end - $0.start) < ($1.end - $1.start) })
     }
 
     private func updateSpeakerLabel(speakerId: String, name: String) {
@@ -72,41 +148,68 @@ struct SpeakerLabelingView: View {
 
         // Add new label if name is not empty
         if !name.isEmpty {
-            labels.append(SpeakerLabel(speakerId: speakerId, name: name))
+            labels.append(SpeakerLabel(speakerId: speakerId, name: name, isUserAssigned: true))
         }
 
         meeting.speakerLabels = labels
 
+        // Capture the updated meeting value for the async task
+        let meetingToSave = meeting
+
         // Save to database
         Task {
-            try? await DatabaseManager.shared.update(meeting)
+            do {
+                try await DatabaseManager.shared.update(meetingToSave)
+                print("[SpeakerLabelingView] Saved speaker label '\(name)' for \(speakerId)")
+                // Notify other views that meeting data changed
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+                }
+            } catch {
+                print("[SpeakerLabelingView] ERROR saving speaker label: \(error)")
+            }
         }
     }
 }
 
-/// Row for a single speaker with editable label
+/// Row for a single speaker with editable label and audio preview
 struct SpeakerLabelRow: View {
     let speakerId: String
     let currentLabel: String
     let isLabeled: Bool
+    var sampleSegment: DiarizationSegment? = nil
+    var audioPath: String? = nil
+    var audioPreview: SpeakerAudioPreviewManager? = nil
     let onLabelChanged: (String) -> Void
 
     @State private var isEditing = false
     @State private var editedName: String = ""
     @State private var isHovered = false
+    @State private var isPlayButtonHovered = false
     @FocusState private var isFocused: Bool
+
+    /// Whether this speaker's sample is currently playing
+    @MainActor private var isPlayingSample: Bool {
+        audioPreview?.isPlayingSpeaker(speakerId) ?? false
+    }
+
+    /// Whether we can play a sample (have segment data and audio file)
+    private var canPlaySample: Bool {
+        sampleSegment != nil && audioPath != nil && audioPreview != nil
+    }
 
     var body: some View {
         HStack(spacing: 12) {
-            // Speaker avatar
-            Circle()
-                .fill(colorForSpeaker(speakerId))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text(currentLabel.prefix(1).uppercased())
-                        .font(.caption.weight(.semibold))
-                        .foregroundColor(.white)
-                )
+            // Speaker avatar circle
+            ZStack {
+                Circle()
+                    .fill(colorForSpeaker(speakerId))
+                    .frame(width: 32, height: 32)
+
+                Text(currentLabel.prefix(1).uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.white)
+            }
 
             if isEditing {
                 // Edit mode - brand-styled inline text field, left-aligned
@@ -162,8 +265,30 @@ struct SpeakerLabelRow: View {
 
                     Spacer()
 
+                    // Play button for voice sample
+                    if canPlaySample {
+                        Button(action: togglePlaySample) {
+                            ZStack {
+                                Circle()
+                                    .fill(isPlayingSample ? Color.brandViolet : (isPlayButtonHovered ? Color.brandViolet.opacity(0.15) : Color.clear))
+                                    .frame(width: 28, height: 28)
+
+                                Image(systemName: isPlayingSample ? "stop.fill" : "play.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(isPlayingSample ? .white : .brandViolet)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .onHover { hovering in
+                            withAnimation(.easeInOut(duration: 0.1)) {
+                                isPlayButtonHovered = hovering
+                            }
+                        }
+                        .help(isPlayingSample ? "Stop preview" : "Play voice sample")
+                    }
+
                     // Show pencil on hover
-                    if isHovered {
+                    if isHovered && !isPlayButtonHovered {
                         Image(systemName: "pencil")
                             .font(.system(size: 11))
                             .foregroundColor(.brandTextSecondary)
@@ -179,6 +304,20 @@ struct SpeakerLabelRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    @MainActor private func togglePlaySample() {
+        guard let preview = audioPreview,
+              let segment = sampleSegment,
+              let path = audioPath else { return }
+
+        if isPlayingSample {
+            preview.stop()
+        } else {
+            // Play up to 5 seconds of the segment
+            let duration = min(5.0, segment.end - segment.start)
+            preview.playSample(audioPath: path, startTime: segment.start, duration: duration, speakerId: speakerId)
+        }
     }
 
     private func startEditing() {
@@ -304,6 +443,7 @@ struct SpeakerNamingPrompt: View {
     @Binding var meeting: Meeting
     @State private var isExpanded = false
     @State private var isHovered = false
+    @StateObject private var audioPreview = SpeakerAudioPreviewManager()
 
     private var unnamedCount: Int {
         let speakers = meeting.uniqueSpeakers
@@ -332,7 +472,7 @@ struct SpeakerNamingPrompt: View {
                             .font(.brandDisplay(13, weight: .semibold))
                             .foregroundColor(.brandTextPrimary)
 
-                        Text("\(unnamedCount) speaker\(unnamedCount == 1 ? "" : "s") detected • add names for better transcripts")
+                        Text("\(unnamedCount) speaker\(unnamedCount == 1 ? "" : "s") detected • click avatars to hear voices")
                             .font(.brandDisplay(11))
                             .foregroundColor(.brandTextSecondary)
                     }
@@ -382,6 +522,9 @@ struct SpeakerNamingPrompt: View {
                                 speakerId: speakerId,
                                 currentLabel: meeting.speakerName(for: speakerId),
                                 isLabeled: meeting.speakerLabels?.contains(where: { $0.speakerId == speakerId && $0.isUserAssigned }) ?? false,
+                                sampleSegment: firstSegment(for: speakerId),
+                                audioPath: meeting.audioPath,
+                                audioPreview: audioPreview,
                                 onLabelChanged: { newName in
                                     updateSpeakerLabel(speakerId: speakerId, name: newName, isUserAssigned: true)
                                 }
@@ -416,16 +559,42 @@ struct SpeakerNamingPrompt: View {
         .onHover { hovering in
             isHovered = hovering
         }
+        .onDisappear {
+            audioPreview.stop()
+        }
+    }
+
+    /// Get the first (or best) segment for a speaker to use as a sample
+    private func firstSegment(for speakerId: String) -> DiarizationSegment? {
+        guard let segments = meeting.diarizationSegments else { return nil }
+
+        // Find segments for this speaker, prefer longer ones (more recognizable voice)
+        let speakerSegments = segments.filter { $0.speakerId == speakerId }
+
+        // Return the longest segment (up to 10 seconds is ideal for identification)
+        return speakerSegments.max(by: { ($0.end - $0.start) < ($1.end - $1.start) })
     }
 
     private func dismissPrompt() {
+        audioPreview.stop()
         withAnimation(.easeOut(duration: 0.2)) {
             meeting.speakerNamingDismissed = true
         }
 
+        // Capture the updated meeting value for the async task
+        let meetingToSave = meeting
+
         // Save to database
         Task {
-            try? await DatabaseManager.shared.update(meeting)
+            do {
+                try await DatabaseManager.shared.update(meetingToSave)
+                print("[SpeakerNamingPrompt] Saved dismiss state")
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+                }
+            } catch {
+                print("[SpeakerNamingPrompt] ERROR saving dismiss state: \(error)")
+            }
         }
     }
 
@@ -446,9 +615,20 @@ struct SpeakerNamingPrompt: View {
 
         meeting.speakerLabels = labels
 
+        // Capture the updated meeting value for the async task
+        let meetingToSave = meeting
+
         // Save to database
         Task {
-            try? await DatabaseManager.shared.update(meeting)
+            do {
+                try await DatabaseManager.shared.update(meetingToSave)
+                print("[SpeakerNamingPrompt] Saved speaker label '\(name)' for \(speakerId)")
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+                }
+            } catch {
+                print("[SpeakerNamingPrompt] ERROR saving speaker label: \(error)")
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ import CoreGraphics
 import CoreAudio
 import os.log
 
-private let logger = Logger(subsystem: "com.meetingrecorder.app", category: "MeetingDetector")
+private let logger = Logger(subsystem: "com.ambient.app", category: "MeetingDetector")
 
 /// Represents a detected meeting session
 struct DetectedMeeting: Equatable {

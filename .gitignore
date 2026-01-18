@@ -20,6 +20,7 @@ Thumbs.db
 *.xcuserstate
 xcuserdata/
 DerivedData/
+.derivedData/
 *.moved-aside
 *.pbxuser
 !default.pbxuser

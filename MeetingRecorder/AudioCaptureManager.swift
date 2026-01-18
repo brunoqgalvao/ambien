@@ -707,7 +707,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
             throw AudioCaptureError.streamFailed(NSError(domain: "AudioCapture", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create output handler"]))
         }
 
-        let outputQueue = DispatchQueue(label: "com.meetingrecorder.audio")
+        let outputQueue = DispatchQueue(label: "com.ambient.audio")
         streamOutputQueue = outputQueue
         try currentStream.addStreamOutput(output, type: .audio, sampleHandlerQueue: outputQueue)
 

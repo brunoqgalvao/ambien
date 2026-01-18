@@ -241,8 +241,9 @@ actor SummarizationProcess {
             return preferred
         }
 
-        // Priority for intelligence: Gemini > OpenAI > Claude (Gemini is fast + cheap for structured output)
-        let priority: [SummarizationProvider] = [.gemini, .openai, .anthropic]
+        // Priority for intelligence: OpenAI (GPT-4o) > Claude > Gemini
+        // We need a strong model for thorough analysis
+        let priority: [SummarizationProvider] = [.openai, .anthropic, .gemini]
         for provider in priority {
             if provider.isConfigured {
                 return provider
@@ -402,7 +403,8 @@ actor SummarizationProcess {
             throw SummarizationProcessError.noAPIKey(.openai)
         }
 
-        let model = "gpt-4o-mini"
+        // Use GPT-4o for thorough analysis (not mini)
+        let model = "gpt-4o"
         let prompt = buildIntelligencePrompt(transcript: transcript)
 
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
@@ -469,7 +471,8 @@ actor SummarizationProcess {
             throw SummarizationProcessError.noAPIKey(.anthropic)
         }
 
-        let model = "claude-3-5-haiku-20241022"
+        // Use Claude Sonnet for thorough analysis
+        let model = "claude-sonnet-4-20250514"
         let prompt = buildIntelligencePrompt(transcript: transcript)
 
         var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
@@ -525,44 +528,69 @@ actor SummarizationProcess {
 
     private func buildIntelligencePrompt(transcript: String) -> String {
         // Truncate if too long
-        let maxTranscriptLength = 50000
+        let maxTranscriptLength = 80000
         let truncatedTranscript = transcript.count > maxTranscriptLength
             ? String(transcript.prefix(maxTranscriptLength)) + "\n\n[... transcript truncated ...]"
             : transcript
 
         return """
-        Analyze this meeting transcript and extract actionable intelligence.
+        You are an expert meeting analyst. Analyze this meeting transcript thoroughly and extract comprehensive, actionable intelligence.
 
         Respond with JSON in this exact format:
         {
             "brief": {
-                "purpose": "One clear sentence describing the meeting's purpose",
-                "participants": ["Name1", "Name2"],
-                "discussion_points": ["Key topic 1", "Key topic 2", ...],
-                "decisions_made": ["Decision 1", ...],
-                "decisions_pending": ["Pending decision 1", ...],
-                "blockers": ["Blocker 1", ...] or null if none
+                "purpose": "2-3 sentences describing the meeting's purpose and main objective",
+                "participants": ["Only people who SPOKE in the meeting - not people who were mentioned"],
+                "people_mentioned": ["People discussed but not present in the call"],
+                "summary": "A thorough 3-5 paragraph summary in markdown format covering: (1) what was discussed, (2) key insights and context, (3) conclusions reached. Use **bold** for emphasis, bullet points where helpful.",
+                "discussion_points": [
+                    "Detailed point 1 - include context and what was said about it",
+                    "Detailed point 2 - include any conclusions or insights",
+                    "..."
+                ],
+                "key_insights": ["Important realizations or learnings from the discussion"],
+                "decisions_made": ["Explicit decisions that were agreed upon - be specific"],
+                "decisions_pending": ["Things that still need to be decided - include context on blockers"],
+                "blockers": ["Issues or dependencies that are blocking progress"] or null if none,
+                "follow_ups_needed": ["Things that need follow-up but aren't action items per se"]
             },
             "action_items": [
                 {
-                    "task": "Clear, actionable task description",
-                    "assignee": "Person name" or null if unclear,
+                    "task": "Clear, specific, actionable task description",
+                    "assignee": "Person name who committed to doing it" or null if unclear,
                     "due_suggestion": "by Friday" or "next week" or "ASAP" or null,
                     "priority": "high" | "medium" | "low",
-                    "context": "Brief context from meeting" or null
+                    "context": "Why this task matters and any relevant context from the meeting"
                 }
             ]
         }
 
-        Guidelines:
-        - Extract ONLY explicitly mentioned action items (things someone committed to DO)
-        - Infer priority from urgency language ("ASAP", "critical", "when you get a chance")
-        - Use exact names mentioned in transcript for assignees
-        - If no clear assignee, leave null (don't guess)
-        - Due suggestions should use relative terms from the meeting context
-        - Keep discussion points to 3-7 most important topics
-        - Decisions must be explicit agreements, not assumptions
-        - For participants, extract names mentioned as attendees/speakers
+        CRITICAL GUIDELINES:
+
+        **Participants vs Mentioned People:**
+        - "participants" = ONLY people who actually SPOKE in the meeting (you can tell from speaker labels or who is talking)
+        - "people_mentioned" = People who were DISCUSSED or REFERENCED but are NOT in the call
+
+        **Summary Quality:**
+        - Write a thorough summary that someone who missed the meeting could read and understand what happened
+        - Use markdown formatting: **bold** for key terms, bullet points for lists
+        - Include context, not just what was said but WHY it matters
+        - Capture the narrative arc of the conversation
+
+        **Discussion Points:**
+        - Be comprehensive - for a 45-minute meeting, expect 5-10 substantial discussion points
+        - Include enough detail that each point is meaningful on its own
+        - Don't just list topics - explain what was discussed about each
+
+        **Action Items:**
+        - Only include EXPLICIT commitments ("I'll do X", "Let's make sure to Y")
+        - Don't invent action items that weren't actually committed to
+        - Include context so the person knows why they're doing it
+        - If someone said they'd do something, capture exactly what they committed to
+
+        **Key Insights:**
+        - What were the "aha moments" or important realizations?
+        - What context or background information was shared that's valuable?
 
         TRANSCRIPT:
         \(truncatedTranscript)
@@ -602,16 +630,32 @@ actor SummarizationProcess {
             throw SummarizationProcessError.invalidResponse
         }
 
+        // Determine provider name
+        let providerName: String
+        if model.contains("gemini") {
+            providerName = "Gemini"
+        } else if model.contains("gpt") {
+            providerName = "OpenAI GPT-4o"
+        } else if model.contains("claude") {
+            providerName = "Claude Sonnet"
+        } else {
+            providerName = "AI"
+        }
+
         let brief = MeetingBrief(
             purpose: briefJson["purpose"] as? String ?? "Meeting summary",
             participants: briefJson["participants"] as? [String] ?? [],
+            peopleMentioned: briefJson["people_mentioned"] as? [String],
+            summary: briefJson["summary"] as? String,
             discussionPoints: briefJson["discussion_points"] as? [String] ?? [],
+            keyInsights: briefJson["key_insights"] as? [String],
             decisionsMade: briefJson["decisions_made"] as? [String] ?? [],
             decisionsPending: briefJson["decisions_pending"] as? [String] ?? [],
             blockers: briefJson["blockers"] as? [String],
+            followUpsNeeded: briefJson["follow_ups_needed"] as? [String],
             generatedAt: Date(),
             model: model,
-            provider: model.contains("gemini") ? "Gemini" : (model.contains("gpt") ? "OpenAI" : "Anthropic")
+            provider: providerName
         )
 
         // Parse action items

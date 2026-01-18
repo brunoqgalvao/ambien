@@ -70,7 +70,7 @@ struct ProjectsListView: View {
             }
         }
         .sheet(item: $selectedProject) { project in
-            ProjectDetailView(project: project)
+            ProjectDashboardView(project: project)
         }
         .sheet(isPresented: $isCreatingProject) {
             CreateProjectSheet(viewModel: viewModel)

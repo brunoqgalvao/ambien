@@ -54,7 +54,7 @@ class MainAppWindowController {
         let hostingController = NSHostingController(rootView: mainView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "MeetingRecorder"
+        window.title = "Ambient"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden

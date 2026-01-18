@@ -168,7 +168,7 @@ struct WelcomeStep: View {
                 }
 
                 VStack(spacing: 12) {
-                    Text("Welcome to MeetingRecorder")
+                    Text("Welcome to Ambient")
                         .font(.system(size: 28, weight: .bold))
 
                     Text("Your Mac's memory for everything\nyou say and hear.")
@@ -326,7 +326,7 @@ struct ScreenRecordingPermissionStep: View {
             screenshotView: AnyView(ScreenRecordingScreenshot()),
             instructions: [
                 "Click \"Open System Settings\"",
-                "Find \"MeetingRecorder\" in the list",
+                "Find \"Ambient\" in the list",
                 "Toggle the switch ON",
                 "Click \"Quit & Reopen\" if prompted"
             ],
@@ -520,7 +520,7 @@ struct MicrophoneScreenshot: View {
                     .font(.system(size: 36))
                     .foregroundColor(.blue)
 
-                Text("\"MeetingRecorder\" would like to\naccess the microphone.")
+                Text("\"Ambient\" would like to\naccess the microphone.")
                     .font(.system(size: 13, weight: .medium))
                     .multilineTextAlignment(.center)
 
@@ -578,7 +578,7 @@ struct ScreenRecordingScreenshot: View {
                 VStack(spacing: 0) {
                     MockAppRow(name: "Zoom", isEnabled: true)
                     Divider().padding(.leading, 44)
-                    MockAppRow(name: "MeetingRecorder", isEnabled: false, isHighlighted: true)
+                    MockAppRow(name: "Ambient", isEnabled: false, isHighlighted: true)
                     Divider().padding(.leading, 44)
                     MockAppRow(name: "Chrome", isEnabled: true)
                 }

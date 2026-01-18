@@ -64,6 +64,7 @@
 		1BPROJECT00002 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJECT00001 /* Project.swift */; };
 		1BPROJMGR00002 /* ProjectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJMGR00001 /* ProjectManager.swift */; };
 		1BPROJVIEW00002 /* ProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJVIEW00001 /* ProjectsView.swift */; };
+		1BPROJDASH00002 /* ProjectDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJDASH00001 /* ProjectDashboardView.swift */; };
 		1BDEEPGRAM00002 /* DeepgramTranscriptionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */; };
 		1CSPEAKERID00002 /* SpeakerIdentificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CSPEAKERID00001 /* SpeakerIdentificationService.swift */; };
 		1CACTIONITEM00002 /* ActionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONITEM00001 /* ActionItem.swift */; };
@@ -71,6 +72,11 @@
 		1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONVIEWS00001 /* ActionItemViews.swift */; };
 		1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONDASH00001 /* ActionItemsDashboardView.swift */; };
 		1DCLIINSTALL00002 /* CLIInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCLIINSTALL00001 /* CLIInstaller.swift */; };
+		1EMTGTEMPL00002 /* MeetingTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EMTGTEMPL00001 /* MeetingTemplate.swift */; };
+		1EMTGTEMPLVIEW00002 /* MeetingTemplatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EMTGTEMPLVIEW00001 /* MeetingTemplatesView.swift */; };
+		1FVOICEEMBED00002 /* VoiceEmbeddingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */; };
+		1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERPROF00001 /* SpeakerProfile.swift */; };
+		1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -132,6 +138,7 @@
 		1BPROJECT00001 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
 		1BPROJMGR00001 /* ProjectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectManager.swift; sourceTree = "<group>"; };
 		1BPROJVIEW00001 /* ProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsView.swift; sourceTree = "<group>"; };
+		1BPROJDASH00001 /* ProjectDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDashboardView.swift; sourceTree = "<group>"; };
 		1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramTranscriptionProvider.swift; sourceTree = "<group>"; };
 		1CSPEAKERID00001 /* SpeakerIdentificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerIdentificationService.swift; sourceTree = "<group>"; };
 		1CACTIONITEM00001 /* ActionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItem.swift; sourceTree = "<group>"; };
@@ -139,6 +146,11 @@
 		1CACTIONVIEWS00001 /* ActionItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemViews.swift; sourceTree = "<group>"; };
 		1CACTIONDASH00001 /* ActionItemsDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemsDashboardView.swift; sourceTree = "<group>"; };
 		1DCLIINSTALL00001 /* CLIInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIInstaller.swift; sourceTree = "<group>"; };
+		1EMTGTEMPL00001 /* MeetingTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingTemplate.swift; sourceTree = "<group>"; };
+		1EMTGTEMPLVIEW00001 /* MeetingTemplatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingTemplatesView.swift; sourceTree = "<group>"; };
+		1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceEmbeddingClient.swift; sourceTree = "<group>"; };
+		1FSPEAKERPROF00001 /* SpeakerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfile.swift; sourceTree = "<group>"; };
+		1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfilesSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +232,7 @@
 				1BPROJECT00001 /* Project.swift */,
 				1BPROJMGR00001 /* ProjectManager.swift */,
 				1BPROJVIEW00001 /* ProjectsView.swift */,
+				1BPROJDASH00001 /* ProjectDashboardView.swift */,
 				1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */,
 				1CSPEAKERID00001 /* SpeakerIdentificationService.swift */,
 				1CACTIONITEM00001 /* ActionItem.swift */,
@@ -227,6 +240,11 @@
 				1CACTIONVIEWS00001 /* ActionItemViews.swift */,
 				1CACTIONDASH00001 /* ActionItemsDashboardView.swift */,
 				1DCLIINSTALL00001 /* CLIInstaller.swift */,
+				1EMTGTEMPL00001 /* MeetingTemplate.swift */,
+				1EMTGTEMPLVIEW00001 /* MeetingTemplatesView.swift */,
+				1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */,
+				1FSPEAKERPROF00001 /* SpeakerProfile.swift */,
+				1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -396,6 +414,7 @@
 				1BPROJECT00002 /* Project.swift in Sources */,
 				1BPROJMGR00002 /* ProjectManager.swift in Sources */,
 				1BPROJVIEW00002 /* ProjectsView.swift in Sources */,
+				1BPROJDASH00002 /* ProjectDashboardView.swift in Sources */,
 				1BDEEPGRAM00002 /* DeepgramTranscriptionProvider.swift in Sources */,
 				1CSPEAKERID00002 /* SpeakerIdentificationService.swift in Sources */,
 				1CACTIONITEM00002 /* ActionItem.swift in Sources */,
@@ -403,6 +422,11 @@
 				1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */,
 				1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */,
 				1DCLIINSTALL00002 /* CLIInstaller.swift in Sources */,
+				1EMTGTEMPL00002 /* MeetingTemplate.swift in Sources */,
+				1EMTGTEMPLVIEW00002 /* MeetingTemplatesView.swift in Sources */,
+				1FVOICEEMBED00002 /* VoiceEmbeddingClient.swift in Sources */,
+				1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */,
+				1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

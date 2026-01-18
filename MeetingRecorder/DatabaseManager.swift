@@ -289,6 +289,47 @@ actor DatabaseManager {
             print("[DatabaseManager] Migration v7_add_action_items applied")
         }
 
+        // Migration 8: Speaker profiles for voice embeddings
+        migrator.registerMigration("v8_add_speaker_profiles") { db in
+            // Speaker profiles table - persistent speaker identities with embeddings
+            try db.create(table: "speaker_profiles") { t in
+                t.column("id", .text).primaryKey()
+                t.column("name", .text)
+                t.column("email", .text)
+                t.column("embedding", .blob).notNull()       // JSON-encoded [Float]
+                t.column("created_at", .datetime).notNull()
+                t.column("last_seen_at", .datetime)
+                t.column("meeting_count", .integer).notNull().defaults(to: 1)
+                t.column("average_confidence", .double)
+                t.column("notes", .text)
+                t.column("is_active", .boolean).notNull().defaults(to: true)
+            }
+
+            // Meeting-speaker links - tracks which speakers are in which meetings
+            try db.create(table: "meeting_speaker_links") { t in
+                t.column("id", .text).primaryKey()
+                t.column("meeting_id", .text).notNull()
+                    .references("meetings", onDelete: .cascade)
+                t.column("speaker_profile_id", .text).notNull()
+                    .references("speaker_profiles", onDelete: .cascade)
+                t.column("meeting_speaker_id", .text).notNull()  // "speaker_0", etc.
+                t.column("confidence", .double).notNull()
+                t.column("created_at", .datetime).notNull()
+            }
+
+            // Indexes for fast lookups
+            try db.create(index: "idx_speaker_profiles_name", on: "speaker_profiles", columns: ["name"])
+            try db.create(index: "idx_meeting_speaker_links_meeting", on: "meeting_speaker_links", columns: ["meeting_id"])
+            try db.create(index: "idx_meeting_speaker_links_profile", on: "meeting_speaker_links", columns: ["speaker_profile_id"])
+
+            // Add speaker_naming_dismissed to meetings
+            try db.alter(table: "meetings") { t in
+                t.add(column: "speaker_naming_dismissed", .boolean).notNull().defaults(to: false)
+            }
+
+            print("[DatabaseManager] Migration v8_add_speaker_profiles applied")
+        }
+
         do {
             try migrator.migrate(db)
         } catch {
@@ -498,6 +539,9 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
     var meetingBrief: String?        // JSON encoded MeetingBrief
     var briefGeneratedAt: Date?
 
+    // Speaker naming prompt dismissed
+    var speakerNamingDismissed: Bool
+
     enum CodingKeys: String, CodingKey {
         case id
         case title
@@ -521,6 +565,7 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         case diarizationSegments = "diarization_segments"
         case meetingBrief = "meeting_brief"
         case briefGeneratedAt = "brief_generated_at"
+        case speakerNamingDismissed = "speaker_naming_dismissed"
     }
 
     init(_ meeting: Meeting) {
@@ -578,6 +623,7 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             self.meetingBrief = nil
         }
         self.briefGeneratedAt = meeting.briefGeneratedAt
+        self.speakerNamingDismissed = meeting.speakerNamingDismissed
     }
 
     func toMeeting() -> Meeting {
@@ -633,7 +679,8 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             speakerLabels: speakerLabelsArray,
             diarizationSegments: segmentsArray,
             meetingBrief: briefObject,
-            briefGeneratedAt: briefGeneratedAt
+            briefGeneratedAt: briefGeneratedAt,
+            speakerNamingDismissed: speakerNamingDismissed
         )
     }
 }
@@ -646,5 +693,112 @@ extension DatabaseManager {
     /// Expose the database queue for GroupManager to use
     func getDbQueue() -> DatabaseQueue? {
         return dbQueue
+    }
+}
+
+// MARK: - Speaker Profile Operations
+
+extension DatabaseManager {
+    /// Fetch all speaker profiles
+    func fetchSpeakerProfiles() async throws -> [SpeakerProfile] {
+        guard let db = dbQueue else { return [] }
+
+        return try await db.read { db in
+            try SpeakerProfile.fetchAll(db)
+        }
+    }
+
+    /// Fetch active speaker profiles only
+    func fetchActiveSpeakerProfiles() async throws -> [SpeakerProfile] {
+        guard let db = dbQueue else { return [] }
+
+        return try await db.read { db in
+            try SpeakerProfile.filter(SpeakerProfile.Columns.isActive == true).fetchAll(db)
+        }
+    }
+
+    /// Get a speaker profile by ID
+    func getSpeakerProfile(id: UUID) async throws -> SpeakerProfile? {
+        guard let db = dbQueue else { return nil }
+
+        return try await db.read { db in
+            try SpeakerProfile.filter(SpeakerProfile.Columns.id == id.uuidString).fetchOne(db)
+        }
+    }
+
+    /// Save (insert or update) a speaker profile
+    func saveSpeakerProfile(_ profile: SpeakerProfile) async throws {
+        guard let db = dbQueue else {
+            throw DatabaseError.initializationFailed(NSError(domain: "DatabaseManager", code: -1))
+        }
+
+        try await db.write { db in
+            try profile.save(db)
+        }
+        print("[DatabaseManager] Saved speaker profile: \(profile.id)")
+    }
+
+    /// Delete a speaker profile
+    func deleteSpeakerProfile(_ profileId: UUID) async throws {
+        guard let db = dbQueue else {
+            throw DatabaseError.initializationFailed(NSError(domain: "DatabaseManager", code: -1))
+        }
+
+        try await db.write { db in
+            try db.execute(
+                sql: "DELETE FROM speaker_profiles WHERE id = ?",
+                arguments: [profileId.uuidString]
+            )
+        }
+        print("[DatabaseManager] Deleted speaker profile: \(profileId)")
+    }
+
+    /// Fetch meeting-speaker links for a profile
+    func fetchMeetingSpeakerLinks(forProfileId profileId: UUID) async throws -> [MeetingSpeakerLink] {
+        guard let db = dbQueue else { return [] }
+
+        return try await db.read { db in
+            try MeetingSpeakerLink.filter(
+                MeetingSpeakerLink.Columns.speakerProfileId == profileId.uuidString
+            ).fetchAll(db)
+        }
+    }
+
+    /// Fetch meeting-speaker links for a meeting
+    func fetchMeetingSpeakerLinks(forMeetingId meetingId: UUID) async throws -> [MeetingSpeakerLink] {
+        guard let db = dbQueue else { return [] }
+
+        return try await db.read { db in
+            try MeetingSpeakerLink.filter(
+                MeetingSpeakerLink.Columns.meetingId == meetingId.uuidString
+            ).fetchAll(db)
+        }
+    }
+
+    /// Save a meeting-speaker link
+    func saveMeetingSpeakerLink(_ link: MeetingSpeakerLink) async throws {
+        guard let db = dbQueue else {
+            throw DatabaseError.initializationFailed(NSError(domain: "DatabaseManager", code: -1))
+        }
+
+        try await db.write { db in
+            try link.save(db)
+        }
+        print("[DatabaseManager] Saved meeting-speaker link: \(link.meetingId) -> \(link.speakerProfileId)")
+    }
+
+    /// Update meeting-speaker links when merging profiles
+    func updateMeetingSpeakerLinks(fromProfileId: UUID, toProfileId: UUID) async throws {
+        guard let db = dbQueue else {
+            throw DatabaseError.initializationFailed(NSError(domain: "DatabaseManager", code: -1))
+        }
+
+        try await db.write { db in
+            try db.execute(
+                sql: "UPDATE meeting_speaker_links SET speaker_profile_id = ? WHERE speaker_profile_id = ?",
+                arguments: [toProfileId.uuidString, fromProfileId.uuidString]
+            )
+        }
+        print("[DatabaseManager] Moved speaker links from \(fromProfileId) to \(toProfileId)")
     }
 }

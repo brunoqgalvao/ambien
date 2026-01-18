@@ -27,15 +27,15 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>MeetingRecorder uses AppleScript to detect Google Meet in browser tabs for auto-recording.</string>
+	<string>Ambient uses AppleScript to detect Google Meet in browser tabs for auto-recording.</string>
 	<key>NSApplicationSupportsSecureRestorableState</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2025 MeetingRecorder. All rights reserved.</string>
+	<string>Copyright © 2025 Ambient. All rights reserved.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>MeetingRecorder needs microphone access to capture your voice during meetings and for system-wide dictation.</string>
+	<string>Ambient needs microphone access to capture your voice during meetings and for system-wide dictation.</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>MeetingRecorder needs screen recording permission to capture system audio from meetings (Zoom, Google Meet, Teams, etc.). This allows recording what others say in your calls.</string>
+	<string>Ambient needs screen recording permission to capture system audio from meetings (Zoom, Google Meet, Teams, etc.). This allows recording what others say in your calls.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>SUFeedURL</key>
