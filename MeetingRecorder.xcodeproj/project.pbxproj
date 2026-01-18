@@ -65,6 +65,11 @@
 		1BPROJMGR00002 /* ProjectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJMGR00001 /* ProjectManager.swift */; };
 		1BPROJVIEW00002 /* ProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJVIEW00001 /* ProjectsView.swift */; };
 		1BDEEPGRAM00002 /* DeepgramTranscriptionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */; };
+		1CSPEAKERID00002 /* SpeakerIdentificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CSPEAKERID00001 /* SpeakerIdentificationService.swift */; };
+		1CACTIONITEM00002 /* ActionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONITEM00001 /* ActionItem.swift */; };
+		1CACTIONMGR00002 /* ActionItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONMGR00001 /* ActionItemManager.swift */; };
+		1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONVIEWS00001 /* ActionItemViews.swift */; };
+		1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONDASH00001 /* ActionItemsDashboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -127,6 +132,11 @@
 		1BPROJMGR00001 /* ProjectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectManager.swift; sourceTree = "<group>"; };
 		1BPROJVIEW00001 /* ProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsView.swift; sourceTree = "<group>"; };
 		1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramTranscriptionProvider.swift; sourceTree = "<group>"; };
+		1CSPEAKERID00001 /* SpeakerIdentificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerIdentificationService.swift; sourceTree = "<group>"; };
+		1CACTIONITEM00001 /* ActionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItem.swift; sourceTree = "<group>"; };
+		1CACTIONMGR00001 /* ActionItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemManager.swift; sourceTree = "<group>"; };
+		1CACTIONVIEWS00001 /* ActionItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemViews.swift; sourceTree = "<group>"; };
+		1CACTIONDASH00001 /* ActionItemsDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemsDashboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -209,6 +219,11 @@
 				1BPROJMGR00001 /* ProjectManager.swift */,
 				1BPROJVIEW00001 /* ProjectsView.swift */,
 				1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */,
+				1CSPEAKERID00001 /* SpeakerIdentificationService.swift */,
+				1CACTIONITEM00001 /* ActionItem.swift */,
+				1CACTIONMGR00001 /* ActionItemManager.swift */,
+				1CACTIONVIEWS00001 /* ActionItemViews.swift */,
+				1CACTIONDASH00001 /* ActionItemsDashboardView.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -225,6 +240,30 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		1AAMBIENTCLI0001 /* Build Ambient CLI */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/AmbientCLI/Sources/ambient/main.swift",
+				"$(SRCROOT)/AmbientCLI/Package.swift",
+			);
+			name = "Build Ambient CLI";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(PRODUCT_NAME).app/Contents/MacOS/ambient",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build the Ambient CLI and copy to app bundle\ncd \"${SRCROOT}/AmbientCLI\"\n\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n    swift build -c release\n    CLI_PATH=\".build/release/ambient\"\nelse\n    swift build\n    CLI_PATH=\".build/debug/ambient\"\nfi\n\n# Copy CLI binary to app bundle\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/MacOS\"\ncp \"$CLI_PATH\" \"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/Contents/MacOS/ambient\"\n\necho \"Ambient CLI copied to app bundle\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		1A0000000000000000000040 /* MeetingRecorder */ = {
 			isa = PBXNativeTarget;
@@ -233,6 +272,7 @@
 				1A0000000000000000000041 /* Sources */,
 				1A0000000000000000000020 /* Frameworks */,
 				1A0000000000000000000042 /* Resources */,
+				1AAMBIENTCLI0001 /* Build Ambient CLI */,
 			);
 			buildRules = (
 			);
@@ -353,6 +393,12 @@
 				1BPROJECT00002 /* Project.swift in Sources */,
 				1BPROJMGR00002 /* ProjectManager.swift in Sources */,
 				1BPROJVIEW00002 /* ProjectsView.swift in Sources */,
+				1BDEEPGRAM00002 /* DeepgramTranscriptionProvider.swift in Sources */,
+				1CSPEAKERID00002 /* SpeakerIdentificationService.swift in Sources */,
+				1CACTIONITEM00002 /* ActionItem.swift in Sources */,
+				1CACTIONMGR00002 /* ActionItemManager.swift in Sources */,
+				1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */,
+				1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -396,7 +442,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -458,7 +504,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

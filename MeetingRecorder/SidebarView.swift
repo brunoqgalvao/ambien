@@ -12,7 +12,8 @@ struct SidebarView: View {
     @ObservedObject var viewModel: MainAppViewModel
     var onRecord: () -> Void
     var onSettings: () -> Void
-    
+    @Binding var isMeetingsListCollapsed: Bool
+
     var body: some View {
         VStack(spacing: 0) {
             // Top Navigation Items
@@ -23,14 +24,22 @@ struct SidebarView: View {
                     isSelected: selectedItem == .home,
                     action: { selectedItem = .home }
                 )
-                
+
                 SidebarButton(
                     icon: "calendar",
                     label: "Calendar",
                     isSelected: selectedItem == .calendar,
                     action: { selectedItem = .calendar }
                 )
-                
+
+                SidebarButton(
+                    icon: "checklist",
+                    label: "Action Items",
+                    isSelected: selectedItem == .actionItems,
+                    badge: viewModel.openActionItemsCount > 0 ? viewModel.openActionItemsCount : nil,
+                    action: { selectedItem = .actionItems }
+                )
+
                 SidebarButton(
                     icon: "doc.text.fill",
                     label: "Meetings",
@@ -71,11 +80,11 @@ struct SidebarView: View {
                 }
             }
             .padding(.top, 52)
-            
+
             Spacer()
-            
-            // Bottom Action Items - Settings only
-            VStack(spacing: 16) {
+
+            // Bottom Action Items
+            VStack(spacing: 12) {
                 // Settings Button
                 SidebarButton(
                     icon: "gear",
@@ -92,10 +101,60 @@ struct SidebarView: View {
                 .ignoresSafeArea()
         )
         .overlay(alignment: .trailing) {
-            Rectangle()
-                .frame(width: 1)
-                .foregroundColor(Color.brandBorder)
-                .ignoresSafeArea()
+            ZStack {
+                // Border line
+                Rectangle()
+                    .frame(width: 1)
+                    .foregroundColor(Color.brandBorder)
+                    .ignoresSafeArea()
+
+                // Edge toggle button - only show on Meetings tab
+                if selectedItem == .meetings {
+                    SidebarEdgeToggle(isCollapsed: $isMeetingsListCollapsed)
+                        .offset(x: 12) // Half the button width to center on edge
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Sidebar Edge Toggle Button
+
+/// A small tab that sits on the edge of the sidebar to toggle the meetings list
+struct SidebarEdgeToggle: View {
+    @Binding var isCollapsed: Bool
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isCollapsed.toggle()
+            }
+        }) {
+            ZStack {
+                // Pill-shaped background
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isHovered ? Color.brandViolet.opacity(0.1) : Color.brandSurface)
+                    .frame(width: 24, height: 48)
+                    .shadow(color: .black.opacity(0.08), radius: 2, x: 1, y: 0)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.brandBorder, lineWidth: 1)
+                    )
+
+                // Chevron icon
+                Image(systemName: isCollapsed ? "chevron.right" : "chevron.left")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(isHovered ? .brandViolet : .brandTextSecondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(isCollapsed ? "Show meeting list" : "Hide meeting list")
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
         }
     }
 }

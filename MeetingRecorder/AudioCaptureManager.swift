@@ -427,6 +427,12 @@ class AudioCaptureManager: NSObject, ObservableObject {
             updatedMeeting.speakerCount = result.speakerCount
             updatedMeeting.diarizationSegments = result.diarizationSegments
 
+            // Update with AI-inferred speaker names
+            if let inferredLabels = result.inferredSpeakerLabels, !inferredLabels.isEmpty {
+                updatedMeeting.speakerLabels = inferredLabels
+                logInfo("[AudioCapture] AI identified speakers: \(inferredLabels.map { "\($0.speakerId)=\($0.name)" }.joined(separator: ", "))")
+            }
+
             // Use title from transcription process (generated automatically)
             if let generatedTitle = result.title {
                 updatedMeeting.title = generatedTitle

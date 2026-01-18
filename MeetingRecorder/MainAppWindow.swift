@@ -97,6 +97,7 @@ class MainAppWindowController {
 enum NavigationItem: String, CaseIterable, Identifiable {
     case home = "Home"
     case calendar = "Calendar"
+    case actionItems = "Action Items"
     case meetings = "Meetings"
     case projects = "Projects"
     case dictations = "Dictations"
@@ -120,6 +121,9 @@ struct MainAppView: View {
     /// Selected meeting ID passed from window controller
     @State private var selectedMeetingId: UUID?
 
+    /// Controls whether the meeting list sidebar is collapsed
+    @AppStorage("meetingsListCollapsed") private var isMeetingsListCollapsed = true
+
     var body: some View {
         HStack(spacing: 0) {
             // New 60px Sidebar
@@ -127,11 +131,18 @@ struct MainAppView: View {
                 selectedItem: $selectedItem,
                 viewModel: viewModel,
                 onRecord: { viewModel.toggleRecording() },
-                onSettings: { selectedItem = .settings }
+                onSettings: { selectedItem = .settings },
+                isMeetingsListCollapsed: $isMeetingsListCollapsed
             )
 
             // Content
-            DetailView(selectedItem: $selectedItem, viewModel: viewModel, searchText: $searchText, selectedMeetingId: $selectedMeetingId)
+            DetailView(
+                selectedItem: $selectedItem,
+                viewModel: viewModel,
+                searchText: $searchText,
+                selectedMeetingId: $selectedMeetingId,
+                isMeetingsListCollapsed: $isMeetingsListCollapsed
+            )
         }
         .ignoresSafeArea()
         .frame(minWidth: 900, minHeight: 600)
@@ -171,6 +182,7 @@ struct DetailView: View {
     @ObservedObject var viewModel: MainAppViewModel
     @Binding var searchText: String
     @Binding var selectedMeetingId: UUID?
+    @Binding var isMeetingsListCollapsed: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -178,7 +190,7 @@ struct DetailView: View {
             switch selectedItem {
             case .home:
                 HomeView(viewModel: viewModel, selectedTab: $selectedItem)
-            
+
             case .calendar:
                 VStack(spacing: 0) {
                     DetailToolbar(title: "Calendar", searchText: $searchText)
@@ -188,11 +200,19 @@ struct DetailView: View {
                         selectedItem = .meetings
                     }
                 }
-                
+
+            case .actionItems:
+                ActionItemsDashboardView()
+
             case .meetings:
                 VStack(spacing: 0) {
                     DetailToolbar(title: "Meetings", searchText: $searchText)
-                    MeetingsListView(viewModel: viewModel, searchText: searchText, initialMeetingId: $selectedMeetingId)
+                    MeetingsListView(
+                        viewModel: viewModel,
+                        searchText: searchText,
+                        initialMeetingId: $selectedMeetingId,
+                        isListCollapsed: $isMeetingsListCollapsed
+                    )
                 }
 
             case .projects:
@@ -465,11 +485,11 @@ struct MeetingsListView: View {
     @ObservedObject var viewModel: MainAppViewModel
     let searchText: String
     @Binding var initialMeetingId: UUID?
+    @Binding var isListCollapsed: Bool
     @State private var selectedMeeting: Meeting?
     @State private var meetingToRename: Meeting?
     @State private var meetingToAddToProject: Meeting?
     @State private var newTitle: String = ""
-    @AppStorage("meetingsListCollapsed") private var isListCollapsed = true  // Hidden by default
     @State private var listWidth: CGFloat = 280
 
     private var filteredMeetings: [Meeting] {
@@ -512,30 +532,8 @@ struct MeetingsListView: View {
                     )
             }
 
-            // Detail pane with toggle button
-            ZStack(alignment: .topLeading) {
-                detailPane
-
-                // Toggle button
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isListCollapsed.toggle()
-                    }
-                }) {
-                    Image(systemName: isListCollapsed ? "sidebar.left" : "sidebar.left")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.brandTextSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.brandSurface)
-                                .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
-                        )
-                }
-                .buttonStyle(.plain)
-                .padding(12)
-                .help(isListCollapsed ? "Show meeting list" : "Hide meeting list")
-            }
+            // Detail pane (no floating toggle button - moved to sidebar)
+            detailPane
         }
         .sheet(item: $meetingToRename) { meeting in
             renameSheet(for: meeting)
@@ -1569,6 +1567,7 @@ class MainAppViewModel: ObservableObject {
     @Published var totalCost: Double = 0
     @Published var pendingTranscriptions = 0
     @Published var todayMeetings = 0
+    @Published var openActionItemsCount = 0
     @Published var dictationsCount = 0
     @Published var dictationMinutes: Double = 0
     @Published var dictationCost: Double = 0
@@ -1602,6 +1601,10 @@ class MainAppViewModel: ObservableObject {
 
             pendingTranscriptions = meetings.filter { $0.status == .pendingTranscription || $0.status == .transcribing }.count
             todayMeetings = meetings.filter { Calendar.current.isDateInToday($0.startTime) }.count
+
+            // Action items count
+            let counts = try await ActionItemManager.shared.getCounts()
+            openActionItemsCount = counts.totalOpen
 
             // Monthly stats
             let calendar = Calendar.current

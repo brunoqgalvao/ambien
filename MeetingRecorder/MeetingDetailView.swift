@@ -16,7 +16,7 @@ struct MeetingDetailView: View {
     var onDeleted: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioPlayer = AudioPlayerManager()
-    @State private var selectedContentTab: TranscriptSummarySection.ContentTab = .summary
+    @State private var selectedContentTab: TranscriptSummarySection.ContentTab = .brief
     @State private var isProcessing = false
 
     var body: some View {
@@ -57,6 +57,15 @@ struct MeetingDetailView: View {
                             .padding(.vertical, 8)
                         }
 
+                        // Speaker naming prompt (dismissable)
+                        if meeting.shouldShowSpeakerNamingPrompt {
+                            SpeakerNamingPrompt(meeting: $meeting)
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .top)),
+                                    removal: .opacity.combined(with: .scale(scale: 0.95))
+                                ))
+                        }
+
                         // Speakers section (above tabs, outside the tabbed section)
                         SpeakersBar(meeting: $meeting)
 
@@ -64,6 +73,7 @@ struct MeetingDetailView: View {
                         TranscriptSummarySection(
                             meeting: $meeting,
                             selectedTab: $selectedContentTab,
+                            audioPlayer: audioPlayer,
                             onReprocess: {
                                 await processMeeting()
                             },
@@ -1102,21 +1112,22 @@ struct AudioPlayerCard: View {
 struct TranscriptSummarySection: View {
     @Binding var meeting: Meeting
     @Binding var selectedTab: ContentTab
+    var audioPlayer: AudioPlayerManager?
     var onReprocess: (() async -> Void)?
     var onRetryTranscription: (() -> Void)?
     var onReprocessTranscription: (() -> Void)?
 
-    // Reordered: Summary and Action Items on top (generated together), then Transcript, then Private Notes
+    // Reordered: Brief and Action Items on top (generated together), then Transcript, then Private Notes
     // Speakers is removed from tabs - shown separately above
     enum ContentTab: String, CaseIterable {
-        case summary = "Summary"
+        case brief = "Brief"
         case actionItems = "Action Items"
         case transcript = "Transcript"
         case privateNotes = "Private notes"
 
         var icon: String {
             switch self {
-            case .summary: return "doc.text"
+            case .brief: return "doc.text.magnifyingglass"
             case .actionItems: return "checklist"
             case .transcript: return "text.alignleft"
             case .privateNotes: return "note.text"
@@ -1160,12 +1171,12 @@ struct TranscriptSummarySection: View {
             ScrollView {
                 Group {
                     switch selectedTab {
-                    case .summary:
-                        SummaryContentView(meeting: meeting, onReprocess: onReprocess)
+                    case .brief:
+                        BriefContentView(meeting: meeting, onGenerateBrief: onReprocess)
                     case .actionItems:
-                        ActionItemsContentView(meeting: meeting, onReprocess: onReprocess)
+                        MeetingActionItemsList(meetingId: meeting.id)
                     case .transcript:
-                        TranscriptContentView(meeting: meeting, onRetry: onRetryTranscription, onReprocess: onReprocessTranscription)
+                        TranscriptContentView(meeting: meeting, audioPlayer: audioPlayer, onRetry: onRetryTranscription, onReprocess: onReprocessTranscription)
                     case .privateNotes:
                         PrivateNotesContentView(meeting: $meeting)
                     }
@@ -1183,8 +1194,8 @@ struct TranscriptSummarySection: View {
 
     private var currentContent: String? {
         switch selectedTab {
-        case .summary: return meeting.summary ?? meeting.processedSummaries?.first?.content
-        case .actionItems: return meeting.actionItems?.joined(separator: "\n")
+        case .brief: return meeting.meetingBrief?.markdown ?? meeting.summary
+        case .actionItems: return nil // Handled separately with export menu
         case .transcript: return meeting.transcript
         case .privateNotes: return meeting.privateNotes
         }
@@ -1344,20 +1355,6 @@ struct ProcessedSummaryView: View {
         case .keyPoints: return "list.bullet"
         case .custom: return "doc.text"
         }
-    }
-}
-
-// MARK: - Markdown Text View
-
-struct MarkdownTextView: View {
-    let text: String
-
-    var body: some View {
-        Text(LocalizedStringKey(text))
-            .font(.body)
-            .lineSpacing(4)
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -1737,6 +1734,7 @@ struct ActionItemsContentView: View {
 
 struct TranscriptContentView: View {
     let meeting: Meeting
+    var audioPlayer: AudioPlayerManager?
     var onRetry: (() -> Void)?
     var onReprocess: (() -> Void)?
     @State private var isReprocessing = false
@@ -1799,7 +1797,7 @@ struct TranscriptContentView: View {
 
                 // Content based on view mode
                 if viewMode == .diarized && hasDiarization {
-                    DiarizedTranscriptView(meeting: meeting)
+                    DiarizedTranscriptView(meeting: meeting, audioPlayer: audioPlayer)
                 } else {
                     Text(transcript)
                         .font(.body)
@@ -1828,6 +1826,7 @@ struct TranscriptContentView: View {
 /// Chat-like view showing transcript with speaker labels and timestamps
 struct DiarizedTranscriptView: View {
     let meeting: Meeting
+    var audioPlayer: AudioPlayerManager?
 
     private var segments: [DiarizationSegment] {
         meeting.diarizationSegments ?? []
@@ -1840,7 +1839,10 @@ struct DiarizedTranscriptView: View {
                     segment: segment,
                     speakerName: meeting.speakerName(for: segment.speakerId),
                     speakerIndex: speakerIndex(for: segment.speakerId),
-                    isNewSpeaker: isNewSpeaker(at: index)
+                    isNewSpeaker: isNewSpeaker(at: index),
+                    onTimestampTap: audioPlayer != nil ? { seconds in
+                        audioPlayer?.seekToTime(seconds)
+                    } : nil
                 )
             }
         }
@@ -1865,6 +1867,7 @@ struct DiarizationSegmentRow: View {
     let speakerName: String
     let speakerIndex: Int
     let isNewSpeaker: Bool
+    var onTimestampTap: ((Double) -> Void)?
 
     private static let speakerColors: [Color] = [
         .brandViolet,
@@ -1905,9 +1908,28 @@ struct DiarizationSegmentRow: View {
                             .font(.brandDisplay(13, weight: .semibold))
                             .foregroundColor(speakerColor)
 
-                        Text(formatTimestamp(segment.start))
-                            .font(.brandMono(11))
-                            .foregroundColor(.brandTextSecondary)
+                        // Clickable timestamp
+                        if let onTap = onTimestampTap {
+                            Button(action: { onTap(segment.start) }) {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "play.fill")
+                                        .font(.system(size: 8))
+                                    Text(formatTimestamp(segment.start))
+                                        .font(.brandMono(11))
+                                }
+                                .foregroundColor(.brandViolet)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.brandViolet.opacity(0.1))
+                                .cornerRadius(4)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Play from \(formatTimestamp(segment.start))")
+                        } else {
+                            Text(formatTimestamp(segment.start))
+                                .font(.brandMono(11))
+                                .foregroundColor(.brandTextSecondary)
+                        }
                     }
                 }
 
@@ -2643,6 +2665,18 @@ class AudioPlayerManager: ObservableObject {
         guard let player = player else { return }
         player.currentTime = progress * player.duration
         updateProgress()
+    }
+
+    /// Seek to a specific time in seconds and start playing
+    func seekToTime(_ seconds: Double, andPlay: Bool = true) {
+        guard let player = player else { return }
+        player.currentTime = max(0, min(player.duration, seconds))
+        updateProgress()
+        if andPlay && !isPlaying {
+            player.play()
+            isPlaying = true
+            startTimer()
+        }
     }
 
     func setVolume(_ newVolume: Float) {

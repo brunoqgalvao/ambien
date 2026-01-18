@@ -2,7 +2,7 @@
 //  AgentAPIManager.swift
 //  MeetingRecorder
 //
-//  Exports meetings to ~/.meetingrecorder/meetings/ as JSON for AI agents.
+//  Exports meetings to ~/.ambient/meetings/ as JSON for AI agents.
 //  Uses atomic writes with lock files to prevent partial reads.
 //
 
@@ -102,11 +102,11 @@ struct AgentGroupIndex: Codable {
 actor AgentAPIManager {
     private let fileManager = FileManager.default
 
-    /// Base directory: ~/.meetingrecorder/meetings/
+    /// Base directory: ~/.ambient/meetings/
     private var baseDirectory: URL {
         let home = fileManager.homeDirectoryForCurrentUser
         return home
-            .appendingPathComponent(".meetingrecorder", isDirectory: true)
+            .appendingPathComponent(".ambient", isDirectory: true)
             .appendingPathComponent("meetings", isDirectory: true)
     }
 
@@ -172,7 +172,7 @@ actor AgentAPIManager {
 
     // MARK: - Group Export
 
-    /// Groups directory: ~/.meetingrecorder/meetings/groups/
+    /// Groups directory: ~/.ambient/meetings/groups/
     private var groupsDirectory: URL {
         baseDirectory.appendingPathComponent("groups", isDirectory: true)
     }

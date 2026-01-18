@@ -606,9 +606,9 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         }
 
         // Decode meeting brief from JSON
-        var brief: MeetingBrief? = nil
+        var briefObject: MeetingBrief? = nil
         if let json = meetingBrief, let data = json.data(using: .utf8) {
-            brief = try? JSONDecoder().decode(MeetingBrief.self, from: data)
+            briefObject = try? JSONDecoder().decode(MeetingBrief.self, from: data)
         }
 
         return Meeting(
@@ -632,7 +632,7 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             speakerCount: speakerCount,
             speakerLabels: speakerLabelsArray,
             diarizationSegments: segmentsArray,
-            meetingBrief: brief,
+            meetingBrief: briefObject,
             briefGeneratedAt: briefGeneratedAt
         )
     }

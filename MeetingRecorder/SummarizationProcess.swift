@@ -189,6 +189,502 @@ actor SummarizationProcess {
         )
     }
 
+    // MARK: - Meeting Intelligence (NEW)
+
+    /// Generate meeting intelligence: brief + action items using Gemini Flash 3
+    func generateMeetingIntelligence(
+        transcript: String,
+        meetingId: UUID,
+        meetingDate: Date,
+        speakerSegments: [TranscriptSegment]? = nil,
+        preferredProvider: SummarizationProvider? = nil
+    ) async throws -> MeetingIntelligenceResult {
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        guard !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw SummarizationProcessError.emptyTranscript
+        }
+
+        // Default to Gemini for meeting intelligence (fast + cheap + good at structured output)
+        let provider = try selectProviderForIntelligence(preferred: preferredProvider)
+        logInfo("[SummarizationProcess] Generating meeting intelligence with: \(provider.displayName)")
+
+        // Preprocess transcript
+        let processedTranscript = preprocessTranscript(
+            transcript: transcript,
+            speakerSegments: speakerSegments
+        )
+
+        // Generate intelligence
+        let result = try await performIntelligenceExtraction(
+            transcript: processedTranscript,
+            provider: provider,
+            meetingId: meetingId,
+            meetingDate: meetingDate
+        )
+
+        let processingTime = CFAbsoluteTimeGetCurrent() - startTime
+        logInfo("[SummarizationProcess] Intelligence complete in \(String(format: "%.1f", processingTime))s - extracted \(result.actionItems.count) action items")
+
+        return MeetingIntelligenceResult(
+            brief: result.brief,
+            actionItems: result.actionItems,
+            costCents: result.costCents,
+            processingTime: processingTime,
+            model: result.model,
+            provider: provider
+        )
+    }
+
+    private func selectProviderForIntelligence(preferred: SummarizationProvider?) throws -> SummarizationProvider {
+        if let preferred, preferred.isConfigured {
+            return preferred
+        }
+
+        // Priority for intelligence: Gemini > OpenAI > Claude (Gemini is fast + cheap for structured output)
+        let priority: [SummarizationProvider] = [.gemini, .openai, .anthropic]
+        for provider in priority {
+            if provider.isConfigured {
+                return provider
+            }
+        }
+
+        throw SummarizationProcessError.noProviderConfigured
+    }
+
+    private struct IntelligenceResult {
+        let brief: MeetingBrief
+        let actionItems: [ActionItem]
+        let costCents: Int
+        let model: String
+    }
+
+    private func performIntelligenceExtraction(
+        transcript: String,
+        provider: SummarizationProvider,
+        meetingId: UUID,
+        meetingDate: Date
+    ) async throws -> IntelligenceResult {
+        switch provider {
+        case .gemini:
+            return try await extractIntelligenceWithGemini(
+                transcript: transcript,
+                meetingId: meetingId,
+                meetingDate: meetingDate
+            )
+        case .openai:
+            return try await extractIntelligenceWithOpenAI(
+                transcript: transcript,
+                meetingId: meetingId,
+                meetingDate: meetingDate
+            )
+        case .anthropic:
+            return try await extractIntelligenceWithClaude(
+                transcript: transcript,
+                meetingId: meetingId,
+                meetingDate: meetingDate
+            )
+        }
+    }
+
+    // MARK: - Gemini Intelligence Extraction
+
+    private func extractIntelligenceWithGemini(
+        transcript: String,
+        meetingId: UUID,
+        meetingDate: Date
+    ) async throws -> IntelligenceResult {
+        let callStartTime = CFAbsoluteTimeGetCurrent()
+
+        guard let apiKey = KeychainHelper.readGeminiKey() else {
+            throw SummarizationProcessError.noAPIKey(.gemini)
+        }
+
+        let model = "gemini-2.0-flash-exp"
+        let prompt = buildIntelligencePrompt(transcript: transcript)
+
+        let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)")!
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+
+        let payload: [String: Any] = [
+            "contents": [[
+                "parts": [["text": prompt]]
+            ]],
+            "generationConfig": [
+                "temperature": 0.2,
+                "maxOutputTokens": 4000,
+                "responseMimeType": "application/json"
+            ],
+            "systemInstruction": [
+                "parts": [["text": "You are an expert meeting analyst. Extract actionable intelligence from meeting transcripts. Be precise about action items - only include explicitly mentioned commitments."]]
+            ]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let durationMs = Int((CFAbsoluteTimeGetCurrent() - callStartTime) * 1000)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            await APICallLogManager.shared.logFailure(
+                type: .summarization,
+                provider: "Gemini",
+                model: model,
+                endpoint: "/v1beta/models/\(model):generateContent",
+                durationMs: durationMs,
+                error: "Invalid response"
+            )
+            throw SummarizationProcessError.networkError(NSError(domain: "Gemini", code: -1))
+        }
+
+        guard httpResponse.statusCode == 200 else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown"
+            await APICallLogManager.shared.logFailure(
+                type: .summarization,
+                provider: "Gemini",
+                model: model,
+                endpoint: "/v1beta/models/\(model):generateContent",
+                durationMs: durationMs,
+                error: "HTTP \(httpResponse.statusCode): \(errorMessage)"
+            )
+            throw SummarizationProcessError.serverError(httpResponse.statusCode, errorMessage)
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates = json["candidates"] as? [[String: Any]],
+              let content = candidates.first?["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.first?["text"] as? String else {
+            await APICallLogManager.shared.logFailure(
+                type: .summarization,
+                provider: "Gemini",
+                model: model,
+                endpoint: "/v1beta/models/\(model):generateContent",
+                durationMs: durationMs,
+                error: "Invalid response format"
+            )
+            throw SummarizationProcessError.invalidResponse
+        }
+
+        // Estimate cost (Gemini Flash is very cheap)
+        let inputTokens = transcript.count / 4
+        let outputTokens = text.count / 4
+        let costCents = max(1, Int(ceil((Double(inputTokens) + Double(outputTokens)) * 0.0001)))
+
+        // Log success
+        await APICallLogManager.shared.logSuccess(
+            type: .summarization,
+            provider: "Gemini",
+            model: model,
+            endpoint: "/v1beta/models/\(model):generateContent",
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            durationMs: durationMs,
+            costCents: costCents
+        )
+
+        return try parseIntelligenceResponse(text, model: model, costCents: costCents, meetingId: meetingId, meetingDate: meetingDate)
+    }
+
+    // MARK: - OpenAI Intelligence Extraction
+
+    private func extractIntelligenceWithOpenAI(
+        transcript: String,
+        meetingId: UUID,
+        meetingDate: Date
+    ) async throws -> IntelligenceResult {
+        let callStartTime = CFAbsoluteTimeGetCurrent()
+
+        guard let apiKey = KeychainHelper.readOpenAIKey() else {
+            throw SummarizationProcessError.noAPIKey(.openai)
+        }
+
+        let model = "gpt-4o-mini"
+        let prompt = buildIntelligencePrompt(transcript: transcript)
+
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+
+        let body: [String: Any] = [
+            "model": model,
+            "messages": [
+                ["role": "system", "content": "You are an expert meeting analyst. Extract actionable intelligence from meeting transcripts. Be precise about action items - only include explicitly mentioned commitments."],
+                ["role": "user", "content": prompt]
+            ],
+            "max_tokens": 4000,
+            "temperature": 0.2,
+            "response_format": ["type": "json_object"]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let durationMs = Int((CFAbsoluteTimeGetCurrent() - callStartTime) * 1000)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw SummarizationProcessError.serverError((response as? HTTPURLResponse)?.statusCode ?? -1, errorMessage)
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let message = choices.first?["message"] as? [String: Any],
+              let text = message["content"] as? String else {
+            throw SummarizationProcessError.invalidResponse
+        }
+
+        let inputTokens = transcript.count / 4
+        let outputTokens = text.count / 4
+        let costCents = Int(ceil(Double(inputTokens) * 0.00015 + Double(outputTokens) * 0.0006))
+
+        await APICallLogManager.shared.logSuccess(
+            type: .summarization,
+            provider: "OpenAI",
+            model: model,
+            endpoint: "/v1/chat/completions",
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            durationMs: durationMs,
+            costCents: costCents
+        )
+
+        return try parseIntelligenceResponse(text, model: model, costCents: costCents, meetingId: meetingId, meetingDate: meetingDate)
+    }
+
+    // MARK: - Claude Intelligence Extraction
+
+    private func extractIntelligenceWithClaude(
+        transcript: String,
+        meetingId: UUID,
+        meetingDate: Date
+    ) async throws -> IntelligenceResult {
+        let callStartTime = CFAbsoluteTimeGetCurrent()
+
+        guard let apiKey = KeychainHelper.readAnthropicKey() else {
+            throw SummarizationProcessError.noAPIKey(.anthropic)
+        }
+
+        let model = "claude-3-5-haiku-20241022"
+        let prompt = buildIntelligencePrompt(transcript: transcript)
+
+        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120
+
+        let body: [String: Any] = [
+            "model": model,
+            "max_tokens": 4000,
+            "messages": [
+                ["role": "user", "content": prompt]
+            ],
+            "system": "You are an expert meeting analyst. Extract actionable intelligence from meeting transcripts. Be precise about action items - only include explicitly mentioned commitments. Always respond with valid JSON."
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let durationMs = Int((CFAbsoluteTimeGetCurrent() - callStartTime) * 1000)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw SummarizationProcessError.serverError((response as? HTTPURLResponse)?.statusCode ?? -1, errorMessage)
+        }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [[String: Any]],
+              let text = content.first?["text"] as? String else {
+            throw SummarizationProcessError.invalidResponse
+        }
+
+        let inputTokens = transcript.count / 4
+        let outputTokens = text.count / 4
+        let costCents = Int(ceil(Double(inputTokens) * 0.000025 + Double(outputTokens) * 0.000125))
+
+        await APICallLogManager.shared.logSuccess(
+            type: .summarization,
+            provider: "Anthropic",
+            model: model,
+            endpoint: "/v1/messages",
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
+            durationMs: durationMs,
+            costCents: costCents
+        )
+
+        return try parseIntelligenceResponse(text, model: model, costCents: costCents, meetingId: meetingId, meetingDate: meetingDate)
+    }
+
+    // MARK: - Intelligence Prompt
+
+    private func buildIntelligencePrompt(transcript: String) -> String {
+        // Truncate if too long
+        let maxTranscriptLength = 50000
+        let truncatedTranscript = transcript.count > maxTranscriptLength
+            ? String(transcript.prefix(maxTranscriptLength)) + "\n\n[... transcript truncated ...]"
+            : transcript
+
+        return """
+        Analyze this meeting transcript and extract actionable intelligence.
+
+        Respond with JSON in this exact format:
+        {
+            "brief": {
+                "purpose": "One clear sentence describing the meeting's purpose",
+                "participants": ["Name1", "Name2"],
+                "discussion_points": ["Key topic 1", "Key topic 2", ...],
+                "decisions_made": ["Decision 1", ...],
+                "decisions_pending": ["Pending decision 1", ...],
+                "blockers": ["Blocker 1", ...] or null if none
+            },
+            "action_items": [
+                {
+                    "task": "Clear, actionable task description",
+                    "assignee": "Person name" or null if unclear,
+                    "due_suggestion": "by Friday" or "next week" or "ASAP" or null,
+                    "priority": "high" | "medium" | "low",
+                    "context": "Brief context from meeting" or null
+                }
+            ]
+        }
+
+        Guidelines:
+        - Extract ONLY explicitly mentioned action items (things someone committed to DO)
+        - Infer priority from urgency language ("ASAP", "critical", "when you get a chance")
+        - Use exact names mentioned in transcript for assignees
+        - If no clear assignee, leave null (don't guess)
+        - Due suggestions should use relative terms from the meeting context
+        - Keep discussion points to 3-7 most important topics
+        - Decisions must be explicit agreements, not assumptions
+        - For participants, extract names mentioned as attendees/speakers
+
+        TRANSCRIPT:
+        \(truncatedTranscript)
+        """
+    }
+
+    // MARK: - Intelligence Response Parsing
+
+    private func parseIntelligenceResponse(
+        _ content: String,
+        model: String,
+        costCents: Int,
+        meetingId: UUID,
+        meetingDate: Date
+    ) throws -> IntelligenceResult {
+        // Clean up response
+        var jsonString = content.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Handle markdown code blocks
+        if jsonString.hasPrefix("```json") {
+            jsonString = String(jsonString.dropFirst(7))
+        } else if jsonString.hasPrefix("```") {
+            jsonString = String(jsonString.dropFirst(3))
+        }
+        if jsonString.hasSuffix("```") {
+            jsonString = String(jsonString.dropLast(3))
+        }
+        jsonString = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw SummarizationProcessError.invalidResponse
+        }
+
+        // Parse brief
+        guard let briefJson = json["brief"] as? [String: Any] else {
+            throw SummarizationProcessError.invalidResponse
+        }
+
+        let brief = MeetingBrief(
+            purpose: briefJson["purpose"] as? String ?? "Meeting summary",
+            participants: briefJson["participants"] as? [String] ?? [],
+            discussionPoints: briefJson["discussion_points"] as? [String] ?? [],
+            decisionsMade: briefJson["decisions_made"] as? [String] ?? [],
+            decisionsPending: briefJson["decisions_pending"] as? [String] ?? [],
+            blockers: briefJson["blockers"] as? [String],
+            generatedAt: Date(),
+            model: model,
+            provider: model.contains("gemini") ? "Gemini" : (model.contains("gpt") ? "OpenAI" : "Anthropic")
+        )
+
+        // Parse action items
+        var actionItems: [ActionItem] = []
+        if let itemsJson = json["action_items"] as? [[String: Any]] {
+            for itemJson in itemsJson {
+                guard let task = itemJson["task"] as? String, !task.isEmpty else { continue }
+
+                let dueSuggestion = itemJson["due_suggestion"] as? String
+                let dueDate = parseDueDate(from: dueSuggestion, relativeTo: meetingDate)
+                let priorityStr = (itemJson["priority"] as? String)?.lowercased() ?? "medium"
+
+                let item = ActionItem(
+                    meetingId: meetingId,
+                    task: task,
+                    assignee: itemJson["assignee"] as? String,
+                    dueDate: dueDate,
+                    dueSuggestion: dueSuggestion,
+                    priority: ActionItem.Priority(rawValue: priorityStr) ?? .medium,
+                    context: itemJson["context"] as? String
+                )
+                actionItems.append(item)
+            }
+        }
+
+        return IntelligenceResult(
+            brief: brief,
+            actionItems: actionItems,
+            costCents: costCents,
+            model: model
+        )
+    }
+
+    private func parseDueDate(from suggestion: String?, relativeTo baseDate: Date) -> Date? {
+        guard let suggestion = suggestion?.lowercased() else { return nil }
+
+        let calendar = Calendar.current
+
+        // Common patterns
+        if suggestion.contains("today") || suggestion.contains("asap") || suggestion.contains("immediately") {
+            return calendar.startOfDay(for: baseDate)
+        }
+        if suggestion.contains("tomorrow") {
+            return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: baseDate))
+        }
+        if suggestion.contains("next week") {
+            return calendar.date(byAdding: .weekOfYear, value: 1, to: calendar.startOfDay(for: baseDate))
+        }
+        if suggestion.contains("end of week") || suggestion.contains("by friday") {
+            // Find next Friday
+            var components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: baseDate)
+            components.weekday = 6 // Friday
+            return calendar.date(from: components)
+        }
+        if suggestion.contains("end of day") || suggestion.contains("eod") {
+            return calendar.startOfDay(for: baseDate)
+        }
+
+        // Try to parse day names
+        let dayNames = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        for (index, dayName) in dayNames.enumerated() {
+            if suggestion.contains(dayName) {
+                // Find next occurrence of this day
+                let targetWeekday = index + 2 // Calendar uses 1=Sunday
+                var components = DateComponents()
+                components.weekday = targetWeekday > 7 ? targetWeekday - 7 : targetWeekday
+                return calendar.nextDate(after: baseDate, matching: components, matchingPolicy: .nextTime)
+            }
+        }
+
+        return nil
+    }
+
     // MARK: - Provider Selection
 
     private func selectProvider(preferred: SummarizationProvider?) throws -> SummarizationProvider {

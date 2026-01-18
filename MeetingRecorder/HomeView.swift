@@ -136,7 +136,10 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                
+
+                // Action Items Widget
+                ActionItemsHomeWidget(selectedTab: $selectedTab)
+
                 // Recent Activity
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {

@@ -1,25 +1,48 @@
-# MeetingRecorder Skill
+# Ambient Skill
 
-Read and query transcribed meeting recordings from the MeetingRecorder app.
+Read and query transcribed meeting recordings from the Ambient app.
 
 ## Data Location
 
-Meetings are exported as JSON to `~/.meetingrecorder/meetings/`:
+Meetings are exported as JSON to `~/.ambient/meetings/`:
 
 ```
-~/.meetingrecorder/meetings/
+~/.ambient/meetings/
 ├── index.json              # List of all meetings
+├── groups/                 # Grouped meetings (project threads)
+│   └── abc123.json
 └── 2025-01-15/
     ├── daily-standup.json  # Individual meeting files
     └── client-call.json
 ```
 
-## How to Use
+## CLI Tool
+
+If installed, use the `ambient` CLI for easier access:
+
+```bash
+# List recent meetings
+ambient list
+
+# List meetings from a specific date
+ambient list --date 2025-01-15
+
+# Search transcripts
+ambient search "authentication"
+
+# Get a specific meeting
+ambient get <meeting-id>
+
+# Export to markdown
+ambient export <meeting-id> --format=md
+```
+
+## Direct JSON Access
 
 ### 1. Read the index first
 
 ```bash
-cat ~/.meetingrecorder/meetings/index.json
+cat ~/.ambient/meetings/index.json
 ```
 
 This returns a list of all available meetings with their IDs, dates, and file paths.
@@ -27,7 +50,7 @@ This returns a list of all available meetings with their IDs, dates, and file pa
 ### 2. Read individual meetings
 
 ```bash
-cat ~/.meetingrecorder/meetings/2025-01-15/daily-standup.json
+cat ~/.ambient/meetings/2025-01-15/daily-standup.json
 ```
 
 ## JSON Formats
@@ -45,6 +68,15 @@ cat ~/.meetingrecorder/meetings/2025-01-15/daily-standup.json
       "title": "Daily Standup",
       "status": "ready",
       "path": "2025-01-15/daily-standup.json"
+    }
+  ],
+  "groups": [
+    {
+      "id": "def456-...",
+      "name": "Project Alpha",
+      "emoji": "🚀",
+      "meetingCount": 5,
+      "path": "groups/def456.json"
     }
   ]
 }
@@ -70,6 +102,26 @@ cat ~/.meetingrecorder/meetings/2025-01-15/daily-standup.json
 }
 ```
 
+### Group JSON
+
+```json
+{
+  "id": "def456-...",
+  "name": "Project Alpha",
+  "emoji": "🚀",
+  "createdAt": "2025-01-10T10:00:00Z",
+  "meetings": [
+    {
+      "id": "abc123-...",
+      "title": "Kickoff",
+      "date": "2025-01-10",
+      "transcript": "..."
+    }
+  ],
+  "combinedTranscript": "All meeting transcripts concatenated..."
+}
+```
+
 ## Status Values
 
 - `ready` - Transcription complete, safe to read
@@ -82,7 +134,7 @@ cat ~/.meetingrecorder/meetings/2025-01-15/daily-standup.json
 
 ## Lock File Protocol
 
-If `~/.meetingrecorder/meetings/.lock` exists, the app is writing files. Wait briefly and retry.
+If `~/.ambient/meetings/.lock` exists, the app is writing files. Wait briefly and retry.
 
 ## Example Queries
 
@@ -100,15 +152,25 @@ If `~/.meetingrecorder/meetings/.lock` exists, the app is writing files. Wait br
 
 ### "Search all meetings for mentions of 'authentication'"
 
-1. Read index.json to get meeting paths
-2. Read each meeting JSON
-3. Search transcript fields for the keyword
+```bash
+# With CLI
+ambient search "authentication"
+
+# Or manually
+grep -r "authentication" ~/.ambient/meetings/
+```
 
 ### "Summarize this week's meetings"
 
 1. Filter index.json for this week's dates
 2. Read each meeting JSON
 3. Extract titles, durations, and key transcript excerpts
+
+### "Get context from project meetings"
+
+1. Read index.json to find relevant group
+2. Read the group JSON for combined transcript
+3. Use combined transcript for full project context
 
 ## Tips
 
@@ -117,3 +179,4 @@ If `~/.meetingrecorder/meetings/.lock` exists, the app is writing files. Wait br
 - **Handle missing files** - Meetings may be deleted
 - **Respect the lock** - If .lock exists, wait and retry
 - **Transcripts are plain text** - No speaker identification
+- **Groups have combined context** - Use for project-wide queries
