@@ -75,7 +75,7 @@ struct MeetingDetailView: View {
                             selectedTab: $selectedContentTab,
                             audioPlayer: audioPlayer,
                             onReprocess: {
-                                await processMeeting()
+                                await generateBrief()
                             },
                             onRetryTranscription: meeting.status == .failed ? {
                                 Task {
@@ -309,6 +309,61 @@ struct MeetingDetailView: View {
         }
 
         return items
+    }
+
+    /// Generate meeting brief and action items using the new intelligence system
+    private func generateBrief() async {
+        guard let transcript = meeting.transcript else {
+            logError("[MeetingDetailView] Cannot generate brief - no transcript")
+            return
+        }
+
+        isProcessing = true
+        defer { isProcessing = false }
+
+        do {
+            logInfo("[MeetingDetailView] Generating meeting intelligence...")
+
+            // Call the new intelligence extraction
+            let result = try await SummarizationProcess.shared.generateMeetingIntelligence(
+                transcript: transcript,
+                meetingId: meeting.id,
+                meetingDate: meeting.startTime,
+                speakerSegments: meeting.diarizationSegments?.map { seg in
+                    TranscriptSegment(
+                        speaker: seg.speakerId,
+                        start: seg.start,
+                        end: seg.end,
+                        text: seg.text
+                    )
+                }
+            )
+
+            // Update meeting with brief
+            meeting.meetingBrief = result.brief
+            meeting.briefGeneratedAt = Date()
+
+            // Save action items to database
+            if !result.actionItems.isEmpty {
+                try await ActionItemManager.shared.insert(result.actionItems)
+                logInfo("[MeetingDetailView] Saved \(result.actionItems.count) action items")
+            }
+
+            // Update meeting cost
+            let existingCost = meeting.apiCostCents ?? 0
+            meeting.apiCostCents = existingCost + result.costCents
+
+            // Save meeting to database
+            try await DatabaseManager.shared.update(meeting)
+
+            logInfo("[MeetingDetailView] Brief generated successfully with \(result.actionItems.count) action items")
+
+            // Notify other views
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+
+        } catch {
+            logError("[MeetingDetailView] Failed to generate brief: \(error)")
+        }
     }
 }
 

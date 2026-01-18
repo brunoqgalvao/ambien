@@ -70,6 +70,7 @@
 		1CACTIONMGR00002 /* ActionItemManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONMGR00001 /* ActionItemManager.swift */; };
 		1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONVIEWS00001 /* ActionItemViews.swift */; };
 		1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACTIONDASH00001 /* ActionItemsDashboardView.swift */; };
+		1DCLIINSTALL00002 /* CLIInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCLIINSTALL00001 /* CLIInstaller.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -137,6 +138,7 @@
 		1CACTIONMGR00001 /* ActionItemManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemManager.swift; sourceTree = "<group>"; };
 		1CACTIONVIEWS00001 /* ActionItemViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemViews.swift; sourceTree = "<group>"; };
 		1CACTIONDASH00001 /* ActionItemsDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionItemsDashboardView.swift; sourceTree = "<group>"; };
+		1DCLIINSTALL00001 /* CLIInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIInstaller.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -224,6 +226,7 @@
 				1CACTIONMGR00001 /* ActionItemManager.swift */,
 				1CACTIONVIEWS00001 /* ActionItemViews.swift */,
 				1CACTIONDASH00001 /* ActionItemsDashboardView.swift */,
+				1DCLIINSTALL00001 /* CLIInstaller.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -399,6 +402,7 @@
 				1CACTIONMGR00002 /* ActionItemManager.swift in Sources */,
 				1CACTIONVIEWS00002 /* ActionItemViews.swift in Sources */,
 				1CACTIONDASH00002 /* ActionItemsDashboardView.swift in Sources */,
+				1DCLIINSTALL00002 /* CLIInstaller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

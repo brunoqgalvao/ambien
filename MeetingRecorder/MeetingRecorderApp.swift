@@ -416,6 +416,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             showOnboarding()
         }
 
+        // Offer CLI installation on first launch (after a short delay)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            CLIInstaller.shared.offerInstallIfNeeded()
+        }
+
         // Update icon when recording state changes
         audioManager.$isRecording
             .receive(on: DispatchQueue.main)

@@ -131,8 +131,7 @@ struct MainAppView: View {
                 selectedItem: $selectedItem,
                 viewModel: viewModel,
                 onRecord: { viewModel.toggleRecording() },
-                onSettings: { selectedItem = .settings },
-                isMeetingsListCollapsed: $isMeetingsListCollapsed
+                onSettings: { selectedItem = .settings }
             )
 
             // Content
@@ -218,10 +217,7 @@ struct DetailView: View {
             case .projects:
                 VStack(spacing: 0) {
                     DetailToolbar(title: "Projects", searchText: $searchText)
-                    // TODO: ProjectsListView - coming soon
-                    Text("Projects coming soon")
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ProjectsListView()
                 }
 
             case .dictations:
@@ -507,51 +503,49 @@ struct MeetingsListView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Collapsible list pane
-            if !isListCollapsed {
-                listPane
-                    .frame(width: listWidth)
-                    .transition(.move(edge: .leading).combined(with: .opacity))
+            // Collapsible list pane with edge toggle
+            ZStack(alignment: .trailing) {
+                if !isListCollapsed {
+                    HStack(spacing: 0) {
+                        listPane
+                            .frame(width: listWidth)
 
-                // Resize handle
-                Rectangle()
-                    .fill(Color.brandBorder)
-                    .frame(width: 1)
-                    .overlay(
+                        // Resize handle
                         Rectangle()
-                            .fill(Color.clear)
-                            .frame(width: 8)
-                            .cursor(.resizeLeftRight)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        let newWidth = listWidth + value.translation.width
-                                        listWidth = max(200, min(400, newWidth))
-                                    }
+                            .fill(Color.brandBorder)
+                            .frame(width: 1)
+                            .overlay(
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .frame(width: 8)
+                                    .cursor(.resizeLeftRight)
+                                    .gesture(
+                                        DragGesture()
+                                            .onChanged { value in
+                                                let newWidth = listWidth + value.translation.width
+                                                listWidth = max(200, min(400, newWidth))
+                                            }
+                                    )
                             )
-                    )
+                    }
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+
+                // Edge toggle button - sits on the right edge of list pane (or left edge of detail when collapsed)
+                ListEdgeToggle(isCollapsed: $isListCollapsed)
+                    .offset(x: isListCollapsed ? 12 : 12)
             }
 
-            // Detail pane (no floating toggle button - moved to sidebar)
+            // Detail pane
             detailPane
         }
         .sheet(item: $meetingToRename) { meeting in
             renameSheet(for: meeting)
         }
         .sheet(item: $meetingToAddToProject) { meeting in
-            // TODO: AddMeetingToProjectSheet - coming soon
-            VStack(spacing: 16) {
-                Text("Add to Project")
-                    .font(.headline)
-                Text("This feature is coming soon")
-                    .foregroundColor(.secondary)
-                Button("Close") {
-                    meetingToAddToProject = nil
-                }
-                .buttonStyle(.bordered)
+            AddMeetingToProjectSheet(meeting: meeting) {
+                meetingToAddToProject = nil
             }
-            .padding(24)
-            .frame(width: 300, height: 150)
         }
         .onChange(of: initialMeetingId) { _, newId in
             handleInitialMeetingChange(newId)
@@ -717,6 +711,47 @@ struct MeetingsListView: View {
     }
 }
 
+// MARK: - List Edge Toggle Button
+
+/// A small tab that sits on the edge of the meetings list to toggle collapse/expand
+struct ListEdgeToggle: View {
+    @Binding var isCollapsed: Bool
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isCollapsed.toggle()
+            }
+        }) {
+            ZStack {
+                // Pill-shaped background
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isHovered ? Color.brandViolet.opacity(0.1) : Color.brandSurface)
+                    .frame(width: 24, height: 48)
+                    .shadow(color: .black.opacity(0.08), radius: 2, x: 1, y: 0)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.brandBorder, lineWidth: 1)
+                    )
+
+                // Chevron icon
+                Image(systemName: isCollapsed ? "chevron.right" : "chevron.left")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(isHovered ? .brandViolet : .brandTextSecondary)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(isCollapsed ? "Show meeting list" : "Hide meeting list")
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 // MARK: - Rename Meeting Sheet
 
 struct RenameMeetingSheet: View {
@@ -761,6 +796,236 @@ struct RenameMeetingSheet: View {
         .onAppear {
             isFocused = true
         }
+    }
+}
+
+// MARK: - Add Meeting to Project Sheet
+
+struct AddMeetingToProjectSheet: View {
+    let meeting: Meeting
+    let onDismiss: () -> Void
+
+    @State private var projects: [Project] = []
+    @State private var selectedProjects: Set<UUID> = []
+    @State private var isLoading = true
+    @State private var existingProjectIds: Set<UUID> = []
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Add to Project")
+                    .font(.brandDisplay(16, weight: .bold))
+                    .foregroundColor(.brandTextPrimary)
+
+                Spacer()
+
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.brandTextSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(16)
+
+            // Meeting preview
+            HStack(spacing: 12) {
+                Image(systemName: "waveform")
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandViolet)
+                    .frame(width: 32, height: 32)
+                    .background(
+                        Circle()
+                            .fill(Color.brandViolet.opacity(0.1))
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(meeting.title)
+                        .font(.brandDisplay(13, weight: .semibold))
+                        .foregroundColor(.brandTextPrimary)
+                        .lineLimit(1)
+
+                    Text(meeting.dateGroupKey)
+                        .font(.brandDisplay(11, weight: .regular))
+                        .foregroundColor(.brandTextSecondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+
+            Divider()
+
+            if isLoading {
+                VStack(spacing: 12) {
+                    BrandLoadingIndicator(size: .large)
+                    Text("Loading projects...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if projects.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "folder.badge.plus")
+                        .font(.system(size: 32))
+                        .foregroundColor(.brandTextSecondary)
+
+                    Text("No projects yet")
+                        .font(.brandDisplay(14, weight: .medium))
+                        .foregroundColor(.brandTextPrimary)
+
+                    Text("Create a project first to organize meetings")
+                        .font(.brandDisplay(12, weight: .regular))
+                        .foregroundColor(.brandTextSecondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 4) {
+                        ForEach(projects) { project in
+                            ProjectSelectionRow(
+                                project: project,
+                                isSelected: selectedProjects.contains(project.id),
+                                isAlreadyInProject: existingProjectIds.contains(project.id)
+                            ) {
+                                if selectedProjects.contains(project.id) {
+                                    selectedProjects.remove(project.id)
+                                } else {
+                                    selectedProjects.insert(project.id)
+                                }
+                            }
+                        }
+                    }
+                    .padding(12)
+                }
+            }
+
+            Divider()
+
+            // Actions
+            HStack {
+                Text("\(selectedProjects.count) selected")
+                    .font(.brandDisplay(12, weight: .medium))
+                    .foregroundColor(.brandTextSecondary)
+
+                Spacer()
+
+                BrandSecondaryButton(title: "Cancel") {
+                    onDismiss()
+                }
+
+                BrandPrimaryButton(
+                    title: "Add",
+                    icon: "folder.badge.plus",
+                    isDisabled: selectedProjects.isEmpty
+                ) {
+                    Task {
+                        for projectId in selectedProjects {
+                            try? await ProjectManager.shared.addMeeting(meeting.id, to: projectId)
+                        }
+                        onDismiss()
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .frame(width: 380, height: 420)
+        .background(Color.brandBackground)
+        .task {
+            await loadProjects()
+        }
+    }
+
+    private func loadProjects() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            projects = try await ProjectManager.shared.getAllProjects()
+            let meetingProjects = try await ProjectManager.shared.getProjects(for: meeting.id)
+            existingProjectIds = Set(meetingProjects.map { $0.id })
+        } catch {
+            print("[AddMeetingToProjectSheet] Error: \(error)")
+        }
+    }
+}
+
+struct ProjectSelectionRow: View {
+    let project: Project
+    let isSelected: Bool
+    let isAlreadyInProject: Bool
+    let onToggle: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Checkbox
+            if isAlreadyInProject {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.brandMint)
+            } else {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(isSelected ? .brandViolet : .brandTextSecondary)
+            }
+
+            // Project icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.brandViolet.opacity(0.1))
+                    .frame(width: 28, height: 28)
+
+                if let emoji = project.emoji {
+                    Text(emoji)
+                        .font(.system(size: 14))
+                } else {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.brandViolet)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(project.name)
+                    .font(.brandDisplay(13, weight: .medium))
+                    .foregroundColor(.brandTextPrimary)
+                    .lineLimit(1)
+
+                Text("\(project.meetingCount) meetings")
+                    .font(.brandDisplay(11, weight: .regular))
+                    .foregroundColor(.brandTextSecondary)
+            }
+
+            Spacer()
+
+            if isAlreadyInProject {
+                Text("Added")
+                    .font(.brandDisplay(11, weight: .medium))
+                    .foregroundColor(.brandMint)
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: BrandRadius.small)
+                .fill(isSelected ? Color.brandViolet.opacity(0.08) : (isHovered ? Color.brandViolet.opacity(0.03) : Color.clear))
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !isAlreadyInProject {
+                onToggle()
+            }
+        }
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+        .opacity(isAlreadyInProject ? 0.7 : 1)
     }
 }
 

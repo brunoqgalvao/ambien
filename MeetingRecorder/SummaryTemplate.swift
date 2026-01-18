@@ -420,11 +420,28 @@ class SummaryTemplateManager: ObservableObject {
     private func loadTemplates() {
         // Start with built-in templates
         var loadedTemplates = SummaryTemplate.builtInTemplates
+        var seenIds = Set(loadedTemplates.map { $0.id })
 
-        // Load custom templates from UserDefaults
+        // Load custom templates from UserDefaults (dedupe by ID)
+        // Skip any that have built-in IDs (corrupted data cleanup)
         if let data = UserDefaults.standard.data(forKey: storageKey),
            let customTemplates = try? JSONDecoder().decode([SummaryTemplate].self, from: data) {
-            loadedTemplates.append(contentsOf: customTemplates)
+            var cleanedCustom: [SummaryTemplate] = []
+            for template in customTemplates {
+                // Skip if it's a duplicate or has a built-in ID
+                if !seenIds.contains(template.id) {
+                    cleanedCustom.append(template)
+                    loadedTemplates.append(template)
+                    seenIds.insert(template.id)
+                }
+            }
+            // If we cleaned up corrupted data, save it back
+            if cleanedCustom.count != customTemplates.count {
+                print("[SummaryTemplateManager] Cleaned up \(customTemplates.count - cleanedCustom.count) duplicate templates from storage")
+                if let cleanedData = try? JSONEncoder().encode(cleanedCustom) {
+                    UserDefaults.standard.set(cleanedData, forKey: storageKey)
+                }
+            }
         }
 
         // Load enabled states
@@ -436,7 +453,21 @@ class SummaryTemplateManager: ObservableObject {
             }
         }
 
-        templates = loadedTemplates
+        // Final deduplication safety check (should not be needed but prevents runtime crash)
+        var finalIds = Set<UUID>()
+        var uniqueTemplates: [SummaryTemplate] = []
+        for template in loadedTemplates {
+            if !finalIds.contains(template.id) {
+                uniqueTemplates.append(template)
+                finalIds.insert(template.id)
+            }
+        }
+
+        if uniqueTemplates.count != loadedTemplates.count {
+            print("[SummaryTemplateManager] Warning: Removed \(loadedTemplates.count - uniqueTemplates.count) duplicate templates")
+        }
+
+        templates = uniqueTemplates
 
         // Load selected template
         if let selectedIdString = UserDefaults.standard.string(forKey: selectedTemplateKey),

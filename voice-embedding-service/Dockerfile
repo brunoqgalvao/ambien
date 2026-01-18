@@ -6,7 +6,6 @@ FROM python:3.11-slim as builder
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    ffmpeg \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +25,6 @@ FROM python:3.11-slim
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
@@ -46,8 +44,8 @@ RUN useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Create cache directory for HuggingFace models
-RUN mkdir -p /home/appuser/.cache/huggingface
+# Create cache directory for model
+RUN mkdir -p /home/appuser/.cache
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1

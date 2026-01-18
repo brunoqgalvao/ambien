@@ -567,8 +567,18 @@ struct BriefContentView: View {
                     }
                 }
                 .padding(.top, 8)
+            } else if isGenerating {
+                // Loading state - show only loading indicator
+                VStack(spacing: 16) {
+                    BrandLoadingIndicator(size: .large)
+                    Text("Generating brief...")
+                        .font(.brandDisplay(14))
+                        .foregroundColor(.brandTextSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 80)
             } else {
-                // No brief yet
+                // No brief yet - empty state
                 VStack(spacing: 16) {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 48))
@@ -579,14 +589,7 @@ struct BriefContentView: View {
                         .foregroundColor(.brandTextSecondary)
 
                     if meeting.transcript != nil {
-                        if isGenerating {
-                            HStack(spacing: 8) {
-                                BrandLoadingIndicator(size: .medium)
-                                Text("Generating brief...")
-                                    .font(.brandDisplay(13))
-                                    .foregroundColor(.brandTextSecondary)
-                            }
-                        } else if let onGenerateBrief = onGenerateBrief {
+                        if let onGenerateBrief = onGenerateBrief {
                             BrandPrimaryButton(
                                 title: "Generate Brief",
                                 icon: "sparkles",
