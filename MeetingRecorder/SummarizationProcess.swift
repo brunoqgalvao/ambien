@@ -536,20 +536,22 @@ actor SummarizationProcess {
         return """
         You are an expert meeting analyst. Analyze this meeting transcript thoroughly and extract comprehensive, actionable intelligence.
 
+        \(CitationSystemPrompt.instructions)
+
         Respond with JSON in this exact format:
         {
             "brief": {
                 "purpose": "2-3 sentences describing the meeting's purpose and main objective",
                 "participants": ["Only people who SPOKE in the meeting - not people who were mentioned"],
                 "people_mentioned": ["People discussed but not present in the call"],
-                "summary": "A thorough 3-5 paragraph summary in markdown format covering: (1) what was discussed, (2) key insights and context, (3) conclusions reached. Use **bold** for emphasis, bullet points where helpful.",
+                "summary": "A thorough 3-5 paragraph summary in markdown format. Include citations for key quotes and decisions. Use **bold** for emphasis, bullet points where helpful.",
                 "discussion_points": [
-                    "Detailed point 1 - include context and what was said about it",
-                    "Detailed point 2 - include any conclusions or insights",
+                    "Detailed point with citation [[cite:MM:SS-MM:SS|speaker|\"relevant quote\"]]",
+                    "Another point - include context and citations for specific claims",
                     "..."
                 ],
-                "key_insights": ["Important realizations or learnings from the discussion"],
-                "decisions_made": ["Explicit decisions that were agreed upon - be specific"],
+                "key_insights": ["Important realizations - cite the source if quoting someone"],
+                "decisions_made": ["Decision with citation [[cite:MM:SS-MM:SS|speaker|\"what they said\"]]"],
                 "decisions_pending": ["Things that still need to be decided - include context on blockers"],
                 "blockers": ["Issues or dependencies that are blocking progress"] or null if none,
                 "follow_ups_needed": ["Things that need follow-up but aren't action items per se"]
@@ -560,12 +562,19 @@ actor SummarizationProcess {
                     "assignee": "Person name who committed to doing it" or null if unclear,
                     "due_suggestion": "by Friday" or "next week" or "ASAP" or null,
                     "priority": "high" | "medium" | "low",
-                    "context": "Why this task matters and any relevant context from the meeting"
+                    "context": "Why this task matters - include citation to the commitment [[cite:MM:SS-MM:SS|speaker|\"I'll do X\"]]"
                 }
             ]
         }
 
         CRITICAL GUIDELINES:
+
+        **Citations (IMPORTANT):**
+        - Use the citation format [[cite:MM:SS-MM:SS|speaker|"quoted text"]] to reference specific transcript moments
+        - The timestamps in the transcript are in [MM:SS] format - use these for your citations
+        - Include citations for: key decisions, direct quotes, action item commitments, important insights
+        - Keep quoted text brief (1-2 sentences max) - just enough to identify the moment
+        - Don't over-cite - focus on the most important points
 
         **Participants vs Mentioned People:**
         - "participants" = ONLY people who actually SPOKE in the meeting (you can tell from speaker labels or who is talking)
@@ -576,21 +585,24 @@ actor SummarizationProcess {
         - Use markdown formatting: **bold** for key terms, bullet points for lists
         - Include context, not just what was said but WHY it matters
         - Capture the narrative arc of the conversation
+        - Include citations for key quotes and pivotal moments
 
         **Discussion Points:**
         - Be comprehensive - for a 45-minute meeting, expect 5-10 substantial discussion points
         - Include enough detail that each point is meaningful on its own
         - Don't just list topics - explain what was discussed about each
+        - Add citations for specific statements or decisions within each point
 
         **Action Items:**
         - Only include EXPLICIT commitments ("I'll do X", "Let's make sure to Y")
         - Don't invent action items that weren't actually committed to
         - Include context so the person knows why they're doing it
-        - If someone said they'd do something, capture exactly what they committed to
+        - ALWAYS cite the moment where someone committed to the action
 
         **Key Insights:**
         - What were the "aha moments" or important realizations?
         - What context or background information was shared that's valuable?
+        - Cite the source when quoting someone's insight
 
         TRANSCRIPT:
         \(truncatedTranscript)

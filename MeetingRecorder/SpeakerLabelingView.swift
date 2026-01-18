@@ -170,7 +170,7 @@ struct SpeakerLabelingView: View {
     }
 }
 
-/// Row for a single speaker with editable label and audio preview
+/// Row for a single speaker with editable label and 3-dot menu
 struct SpeakerLabelRow: View {
     let speakerId: String
     @Binding var meeting: Meeting
@@ -181,7 +181,7 @@ struct SpeakerLabelRow: View {
     @State private var isEditing = false
     @State private var editedName: String = ""
     @State private var isHovered = false
-    @State private var isPlayButtonHovered = false
+    @State private var showMenu = false
     @FocusState private var isFocused: Bool
 
     /// Current label derived from meeting binding (reactive)
@@ -210,15 +210,15 @@ struct SpeakerLabelRow: View {
             ZStack {
                 Circle()
                     .fill(colorForSpeaker(speakerId))
-                    .frame(width: 32, height: 32)
+                    .frame(width: 40, height: 40)
 
                 Text(currentLabel.prefix(1).uppercased())
-                    .font(.caption.weight(.semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
             }
 
             if isEditing {
-                // Edit mode - brand-styled inline text field, left-aligned
+                // Edit mode - brand-styled inline text field
                 HStack(spacing: 8) {
                     TextField("Enter name", text: $editedName)
                         .textFieldStyle(.plain)
@@ -256,60 +256,60 @@ struct SpeakerLabelRow: View {
                     isFocused = true
                 }
             } else {
-                // Display mode - double-click to edit
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(currentLabel)
-                            .font(.subheadline.weight(.medium))
+                // Display mode - name + 3-dot menu
+                Text(currentLabel)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.brandTextPrimary)
 
-                        if !isLabeled {
-                            Text("Double-click to name")
-                                .font(.caption2)
-                                .foregroundColor(.brandTextSecondary)
-                        }
-                    }
+                Spacer()
 
-                    Spacer()
-
-                    // Play button for voice sample
+                // 3-dot menu (always visible on hover or when playing)
+                Menu {
                     if canPlaySample {
                         Button(action: togglePlaySample) {
-                            ZStack {
-                                Circle()
-                                    .fill(isPlayingSample ? Color.brandViolet : (isPlayButtonHovered ? Color.brandViolet.opacity(0.15) : Color.clear))
-                                    .frame(width: 28, height: 28)
-
-                                Image(systemName: isPlayingSample ? "stop.fill" : "play.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(isPlayingSample ? .white : .brandViolet)
-                            }
+                            Label(
+                                isPlayingSample ? "Stop playback" : "Play voice sample",
+                                systemImage: isPlayingSample ? "stop.fill" : "play.fill"
+                            )
                         }
-                        .buttonStyle(.plain)
-                        .onHover { hovering in
-                            withAnimation(.easeInOut(duration: 0.1)) {
-                                isPlayButtonHovered = hovering
-                            }
-                        }
-                        .help(isPlayingSample ? "Stop preview" : "Play voice sample")
                     }
 
-                    // Show pencil on hover
-                    if isHovered && !isPlayButtonHovered {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 11))
-                            .foregroundColor(.brandTextSecondary)
+                    Button(action: startEditing) {
+                        Label("Edit name", systemImage: "pencil")
                     }
+
+                    if isLabeled {
+                        Divider()
+                        Button(role: .destructive, action: clearLabel) {
+                            Label("Clear name", systemImage: "trash")
+                        }
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(isPlayingSample ? Color.brandViolet : Color.clear)
+                            .frame(width: 28, height: 28)
+
+                        Image(systemName: isPlayingSample ? "waveform" : "ellipsis")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(isPlayingSample ? .white : .brandViolet)
+                            .symbolEffect(.variableColor.iterative, isActive: isPlayingSample)
+                    }
+                    .contentShape(Circle())
                 }
-                .contentShape(Rectangle())
-                .onTapGesture(count: 2) {
-                    startEditing()
-                }
-                .onHover { hovering in
-                    isHovered = hovering
-                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .opacity(isHovered || isPlayingSample ? 1 : 0.3)
+                .animation(.easeInOut(duration: 0.1), value: isHovered)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 
     @MainActor private func togglePlaySample() {
@@ -328,17 +328,26 @@ struct SpeakerLabelRow: View {
     }
 
     private func startEditing() {
+        // If already labeled, start with current name; otherwise start empty
         editedName = isLabeled ? currentLabel : ""
         isEditing = true
     }
 
     private func commitEdit() {
-        onLabelChanged(editedName)
+        let trimmedName = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty && trimmedName != currentLabel {
+            print("[SpeakerLabelRow] Committing edit: '\(trimmedName)' for \(speakerId)")
+            onLabelChanged(trimmedName)
+        }
         isEditing = false
     }
 
     private func cancelEdit() {
         isEditing = false
+    }
+
+    private func clearLabel() {
+        onLabelChanged("")
     }
 
     private func colorForSpeaker(_ speakerId: String) -> Color {

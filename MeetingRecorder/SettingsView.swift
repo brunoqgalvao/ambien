@@ -934,7 +934,7 @@ struct DictationSettingsContent: View {
 // MARK: - AI Providers Settings Content (Combined API + Models)
 
 struct AIProvidersSettingsContent: View {
-    @AppStorage("selectedTranscriptionModel") private var selectedModelId = "openai:gpt-4o-mini-transcribe"
+    @AppStorage("selectedTranscriptionModel") private var selectedModelId = "gemini:gemini-2.5-flash"
 
     @State private var expandedProvider: TranscriptionProvider? = nil
     @State private var providerKeys: [TranscriptionProvider: String] = [:]

@@ -39,11 +39,16 @@ struct ActionItemsDashboardView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
                         // Grouped items
-                        ForEach(DueDateGroup.allCases.filter { $0 != .completed }, id: \.self) { group in
+                        ForEach(DueDateGroup.allCases.filter { $0 != .completed && $0 != .backlog }, id: \.self) { group in
                             let items = itemsForGroup(group)
                             if !items.isEmpty {
                                 groupSection(group: group, items: items)
                             }
+                        }
+
+                        // Backlog section (collapsible, no badge contribution)
+                        if !backlogItems.isEmpty {
+                            backlogSection
                         }
 
                         // Completed section (collapsible)
@@ -165,7 +170,11 @@ struct ActionItemsDashboardView: View {
                         onComplete: { completeItem($0) },
                         onEdit: { editItem($0) },
                         onDelete: { deleteItem($0) },
-                        onNavigateToMeeting: { navigateToMeeting($0) }
+                        onNavigateToMeeting: { navigateToMeeting($0) },
+                        onMoveToBacklog: { moveToBacklog($0) },
+                        onRestoreFromBacklog: { restoreFromBacklog($0) },
+                        onUpdateDueDate: { updateDueDate($0, $1) },
+                        onUpdateAssignee: { updateAssignee($0, $1) }
                     )
                 }
             }
@@ -176,6 +185,50 @@ struct ActionItemsDashboardView: View {
                     .stroke(Color.brandBorder, lineWidth: 1)
             )
         }
+    }
+
+    // MARK: - Backlog Section
+
+    @State private var showBacklog = false
+
+    private var backlogSection: some View {
+        DisclosureGroup(isExpanded: $showBacklog) {
+            VStack(spacing: 2) {
+                ForEach(backlogItems) { item in
+                    ActionItemDashboardRow(
+                        item: item,
+                        onComplete: { completeItem($0) },
+                        onEdit: { editItem($0) },
+                        onDelete: { deleteItem($0) },
+                        onNavigateToMeeting: { navigateToMeeting($0) },
+                        onRestoreFromBacklog: { restoreFromBacklog($0) },
+                        onUpdateDueDate: { updateDueDate($0, $1) },
+                        onUpdateAssignee: { updateAssignee($0, $1) }
+                    )
+                }
+            }
+            .background(Color.brandSurface)
+            .cornerRadius(BrandRadius.small)
+            .overlay(
+                RoundedRectangle(cornerRadius: BrandRadius.small)
+                    .stroke(Color.brandBorder, lineWidth: 1)
+            )
+        } label: {
+            HStack {
+                Text("📦 BACKLOG")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.brandTextSecondary)
+
+                Text("(\(backlogItems.count))")
+                    .font(.system(size: 11))
+                    .foregroundColor(.brandTextSecondary.opacity(0.7))
+
+                Text("• Won't count in stats")
+                    .font(.system(size: 10))
+                    .foregroundColor(.brandTextSecondary.opacity(0.5))
+            }
+        }
+        .accentColor(.brandTextSecondary)
     }
 
     // MARK: - Completed Section
@@ -279,6 +332,11 @@ struct ActionItemsDashboardView: View {
         return items
     }
 
+    private var backlogItems: [ActionItem] {
+        actionItems.filter { $0.status == .backlog }
+            .sorted { $0.createdAt > $1.createdAt }
+    }
+
     private var completedItems: [ActionItem] {
         actionItems.filter { $0.status == .completed }
             .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
@@ -340,6 +398,30 @@ struct ActionItemsDashboardView: View {
         // TODO: Navigate to meeting detail
     }
 
+    private func moveToBacklog(_ item: ActionItem) {
+        Task {
+            try? await ActionItemManager.shared.moveToBacklog(item.id)
+        }
+    }
+
+    private func restoreFromBacklog(_ item: ActionItem) {
+        Task {
+            try? await ActionItemManager.shared.restoreFromBacklog(item.id)
+        }
+    }
+
+    private func updateDueDate(_ item: ActionItem, _ newDate: Date?) {
+        Task {
+            try? await ActionItemManager.shared.updateDueDate(item.id, dueDate: newDate)
+        }
+    }
+
+    private func updateAssignee(_ item: ActionItem, _ newAssignee: String?) {
+        Task {
+            try? await ActionItemManager.shared.updateAssignee(item.id, assignee: newAssignee)
+        }
+    }
+
     private func copyAsMarkdown() {
         Task {
             let openItems = filteredItems
@@ -375,17 +457,25 @@ struct ActionItemDashboardRow: View {
     var onEdit: ((ActionItem) -> Void)?
     var onDelete: ((ActionItem) -> Void)?
     var onNavigateToMeeting: ((ActionItem) -> Void)?
+    var onMoveToBacklog: ((ActionItem) -> Void)?
+    var onRestoreFromBacklog: ((ActionItem) -> Void)?
+    var onUpdateDueDate: ((ActionItem, Date?) -> Void)?
+    var onUpdateAssignee: ((ActionItem, String?) -> Void)?
 
     @State private var isHovered = false
     @State private var meetingTitle: String?
+    @State private var showDueDatePicker = false
+    @State private var showAssigneePicker = false
+    @State private var tempDueDate: Date = Date()
+    @State private var tempAssignee: String = ""
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Checkbox
             Button(action: { onComplete?(item) }) {
-                Image(systemName: item.status == .completed ? "checkmark.circle.fill" : "circle")
+                Image(systemName: checkmarkIcon)
                     .font(.system(size: 18))
-                    .foregroundColor(item.status == .completed ? .brandMint : .brandTextSecondary)
+                    .foregroundColor(checkmarkColor)
             }
             .buttonStyle(.plain)
 
@@ -398,32 +488,59 @@ struct ActionItemDashboardRow: View {
                     .lineLimit(2)
 
                 HStack(spacing: 8) {
-                    // Assignee
-                    if let assignee = item.assignee {
+                    // Assignee button (clickable to edit)
+                    Button(action: {
+                        tempAssignee = item.assignee ?? ""
+                        showAssigneePicker = true
+                    }) {
                         HStack(spacing: 4) {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 10))
-                            Text(assignee)
+                            Text(item.assignee ?? "Assign")
+                                .font(.system(size: 11))
                         }
-                        .font(.system(size: 11))
-                        .foregroundColor(.brandTextSecondary)
+                        .foregroundColor(item.assignee != nil ? .brandTextSecondary : .brandTextSecondary.opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showAssigneePicker) {
+                        assigneePopover
                     }
 
-                    // Due date
-                    if item.status == .open, let dueText = item.formattedDueDate {
-                        HStack(spacing: 4) {
-                            Image(systemName: "calendar")
-                                .font(.system(size: 10))
-                            Text(dueText)
+                    // Due date button (clickable to edit)
+                    if item.status == .open || item.status == .backlog {
+                        Button(action: {
+                            tempDueDate = item.dueDate ?? Date()
+                            showDueDatePicker = true
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 10))
+                                Text(item.formattedDueDate ?? "Set due date")
+                                    .font(.system(size: 11))
+                            }
+                            .foregroundColor(dueDateColor)
                         }
-                        .font(.system(size: 11))
-                        .foregroundColor(item.isOverdue ? .brandCoral : .brandTextSecondary)
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showDueDatePicker) {
+                            dueDatePopover
+                        }
                     }
 
                     // Priority
-                    if item.status == .open {
+                    if item.status == .open || item.status == .backlog {
                         Text(item.priority.emoji)
                             .font(.system(size: 10))
+                    }
+
+                    // Backlog indicator
+                    if item.status == .backlog {
+                        Text("Backlog")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.brandSurface)
+                            .cornerRadius(4)
                     }
 
                     // Completed date
@@ -452,22 +569,57 @@ struct ActionItemDashboardRow: View {
             Spacer()
 
             // Actions
-            if isHovered && item.status == .open {
+            if item.status == .open || item.status == .backlog {
                 HStack(spacing: 4) {
-                    if let onEdit = onEdit {
-                        BrandIconButton(icon: "pencil", size: 22, action: { onEdit(item) })
-                            .help("Edit")
+                    // Complete button (always visible)
+                    BrandSecondaryButton(title: "", icon: "checkmark", size: .small) {
+                        onComplete?(item)
                     }
-                    if let onDelete = onDelete {
-                        BrandIconButton(icon: "trash", size: 22, color: .brandCoral, action: { onDelete(item) })
-                            .help("Delete")
+                    .frame(width: 32)
+
+                    // Three-dot menu
+                    Menu {
+                        Button(action: { onEdit?(item) }) {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+                        Divider()
+
+                        // Copy options
+                        Button(action: { copyItemAsText() }) {
+                            Label("Copy as Text", systemImage: "doc.on.doc")
+                        }
+                        Button(action: { copyItemAsMarkdown() }) {
+                            Label("Copy as Markdown", systemImage: "text.badge.checkmark")
+                        }
+
+                        Divider()
+
+                        if item.status == .open {
+                            Button(action: { onMoveToBacklog?(item) }) {
+                                Label("Move to Backlog", systemImage: "archivebox")
+                            }
+                        } else if item.status == .backlog {
+                            Button(action: { onRestoreFromBacklog?(item) }) {
+                                Label("Restore to Open", systemImage: "arrow.uturn.backward")
+                            }
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive, action: { onDelete?(item) }) {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                            .frame(width: 28, height: 28)
+                            .contentShape(Rectangle())
                     }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 28)
                 }
-            } else if item.status == .open {
-                BrandSecondaryButton(title: "", icon: "checkmark", size: .small) {
-                    onComplete?(item)
-                }
-                .frame(width: 32)
             } else {
                 Button("Undo") {
                     onComplete?(item)
@@ -498,6 +650,166 @@ struct ActionItemDashboardRow: View {
         .task {
             await loadMeetingTitle()
         }
+    }
+
+    // MARK: - Copy Actions
+
+    private func copyItemAsText() {
+        var text = item.task
+        var details: [String] = []
+
+        if let assignee = item.assignee {
+            details.append("@\(assignee)")
+        }
+        if let due = item.formattedDueDate {
+            details.append("Due: \(due)")
+        }
+        if !details.isEmpty {
+            text += " (\(details.joined(separator: ", ")))"
+        }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func copyItemAsMarkdown() {
+        let checkbox = item.status == .completed ? "[x]" : "[ ]"
+        var text = "- \(checkbox) \(item.task)"
+        var details: [String] = []
+
+        if let assignee = item.assignee {
+            details.append("**@\(assignee)**")
+        }
+        if let due = item.formattedDueDate {
+            details.append("📅 \(due)")
+        }
+        details.append(item.priority.emoji)
+
+        if !details.isEmpty {
+            text += " — \(details.joined(separator: " "))"
+        }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    // MARK: - Computed Properties
+
+    private var checkmarkIcon: String {
+        switch item.status {
+        case .completed: return "checkmark.circle.fill"
+        case .backlog: return "circle.dashed"
+        default: return "circle"
+        }
+    }
+
+    private var checkmarkColor: Color {
+        switch item.status {
+        case .completed: return .brandMint
+        case .backlog: return .brandTextSecondary.opacity(0.5)
+        default: return .brandTextSecondary
+        }
+    }
+
+    private var dueDateColor: Color {
+        if item.dueDate == nil {
+            return .brandTextSecondary.opacity(0.5)
+        } else if item.isOverdue {
+            return .brandCoral
+        } else {
+            return .brandTextSecondary
+        }
+    }
+
+    // MARK: - Popovers
+
+    private var dueDatePopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Set Due Date")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+
+            DatePicker("", selection: $tempDueDate, displayedComponents: .date)
+                .labelsHidden()
+                .datePickerStyle(.graphical)
+
+            HStack {
+                Button("Clear") {
+                    onUpdateDueDate?(item, nil)
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandCoral)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button("Cancel") {
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandTextSecondary)
+                .buttonStyle(.plain)
+
+                Button("Save") {
+                    onUpdateDueDate?(item, tempDueDate)
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.brandViolet)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .frame(width: 280)
+    }
+
+    private var assigneePopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Assign To")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+
+            TextField("Enter name...", text: $tempAssignee)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .padding(10)
+                .background(Color.brandSurface)
+                .cornerRadius(BrandRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: BrandRadius.small)
+                        .stroke(Color.brandBorder, lineWidth: 1)
+                )
+
+            HStack {
+                Button("Clear") {
+                    onUpdateAssignee?(item, nil)
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandCoral)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button("Cancel") {
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandTextSecondary)
+                .buttonStyle(.plain)
+
+                Button("Save") {
+                    onUpdateAssignee?(item, tempAssignee.isEmpty ? nil : tempAssignee)
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.brandViolet)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .frame(width: 240)
     }
 
     private func loadMeetingTitle() async {

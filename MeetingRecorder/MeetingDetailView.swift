@@ -325,13 +325,14 @@ struct MeetingDetailView: View {
             logInfo("[MeetingDetailView] Generating meeting intelligence...")
 
             // Call the new intelligence extraction
+            // Use resolved speaker names (from user labels) instead of raw speaker IDs
             let result = try await SummarizationProcess.shared.generateMeetingIntelligence(
                 transcript: transcript,
                 meetingId: meeting.id,
                 meetingDate: meeting.startTime,
                 speakerSegments: meeting.diarizationSegments?.map { seg in
                     TranscriptSegment(
-                        speaker: seg.speakerId,
+                        speaker: meeting.speakerName(for: seg.speakerId),
                         start: seg.start,
                         end: seg.end,
                         text: seg.text

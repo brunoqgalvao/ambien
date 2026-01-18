@@ -17,16 +17,23 @@ struct ActionItemRow: View {
     var onComplete: ((ActionItem) -> Void)?
     var onEdit: ((ActionItem) -> Void)?
     var onDelete: ((ActionItem) -> Void)?
+    var onMoveToBacklog: ((ActionItem) -> Void)?
+    var onUpdateDueDate: ((ActionItem, Date?) -> Void)?
+    var onUpdateAssignee: ((ActionItem, String?) -> Void)?
 
     @State private var isHovered = false
+    @State private var showDueDatePicker = false
+    @State private var showAssigneePicker = false
+    @State private var tempDueDate: Date = Date()
+    @State private var tempAssignee: String = ""
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Checkbox
             Button(action: { onComplete?(item) }) {
-                Image(systemName: item.status == .completed ? "checkmark.circle.fill" : "circle")
+                Image(systemName: checkmarkIcon)
                     .font(.system(size: 20))
-                    .foregroundColor(item.status == .completed ? .brandMint : .brandTextSecondary)
+                    .foregroundColor(checkmarkColor)
             }
             .buttonStyle(.plain)
 
@@ -38,30 +45,66 @@ struct ActionItemRow: View {
                     .foregroundColor(item.status == .completed ? .brandTextSecondary : .brandTextPrimary)
                     .strikethrough(item.status == .completed)
 
-                // Metadata row
+                // Metadata row with inline edit buttons
                 HStack(spacing: 8) {
-                    // Assignee
-                    if let assignee = item.assignee {
-                        Text(assignee)
-                            .font(.system(size: 12))
-                            .foregroundColor(.brandTextSecondary)
+                    // Assignee button (clickable to edit)
+                    Button(action: {
+                        tempAssignee = item.assignee ?? ""
+                        showAssigneePicker = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 10))
+                            Text(item.assignee ?? "Assign")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundColor(item.assignee != nil ? .brandTextSecondary : .brandTextSecondary.opacity(0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showAssigneePicker) {
+                        assigneePopover
                     }
 
-                    // Due date
-                    if let dueText = item.formattedDueDate {
-                        Text(item.isOverdue ? dueText : dueText)
-                            .font(.system(size: 12))
-                            .foregroundColor(item.isOverdue ? .brandCoral : .brandTextSecondary)
-                    } else if item.status == .completed, let completed = item.formattedCompletedDate {
-                        Text(completed)
-                            .font(.system(size: 12))
-                            .foregroundColor(.brandMint)
+                    // Due date button (clickable to edit)
+                    Button(action: {
+                        tempDueDate = item.dueDate ?? Date()
+                        showDueDatePicker = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 10))
+                            Text(item.formattedDueDate ?? "Set due date")
+                                .font(.system(size: 12))
+                        }
+                        .foregroundColor(dueDateColor)
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showDueDatePicker) {
+                        dueDatePopover
                     }
 
                     // Priority badge
-                    if item.status == .open {
+                    if item.status == .open || item.status == .backlog {
                         Text(item.priority.emoji)
                             .font(.system(size: 10))
+                    }
+
+                    // Backlog indicator
+                    if item.status == .backlog {
+                        Text("Backlog")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.brandSurface)
+                            .cornerRadius(4)
+                    }
+
+                    // Completed date
+                    if item.status == .completed, let completed = item.formattedCompletedDate {
+                        Text(completed)
+                            .font(.system(size: 12))
+                            .foregroundColor(.brandMint)
                     }
                 }
 
@@ -75,24 +118,57 @@ struct ActionItemRow: View {
 
             Spacer()
 
-            // Complete button or hover actions
-            if item.status == .open {
-                if isHovered {
-                    HStack(spacing: 4) {
-                        if let onEdit = onEdit {
-                            BrandIconButton(icon: "pencil", size: 24, action: { onEdit(item) })
-                                .help("Edit")
-                        }
-                        if let onDelete = onDelete {
-                            BrandIconButton(icon: "trash", size: 24, color: .brandCoral, action: { onDelete(item) })
-                                .help("Delete")
-                        }
-                    }
-                } else {
+            // Actions
+            if item.status == .open || item.status == .backlog {
+                HStack(spacing: 4) {
+                    // Complete button (always visible)
                     BrandSecondaryButton(title: "", icon: "checkmark", size: .small) {
                         onComplete?(item)
                     }
                     .frame(width: 32)
+
+                    // Three-dot menu
+                    Menu {
+                        Button(action: { onEdit?(item) }) {
+                            Label("Edit", systemImage: "pencil")
+                        }
+
+                        Divider()
+
+                        // Copy options
+                        Button(action: { copyItemAsText() }) {
+                            Label("Copy as Text", systemImage: "doc.on.doc")
+                        }
+                        Button(action: { copyItemAsMarkdown() }) {
+                            Label("Copy as Markdown", systemImage: "text.badge.checkmark")
+                        }
+
+                        Divider()
+
+                        if item.status == .open {
+                            Button(action: { onMoveToBacklog?(item) }) {
+                                Label("Move to Backlog", systemImage: "archivebox")
+                            }
+                        } else if item.status == .backlog {
+                            Button(action: { onComplete?(item) }) {
+                                Label("Restore to Open", systemImage: "arrow.uturn.backward")
+                            }
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive, action: { onDelete?(item) }) {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                            .frame(width: 28, height: 28)
+                            .contentShape(Rectangle())
+                    }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 28)
                 }
             } else {
                 // Undo button for completed items
@@ -112,7 +188,7 @@ struct ActionItemRow: View {
         )
         .overlay(
             // Overdue indicator
-            item.isOverdue ?
+            item.isOverdue && item.status == .open ?
                 RoundedRectangle(cornerRadius: BrandRadius.small)
                     .fill(Color.brandCoral.opacity(0.1))
                     .overlay(
@@ -126,6 +202,166 @@ struct ActionItemRow: View {
         )
         .onHover { isHovered = $0 }
         .contentShape(Rectangle())
+    }
+
+    // MARK: - Computed Properties
+
+    private var checkmarkIcon: String {
+        switch item.status {
+        case .completed: return "checkmark.circle.fill"
+        case .backlog: return "circle.dashed"
+        default: return "circle"
+        }
+    }
+
+    private var checkmarkColor: Color {
+        switch item.status {
+        case .completed: return .brandMint
+        case .backlog: return .brandTextSecondary.opacity(0.5)
+        default: return .brandTextSecondary
+        }
+    }
+
+    private var dueDateColor: Color {
+        if item.dueDate == nil {
+            return .brandTextSecondary.opacity(0.5)
+        } else if item.isOverdue {
+            return .brandCoral
+        } else {
+            return .brandTextSecondary
+        }
+    }
+
+    // MARK: - Popovers
+
+    private var dueDatePopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Set Due Date")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+
+            DatePicker("", selection: $tempDueDate, displayedComponents: .date)
+                .labelsHidden()
+                .datePickerStyle(.graphical)
+
+            HStack {
+                Button("Clear") {
+                    onUpdateDueDate?(item, nil)
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandCoral)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button("Cancel") {
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandTextSecondary)
+                .buttonStyle(.plain)
+
+                Button("Save") {
+                    onUpdateDueDate?(item, tempDueDate)
+                    showDueDatePicker = false
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.brandViolet)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .frame(width: 280)
+    }
+
+    private var assigneePopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Assign To")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+
+            TextField("Enter name...", text: $tempAssignee)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .padding(10)
+                .background(Color.brandSurface)
+                .cornerRadius(BrandRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: BrandRadius.small)
+                        .stroke(Color.brandBorder, lineWidth: 1)
+                )
+
+            HStack {
+                Button("Clear") {
+                    onUpdateAssignee?(item, nil)
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandCoral)
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button("Cancel") {
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12))
+                .foregroundColor(.brandTextSecondary)
+                .buttonStyle(.plain)
+
+                Button("Save") {
+                    onUpdateAssignee?(item, tempAssignee.isEmpty ? nil : tempAssignee)
+                    showAssigneePicker = false
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.brandViolet)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .frame(width: 240)
+    }
+
+    // MARK: - Copy Actions
+
+    private func copyItemAsText() {
+        var text = item.task
+        var details: [String] = []
+
+        if let assignee = item.assignee {
+            details.append("@\(assignee)")
+        }
+        if let due = item.formattedDueDate {
+            details.append("Due: \(due)")
+        }
+        if !details.isEmpty {
+            text += " (\(details.joined(separator: ", ")))"
+        }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func copyItemAsMarkdown() {
+        let checkbox = item.status == .completed ? "[x]" : "[ ]"
+        var text = "- \(checkbox) \(item.task)"
+        var details: [String] = []
+
+        if let assignee = item.assignee {
+            details.append("**@\(assignee)**")
+        }
+        if let due = item.formattedDueDate {
+            details.append("📅 \(due)")
+        }
+        details.append(item.priority.emoji)
+
+        if !details.isEmpty {
+            text += " — \(details.joined(separator: " "))"
+        }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 }
 
@@ -191,10 +427,36 @@ struct MeetingActionItemsList: View {
                                 item: item,
                                 onComplete: { completeItem($0) },
                                 onEdit: { editItem($0) },
-                                onDelete: { deleteItem($0) }
+                                onDelete: { deleteItem($0) },
+                                onMoveToBacklog: { moveToBacklog($0) },
+                                onUpdateDueDate: { updateDueDate($0, $1) },
+                                onUpdateAssignee: { updateAssignee($0, $1) }
                             )
                         }
                     }
+                }
+
+                // Backlog items (collapsible, no badge contribution)
+                if !backlogItems.isEmpty {
+                    DisclosureGroup {
+                        VStack(spacing: 2) {
+                            ForEach(backlogItems) { item in
+                                ActionItemRow(
+                                    item: item,
+                                    onComplete: { restoreFromBacklog($0) },
+                                    onEdit: { editItem($0) },
+                                    onDelete: { deleteItem($0) },
+                                    onUpdateDueDate: { updateDueDate($0, $1) },
+                                    onUpdateAssignee: { updateAssignee($0, $1) }
+                                )
+                            }
+                        }
+                    } label: {
+                        Text("📦 Backlog (\(backlogItems.count))")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.brandTextSecondary)
+                    }
+                    .padding(.top, 8)
                 }
 
                 // Completed items (collapsible)
@@ -235,6 +497,11 @@ struct MeetingActionItemsList: View {
     private var openItems: [ActionItem] {
         actionItems.filter { $0.status == .open }
             .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+    }
+
+    private var backlogItems: [ActionItem] {
+        actionItems.filter { $0.status == .backlog }
+            .sorted { $0.createdAt > $1.createdAt }
     }
 
     private var completedItems: [ActionItem] {
@@ -300,6 +567,30 @@ struct MeetingActionItemsList: View {
     private func deleteItem(_ item: ActionItem) {
         Task {
             try? await ActionItemManager.shared.delete(item.id)
+        }
+    }
+
+    private func moveToBacklog(_ item: ActionItem) {
+        Task {
+            try? await ActionItemManager.shared.moveToBacklog(item.id)
+        }
+    }
+
+    private func restoreFromBacklog(_ item: ActionItem) {
+        Task {
+            try? await ActionItemManager.shared.restoreFromBacklog(item.id)
+        }
+    }
+
+    private func updateDueDate(_ item: ActionItem, _ newDate: Date?) {
+        Task {
+            try? await ActionItemManager.shared.updateDueDate(item.id, dueDate: newDate)
+        }
+    }
+
+    private func updateAssignee(_ item: ActionItem, _ newAssignee: String?) {
+        Task {
+            try? await ActionItemManager.shared.updateAssignee(item.id, assignee: newAssignee)
         }
     }
 
@@ -524,6 +815,7 @@ struct ActionItemEditSheet: View {
 struct BriefContentView: View {
     let meeting: Meeting
     var onGenerateBrief: (() async -> Void)?
+    var onCitationTap: ((TranscriptCitation) -> Void)? = nil  // Optional handler for citation taps
     @State private var isGenerating = false
 
     var body: some View {
@@ -539,8 +831,15 @@ struct BriefContentView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 80)
             } else if let brief = meeting.meetingBrief {
-                // Render brief as markdown
-                MarkdownTextView(text: brief.markdown)
+                // Render brief as markdown with citation support
+                MarkdownTextView(
+                    text: brief.markdown,
+                    speakerNameResolver: { speakerId in
+                        // Resolve speaker ID to name from meeting's speaker labels
+                        meeting.speakerName(for: speakerId)
+                    },
+                    onCitationTap: onCitationTap
+                )
 
                 // Footer with generation info
                 HStack {
@@ -622,9 +921,11 @@ struct BriefContentView: View {
 
 // MARK: - Markdown Text View
 
-/// Renders markdown text with proper styling - handles full markdown including headers and lists
+/// Renders markdown text with proper styling - handles full markdown including headers, lists, and citations
 struct MarkdownTextView: View {
     let text: String
+    var speakerNameResolver: ((String) -> String?)? = nil  // Resolves speaker IDs to names
+    var onCitationTap: ((TranscriptCitation) -> Void)? = nil  // Callback when citation is tapped
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -635,7 +936,7 @@ struct MarkdownTextView: View {
         .textSelection(.enabled)
     }
 
-    private enum MarkdownBlock {
+    private enum MarkdownBlock: Hashable {
         case heading2(String)
         case heading3(String)
         case paragraph(String)
@@ -689,22 +990,30 @@ struct MarkdownTextView: View {
     private func renderBlock(_ block: MarkdownBlock) -> some View {
         switch block {
         case .heading2(let text):
-            Text(renderInlineMarkdown(text))
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.brandTextPrimary)
-                .padding(.top, 8)
+            CitationAwareText(
+                text: text,
+                font: .system(size: 16, weight: .semibold),
+                speakerNameResolver: speakerNameResolver,
+                onCitationTap: onCitationTap
+            )
+            .padding(.top, 8)
 
         case .heading3(let text):
-            Text(renderInlineMarkdown(text))
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.brandTextPrimary)
-                .padding(.top, 4)
+            CitationAwareText(
+                text: text,
+                font: .system(size: 14, weight: .semibold),
+                speakerNameResolver: speakerNameResolver,
+                onCitationTap: onCitationTap
+            )
+            .padding(.top, 4)
 
         case .paragraph(let text):
-            Text(renderInlineMarkdown(text))
-                .font(.system(size: 14))
-                .foregroundColor(.brandTextPrimary)
-                .fixedSize(horizontal: false, vertical: true)
+            CitationAwareText(
+                text: text,
+                font: .system(size: 14),
+                speakerNameResolver: speakerNameResolver,
+                onCitationTap: onCitationTap
+            )
 
         case .bulletList(let items):
             VStack(alignment: .leading, spacing: 6) {
@@ -713,10 +1022,12 @@ struct MarkdownTextView: View {
                         Text("•")
                             .font(.system(size: 14))
                             .foregroundColor(.brandTextSecondary)
-                        Text(renderInlineMarkdown(item))
-                            .font(.system(size: 14))
-                            .foregroundColor(.brandTextPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        CitationAwareText(
+                            text: item,
+                            font: .system(size: 14),
+                            speakerNameResolver: speakerNameResolver,
+                            onCitationTap: onCitationTap
+                        )
                     }
                 }
             }
@@ -727,14 +1038,299 @@ struct MarkdownTextView: View {
                 .foregroundColor(.brandTextSecondary)
         }
     }
+}
+
+// MARK: - Citation Aware Text
+
+/// Renders text with inline citation badges
+struct CitationAwareText: View {
+    let text: String
+    var font: Font = .system(size: 14)
+    var speakerNameResolver: ((String) -> String?)? = nil
+    var onCitationTap: ((TranscriptCitation) -> Void)? = nil
+
+    @State private var selectedCitation: TranscriptCitation? = nil
+
+    var body: some View {
+        let segments = parseTextWithCitations(text)
+
+        CitationFlowLayout(spacing: 4) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                switch segment {
+                case .text(let content):
+                    Text(renderInlineMarkdown(content))
+                        .font(font)
+                        .foregroundColor(.brandTextPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                case .citation(let citation):
+                    CitationBadge(
+                        citation: citation,
+                        speakerName: resolveSpeakerName(citation),
+                        onTap: {
+                            if let onCitationTap = onCitationTap {
+                                onCitationTap(citation)
+                            } else {
+                                selectedCitation = citation
+                            }
+                        }
+                    )
+                    .popover(isPresented: Binding(
+                        get: { selectedCitation?.id == citation.id },
+                        set: { if !$0 { selectedCitation = nil } }
+                    )) {
+                        CitationPopover(
+                            citation: citation,
+                            speakerName: resolveSpeakerName(citation)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private func resolveSpeakerName(_ citation: TranscriptCitation) -> String? {
+        if let name = citation.speakerName {
+            return name
+        }
+        if let speakerId = citation.speakerId, let resolver = speakerNameResolver {
+            return resolver(speakerId)
+        }
+        return citation.speakerId
+    }
+
+    private enum TextSegment {
+        case text(String)
+        case citation(TranscriptCitation)
+    }
+
+    private func parseTextWithCitations(_ text: String) -> [TextSegment] {
+        let parsed = CitationParser.parse(text)
+
+        if parsed.isEmpty {
+            return [.text(text)]
+        }
+
+        var segments: [TextSegment] = []
+        var currentIndex = 0
+        let nsString = text as NSString
+
+        for item in parsed {
+            // Add text before this citation
+            if item.range.location > currentIndex {
+                let textRange = NSRange(location: currentIndex, length: item.range.location - currentIndex)
+                let textContent = nsString.substring(with: textRange)
+                if !textContent.trimmingCharacters(in: .whitespaces).isEmpty {
+                    segments.append(.text(textContent))
+                }
+            }
+
+            // Add the citation
+            segments.append(.citation(item.citation))
+
+            currentIndex = item.range.location + item.range.length
+        }
+
+        // Add remaining text
+        if currentIndex < nsString.length {
+            let textContent = nsString.substring(from: currentIndex)
+            if !textContent.trimmingCharacters(in: .whitespaces).isEmpty {
+                segments.append(.text(textContent))
+            }
+        }
+
+        return segments
+    }
 
     private func renderInlineMarkdown(_ text: String) -> AttributedString {
         do {
-            var result = try AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+            let result = try AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             return result
         } catch {
             return AttributedString(text)
         }
+    }
+}
+
+// MARK: - Citation Badge
+
+/// A small inline badge that represents a citation reference
+struct CitationBadge: View {
+    let citation: TranscriptCitation
+    var speakerName: String? = nil
+    var onTap: (() -> Void)? = nil
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: { onTap?() }) {
+            HStack(spacing: 4) {
+                Image(systemName: "quote.opening")
+                    .font(.system(size: 8))
+
+                Text(citation.formattedStartTime)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+
+                if let speaker = speakerName ?? citation.speakerName ?? citation.speakerId {
+                    Text("•")
+                        .font(.system(size: 8))
+                    Text(speaker)
+                        .font(.system(size: 11, weight: .medium))
+                        .lineLimit(1)
+                }
+            }
+            .foregroundColor(isHovered ? .white : .brandViolet)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(isHovered ? Color.brandViolet : Color.brandViolet.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(Color.brandViolet.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .help("Click to see full quote")
+    }
+}
+
+// MARK: - Citation Popover
+
+/// Popover content showing the full citation context
+struct CitationPopover: View {
+    let citation: TranscriptCitation
+    var speakerName: String? = nil
+    var onPlayTap: (() -> Void)? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header with speaker and timestamp
+            HStack(spacing: 8) {
+                // Speaker avatar
+                Circle()
+                    .fill(speakerColor)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(speakerInitial)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(displaySpeaker)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.brandTextPrimary)
+
+                    Text(citation.formattedTimeRange)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(.brandTextSecondary)
+                }
+
+                Spacer()
+
+                // Play button (if handler provided)
+                if let onPlayTap = onPlayTap {
+                    Button(action: onPlayTap) {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.brandViolet)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Play from this moment")
+                }
+            }
+
+            Divider()
+
+            // Quote text
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "quote.opening")
+                    .font(.system(size: 12))
+                    .foregroundColor(.brandTextSecondary)
+
+                Text(citation.text)
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandTextPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+            .padding(12)
+            .background(Color.brandSurface.opacity(0.5))
+            .cornerRadius(8)
+        }
+        .padding(16)
+        .frame(width: 320)
+    }
+
+    private var displaySpeaker: String {
+        speakerName ?? citation.speakerName ?? citation.speakerId ?? "Unknown Speaker"
+    }
+
+    private var speakerInitial: String {
+        String(displaySpeaker.prefix(1)).uppercased()
+    }
+
+    private var speakerColor: Color {
+        // Generate consistent color from speaker ID
+        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal, .indigo, .mint]
+        let hash = displaySpeaker.hashValue
+        return colors[abs(hash) % colors.count]
+    }
+}
+
+// MARK: - Citation Flow Layout
+
+/// A layout that flows items horizontally and wraps to new lines (for citation text)
+struct CitationFlowLayout: Layout {
+    var spacing: CGFloat = 4
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = computeLayout(proposal: proposal, subviews: subviews)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = computeLayout(proposal: proposal, subviews: subviews)
+
+        for (index, frame) in result.frames.enumerated() {
+            subviews[index].place(
+                at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                proposal: ProposedViewSize(frame.size)
+            )
+        }
+    }
+
+    private func computeLayout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
+        let maxWidth = proposal.width ?? .infinity
+        var frames: [CGRect] = []
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+        var totalWidth: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+
+            if currentX + size.width > maxWidth && currentX > 0 {
+                // Wrap to next line
+                currentX = 0
+                currentY += lineHeight + spacing
+                lineHeight = 0
+            }
+
+            frames.append(CGRect(x: currentX, y: currentY, width: size.width, height: size.height))
+            lineHeight = max(lineHeight, size.height)
+            currentX += size.width + spacing
+            totalWidth = max(totalWidth, currentX - spacing)
+        }
+
+        return (
+            size: CGSize(width: totalWidth, height: currentY + lineHeight),
+            frames: frames
+        )
     }
 }
 

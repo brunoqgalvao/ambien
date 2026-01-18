@@ -131,6 +131,66 @@ actor ActionItemManager {
         await notifyChange()
     }
 
+    /// Move action item to backlog (won't count in stats/badges)
+    func moveToBacklog(_ itemId: UUID) async throws {
+        guard let db = dbQueue else { return }
+
+        let now = Date()
+        try await db.write { db in
+            try db.execute(
+                sql: "UPDATE action_items SET status = ?, updated_at = ? WHERE id = ?",
+                arguments: ["backlog", now, itemId.uuidString]
+            )
+        }
+        logInfo("[ActionItemManager] Moved action item to backlog: \(itemId)")
+        await notifyChange()
+    }
+
+    /// Restore action item from backlog to open
+    func restoreFromBacklog(_ itemId: UUID) async throws {
+        guard let db = dbQueue else { return }
+
+        let now = Date()
+        try await db.write { db in
+            try db.execute(
+                sql: "UPDATE action_items SET status = ?, updated_at = ? WHERE id = ?",
+                arguments: ["open", now, itemId.uuidString]
+            )
+        }
+        logInfo("[ActionItemManager] Restored action item from backlog: \(itemId)")
+        await notifyChange()
+    }
+
+    /// Update due date for an action item
+    func updateDueDate(_ itemId: UUID, dueDate: Date?) async throws {
+        guard let db = dbQueue else { return }
+
+        let now = Date()
+        try await db.write { db in
+            try db.execute(
+                sql: "UPDATE action_items SET due_date = ?, due_suggestion = NULL, updated_at = ? WHERE id = ?",
+                arguments: [dueDate, now, itemId.uuidString]
+            )
+        }
+        logInfo("[ActionItemManager] Updated due date for action item: \(itemId)")
+        await notifyChange()
+    }
+
+    /// Update assignee for an action item
+    func updateAssignee(_ itemId: UUID, assignee: String?) async throws {
+        guard let db = dbQueue else { return }
+
+        let now = Date()
+        try await db.write { db in
+            try db.execute(
+                sql: "UPDATE action_items SET assignee = ?, updated_at = ? WHERE id = ?",
+                arguments: [assignee, now, itemId.uuidString]
+            )
+        }
+        logInfo("[ActionItemManager] Updated assignee for action item: \(itemId)")
+        await notifyChange()
+    }
+
     // MARK: - Fetch Operations
 
     /// Get an action item by ID

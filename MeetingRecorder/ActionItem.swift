@@ -67,12 +67,22 @@ struct ActionItem: Identifiable, Codable, Hashable {
         case open
         case completed
         case cancelled
+        case backlog  // Won't count in badges/stats
 
         var displayName: String {
             switch self {
             case .open: return "Open"
             case .completed: return "Completed"
             case .cancelled: return "Cancelled"
+            case .backlog: return "Backlog"
+            }
+        }
+
+        /// Whether this status counts toward open item statistics
+        var countsInStats: Bool {
+            switch self {
+            case .open: return true
+            case .backlog, .completed, .cancelled: return false
             }
         }
     }
@@ -136,7 +146,12 @@ struct ActionItem: Identifiable, Codable, Hashable {
 
     /// Grouping key for dashboard
     var dueDateGroup: DueDateGroup {
-        guard status == .open else { return .completed }
+        switch status {
+        case .completed: return .completed
+        case .backlog: return .backlog
+        case .cancelled: return .completed  // Group with completed
+        case .open: break
+        }
         guard let dueDate = dueDate else { return .noDueDate }
 
         let calendar = Calendar.current
@@ -216,6 +231,18 @@ struct ActionItem: Identifiable, Codable, Hashable {
         updatedAt = Date()
     }
 
+    /// Move to backlog (won't count in stats/badges)
+    mutating func moveToBacklog() {
+        status = .backlog
+        updatedAt = Date()
+    }
+
+    /// Restore from backlog to open
+    mutating func restoreFromBacklog() {
+        status = .open
+        updatedAt = Date()
+    }
+
     /// Snooze to a new date
     mutating func snooze(to newDate: Date) {
         dueDate = newDate
@@ -238,6 +265,7 @@ enum DueDateGroup: String, CaseIterable {
     case nextWeek
     case later
     case noDueDate
+    case backlog
     case completed
 
     var displayName: String {
@@ -248,6 +276,7 @@ enum DueDateGroup: String, CaseIterable {
         case .nextWeek: return "Next Week"
         case .later: return "Later"
         case .noDueDate: return "No Due Date"
+        case .backlog: return "Backlog"
         case .completed: return "Completed"
         }
     }
@@ -260,6 +289,7 @@ enum DueDateGroup: String, CaseIterable {
         case .nextWeek: return "📆"
         case .later: return "🗓"
         case .noDueDate: return "🗓"
+        case .backlog: return "📦"
         case .completed: return "✅"
         }
     }
@@ -272,7 +302,8 @@ enum DueDateGroup: String, CaseIterable {
         case .nextWeek: return 3
         case .later: return 4
         case .noDueDate: return 5
-        case .completed: return 6
+        case .backlog: return 6
+        case .completed: return 7
         }
     }
 }

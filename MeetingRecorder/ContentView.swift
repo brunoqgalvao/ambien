@@ -57,6 +57,16 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 Divider()
 
+                // Import Audio
+                MenuBarButton(
+                    title: "Import Audio...",
+                    icon: "square.and.arrow.down",
+                    shortcut: "⌘I",
+                    action: { AudioImportManager.shared.showImportDialog() }
+                )
+
+                Divider()
+
                 // Open Calendar
                 MenuBarButton(
                     title: "Open Calendar",

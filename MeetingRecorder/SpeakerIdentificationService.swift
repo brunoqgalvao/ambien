@@ -2,7 +2,7 @@
 //  SpeakerIdentificationService.swift
 //  MeetingRecorder
 //
-//  Two-pass speaker identification using Gemini Flash 2.5 (primary) or GPT-4o-mini (fallback).
+//  Two-pass speaker identification using Gemini 2.0 Flash (primary) or GPT-4o-mini (fallback).
 //  Pass 1: Transcription with speaker diarization (Speaker A, B, C...)
 //  Pass 2: Analyze transcript to infer speaker names from context.
 //
@@ -61,13 +61,13 @@ struct InferredSpeaker: Codable, Equatable, Identifiable {
 
 // MARK: - Speaker Identification Service
 
-/// Service for identifying speakers from transcripts using Gemini Flash 2.5 or GPT-4o-mini
+/// Service for identifying speakers from transcripts using Gemini 2.0 Flash or GPT-4o-mini
 actor SpeakerIdentificationService {
 
     static let shared = SpeakerIdentificationService()
 
     /// Identify speakers from a diarized transcript
-    /// Uses Gemini Flash 2.5 as primary, falls back to GPT-4o-mini if unavailable
+    /// Uses Gemini 2.0 Flash as primary, falls back to GPT-4o-mini if unavailable
     /// - Parameters:
     ///   - transcript: The full transcript text
     ///   - segments: Diarization segments with speaker labels
@@ -83,11 +83,13 @@ actor SpeakerIdentificationService {
         // Extract unique speakers from segments
         let uniqueSpeakers = extractUniqueSpeakers(from: segments)
 
-        // If no speakers or only one, skip identification
-        guard uniqueSpeakers.count > 1 else {
-            logInfo("[SpeakerIdentificationService] Skipping - only \(uniqueSpeakers.count) speaker(s)")
+        // If no speakers, skip identification
+        guard uniqueSpeakers.count >= 1 else {
+            logInfo("[SpeakerIdentificationService] Skipping - no speakers detected")
             return nil
         }
+
+        logInfo("[SpeakerIdentificationService] Attempting to identify \(uniqueSpeakers.count) speaker(s)")
 
         // Build context for the LLM
         let context = buildContext(
@@ -147,8 +149,8 @@ actor SpeakerIdentificationService {
             await APICallLogManager.shared.logSuccess(
                 type: .speakerIdentification,
                 provider: "Gemini",
-                model: "gemini-2.5-flash-preview-05-20",
-                endpoint: "/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent",
+                model: "gemini-2.0-flash",
+                endpoint: "/v1beta/models/gemini-2.0-flash:generateContent",
                 inputTokens: result.inputTokens,
                 outputTokens: result.outputTokens,
                 durationMs: durationMs,
@@ -168,8 +170,8 @@ actor SpeakerIdentificationService {
             await APICallLogManager.shared.logFailure(
                 type: .speakerIdentification,
                 provider: "Gemini",
-                model: "gemini-2.5-flash-preview-05-20",
-                endpoint: "/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent",
+                model: "gemini-2.0-flash",
+                endpoint: "/v1beta/models/gemini-2.0-flash:generateContent",
                 durationMs: durationMs,
                 error: error.localizedDescription
             )
@@ -425,7 +427,7 @@ actor SpeakerIdentificationService {
     }
 
     private func callGeminiFlash(apiKey: String, prompt: String) async throws -> LLMResult {
-        let model = "gemini-2.5-flash-preview-05-20"
+        let model = "gemini-2.0-flash"
         let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)")!
 
         var request = URLRequest(url: url)
@@ -474,9 +476,9 @@ actor SpeakerIdentificationService {
             outputTokens = usageMetadata["candidatesTokenCount"] as? Int ?? 0
         }
 
-        // Gemini Flash 2.5 pricing: $0.075/1M input, $0.30/1M output
-        let inputCost = Double(inputTokens) * 0.075 / 1_000_000.0
-        let outputCost = Double(outputTokens) * 0.30 / 1_000_000.0
+        // Gemini 2.0 Flash pricing: $0.10/1M input, $0.40/1M output (text)
+        let inputCost = Double(inputTokens) * 0.10 / 1_000_000.0
+        let outputCost = Double(outputTokens) * 0.40 / 1_000_000.0
         let costCents = max(1, Int(ceil((inputCost + outputCost) * 100)))
 
         return LLMResult(

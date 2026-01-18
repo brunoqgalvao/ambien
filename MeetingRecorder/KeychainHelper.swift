@@ -107,10 +107,10 @@ enum KeychainHelper {
 // MARK: - Transcription Provider Definition
 
 /// Supported transcription API providers
-/// Order reflects priority: AssemblyAI (most reliable) > Gemini > OpenAI > Deepgram
+/// Order reflects priority: Gemini (fastest + cheapest) > AssemblyAI > OpenAI > Deepgram
 enum TranscriptionProvider: String, CaseIterable, Identifiable {
-    case assemblyai = "assemblyai"
     case gemini = "gemini"
+    case assemblyai = "assemblyai"
     case openai = "openai"
     case deepgram = "deepgram"
 
@@ -145,15 +145,15 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .assemblyai: return "Most reliable. Native diarization. Recommended."
-        case .gemini: return "Fast with native diarization. Good for long meetings."
+        case .gemini: return "Fastest & cheapest. Native diarization. Recommended."
+        case .assemblyai: return "Most reliable. Native diarization. Good fallback."
         case .openai: return "Good for short meetings (<25MB). Limited file size."
         case .deepgram: return "Fast and affordable. Good for long recordings."
         }
     }
 
     var isRecommended: Bool {
-        self == .assemblyai  // AssemblyAI is the most reliable
+        self == .gemini  // Gemini is the fastest and cheapest
     }
 
     /// Keychain key for storing the API key
@@ -329,15 +329,15 @@ struct TranscriptionModelOption: Identifiable, Hashable {
             .flatMap { $0.models }
     }
 
-    /// Default model (AssemblyAI if available, else Gemini, else OpenAI, else first configured)
+    /// Default model (Gemini if available, else AssemblyAI, else OpenAI, else first configured)
     static var defaultModel: TranscriptionModelOption? {
-        // Prefer AssemblyAI if configured (most reliable + native diarization)
-        if TranscriptionProvider.assemblyai.isConfigured {
-            return TranscriptionProvider.assemblyai.models.first
-        }
-        // Fall back to Gemini if configured (fast with native diarization)
+        // Prefer Gemini if configured (fastest + cheapest + native diarization)
         if TranscriptionProvider.gemini.isConfigured {
             return TranscriptionProvider.gemini.models.first
+        }
+        // Fall back to AssemblyAI if configured (most reliable + native diarization)
+        if TranscriptionProvider.assemblyai.isConfigured {
+            return TranscriptionProvider.assemblyai.models.first
         }
         // Fall back to OpenAI if configured
         if TranscriptionProvider.openai.isConfigured {
@@ -523,12 +523,12 @@ extension KeychainHelper {
         TranscriptionProvider.allCases.filter { hasKey(for: $0) }
     }
 
-    /// Get the first available provider (AssemblyAI preferred, then Gemini, then OpenAI)
+    /// Get the first available provider (Gemini preferred, then AssemblyAI, then OpenAI)
     static func getPreferredProvider() -> TranscriptionProvider? {
-        // Prefer AssemblyAI if available (most reliable + native diarization)
-        if hasKey(for: .assemblyai) { return .assemblyai }
-        // Fall back to Gemini (fast with native diarization)
+        // Prefer Gemini if available (fastest + cheapest + native diarization)
         if hasKey(for: .gemini) { return .gemini }
+        // Fall back to AssemblyAI (most reliable + native diarization)
+        if hasKey(for: .assemblyai) { return .assemblyai }
         // Fall back to OpenAI
         if hasKey(for: .openai) { return .openai }
         // Otherwise return first configured

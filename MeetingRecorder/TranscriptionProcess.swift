@@ -207,10 +207,15 @@ actor TranscriptionProcess {
         // Speaker identification (Pass 2)
         var inferredSpeakers: [InferredSpeaker]? = nil
 
+        logInfo("[TranscriptionProcess] Speaker ID check: identifySpeakers=\(options.identifySpeakers), enableDiarization=\(options.enableDiarization), speakerCount=\(transcriptionResult.speakerCount ?? 0), segmentCount=\(transcriptionResult.segments?.count ?? 0)")
+
         if options.identifySpeakers && options.enableDiarization {
             // Convert TranscriptSegments to DiarizationSegments for the service
             let diarizationSegments = transcriptionResult.segments?.compactMap { segment -> DiarizationSegment? in
-                guard let speaker = segment.speaker else { return nil }
+                guard let speaker = segment.speaker else {
+                    logInfo("[TranscriptionProcess] Segment without speaker: \(segment.text.prefix(50))...")
+                    return nil
+                }
                 return DiarizationSegment(
                     speakerId: speaker,
                     start: segment.start,
@@ -219,10 +224,14 @@ actor TranscriptionProcess {
                 )
             }
 
-            // Only attempt identification if we have multiple speakers
+            logInfo("[TranscriptionProcess] Diarization segments: \(diarizationSegments?.count ?? 0)")
+
+            // Attempt identification if we have speakers (even 1 speaker can have name inferred)
             let uniqueSpeakers = Set(diarizationSegments?.map { $0.speakerId } ?? [])
-            if uniqueSpeakers.count > 1 {
-                logInfo("[TranscriptionProcess] Identifying \(uniqueSpeakers.count) speakers...")
+            logInfo("[TranscriptionProcess] Unique speakers for ID: \(uniqueSpeakers)")
+
+            if uniqueSpeakers.count >= 1 {
+                logInfo("[TranscriptionProcess] Identifying \(uniqueSpeakers.count) speaker(s)...")
 
                 if let result = await SpeakerIdentificationService.shared.identifySpeakers(
                     transcript: transcriptionResult.text,
@@ -303,9 +312,16 @@ actor TranscriptionProcess {
             return preferred
         }
 
-        // Auto-select: AssemblyAI > Gemini > OpenAI > Deepgram
-        // AssemblyAI is most reliable; Gemini can produce garbage on some audio formats
-        let priority: [TranscriptionProvider] = [.assemblyai, .gemini, .openai, .deepgram]
+        // Check if user has set a preferred model in Settings
+        if let savedModelId = UserDefaults.standard.string(forKey: "selectedTranscriptionModel"),
+           let model = TranscriptionModelOption.find(byFullId: savedModelId),
+           model.provider.isConfigured {
+            return model.provider
+        }
+
+        // Auto-select: Gemini > AssemblyAI > OpenAI > Deepgram
+        // Gemini is fastest and cheapest with native diarization
+        let priority: [TranscriptionProvider] = [.gemini, .assemblyai, .openai, .deepgram]
 
         for provider in priority {
             if provider.isConfigured {
@@ -790,7 +806,9 @@ actor TranscriptionProcess {
         var segments: [TranscriptSegment] = []
         var speakerSet = Set<String>()
 
-        if let utterances = json["utterances"] as? [[String: Any]] {
+        // First try utterances (speaker-labeled chunks) - requires speaker_labels enabled
+        if let utterances = json["utterances"] as? [[String: Any]], !utterances.isEmpty {
+            logInfo("[TranscriptionProcess] AssemblyAI: parsing \(utterances.count) utterances")
             for utt in utterances {
                 guard let uttText = utt["text"] as? String,
                       let start = utt["start"] as? Int,
@@ -806,12 +824,64 @@ actor TranscriptionProcess {
                     text: uttText
                 ))
             }
+        } else if let words = json["words"] as? [[String: Any]], !words.isEmpty {
+            // Fallback to words if utterances not available
+            // Group words into segments (every ~10 words or by speaker change)
+            logInfo("[TranscriptionProcess] AssemblyAI: no utterances, falling back to \(words.count) words")
+
+            var currentSegmentWords: [String] = []
+            var currentSpeaker: String? = nil
+            var segmentStart: Double = 0
+            var segmentEnd: Double = 0
+
+            for word in words {
+                guard let wordText = word["text"] as? String,
+                      let start = word["start"] as? Int,
+                      let end = word["end"] as? Int else { continue }
+
+                let speaker = word["speaker"] as? String
+                if let s = speaker { speakerSet.insert(s) }
+
+                // Start new segment on speaker change or every ~50 words
+                let shouldBreak = (speaker != currentSpeaker && currentSpeaker != nil) ||
+                                  currentSegmentWords.count >= 50
+
+                if shouldBreak && !currentSegmentWords.isEmpty {
+                    segments.append(TranscriptSegment(
+                        speaker: currentSpeaker.map { "Speaker \($0)" },
+                        start: segmentStart,
+                        end: segmentEnd,
+                        text: currentSegmentWords.joined(separator: " ")
+                    ))
+                    currentSegmentWords = []
+                }
+
+                if currentSegmentWords.isEmpty {
+                    segmentStart = Double(start) / 1000.0
+                    currentSpeaker = speaker
+                }
+
+                currentSegmentWords.append(wordText)
+                segmentEnd = Double(end) / 1000.0
+            }
+
+            // Add final segment
+            if !currentSegmentWords.isEmpty {
+                segments.append(TranscriptSegment(
+                    speaker: currentSpeaker.map { "Speaker \($0)" },
+                    start: segmentStart,
+                    end: segmentEnd,
+                    text: currentSegmentWords.joined(separator: " ")
+                ))
+            }
+        } else {
+            logWarning("[TranscriptionProcess] AssemblyAI: no utterances or words found in response")
         }
 
         // $0.00283/minute
         let costCents = Int(ceil((duration / 60.0) * 0.283))
 
-        logInfo("[TranscriptionProcess] AssemblyAI complete, duration: \(String(format: "%.1f", duration))s, speakers: \(speakerSet.count)")
+        logInfo("[TranscriptionProcess] AssemblyAI complete, duration: \(String(format: "%.1f", duration))s, speakers: \(speakerSet.count), segments: \(segments.count)")
 
         return InternalResult(
             text: text,

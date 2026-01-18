@@ -78,6 +78,8 @@
 		1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERPROF00001 /* SpeakerProfile.swift */; };
 		1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */; };
 		1FSPEAKEREMBED00002 /* SpeakerEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */; };
+		1GTRANSCITE00002 /* TranscriptCitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1GTRANSCITE00001 /* TranscriptCitation.swift */; };
+		1HAUDIOIMP00002 /* AudioImportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1HAUDIOIMP00001 /* AudioImportManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -153,6 +155,8 @@
 		1FSPEAKERPROF00001 /* SpeakerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfile.swift; sourceTree = "<group>"; };
 		1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfilesSettingsView.swift; sourceTree = "<group>"; };
 		1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerEmbeddingService.swift; sourceTree = "<group>"; };
+		1GTRANSCITE00001 /* TranscriptCitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptCitation.swift; sourceTree = "<group>"; };
+		1HAUDIOIMP00001 /* AudioImportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioImportManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -248,6 +252,8 @@
 				1FSPEAKERPROF00001 /* SpeakerProfile.swift */,
 				1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */,
 				1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */,
+				1GTRANSCITE00001 /* TranscriptCitation.swift */,
+				1HAUDIOIMP00001 /* AudioImportManager.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -431,6 +437,8 @@
 				1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */,
 				1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */,
 				1FSPEAKEREMBED00002 /* SpeakerEmbeddingService.swift in Sources */,
+				1GTRANSCITE00002 /* TranscriptCitation.swift in Sources */,
+				1HAUDIOIMP00002 /* AudioImportManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

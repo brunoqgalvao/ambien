@@ -135,21 +135,26 @@ struct AnalyticsView: View {
                         .font(.brandDisplay(18, weight: .semibold))
 
                     if viewModel.totalMeetings > 0 {
+                        let maxCount = max(1, last14DaysData.map(\.count).max() ?? 1)
+                        let chartHeight: CGFloat = 80
+
                         HStack(alignment: .bottom, spacing: 6) {
                             ForEach(last14DaysData, id: \.day) { dayData in
-                                VStack {
-                                    Spacer()
+                                VStack(spacing: 4) {
+                                    Spacer(minLength: 0)
                                     RoundedRectangle(cornerRadius: 4)
                                         .fill(dayData.isWeekend ? Color.brandBorder : Color.brandViolet)
-                                        .frame(height: max(4, CGFloat(dayData.count) * 20))
+                                        .frame(height: dayData.count > 0
+                                            ? max(4, chartHeight * CGFloat(dayData.count) / CGFloat(maxCount))
+                                            : 4)
 
                                     Text(dayData.label)
                                         .font(.system(size: 10))
                                         .foregroundColor(.secondary)
                                 }
-                                .frame(height: 100)
                             }
                         }
+                        .frame(height: chartHeight + 20) // chart + labels
                         .frame(maxWidth: .infinity)
                     } else {
                         Text("No recordings yet")
