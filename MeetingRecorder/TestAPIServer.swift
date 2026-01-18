@@ -13,6 +13,8 @@
 
 import Foundation
 import Network
+import CommonCrypto
+import Security
 
 /// Local HTTP server for testing backend functionality
 @MainActor
@@ -205,6 +207,14 @@ class TestAPIServer: ObservableObject {
 
         case ("POST", "/api/meetings/get"):
             await handleGetMeeting(body: body, connection: connection)
+
+        // === DEBUG ===
+
+        case ("POST", "/api/debug/audio-info"):
+            await handleAudioInfo(body: body, connection: connection)
+
+        case ("POST", "/api/debug/transcribe-raw"):
+            await handleTranscribeRaw(body: body, connection: connection)
 
         default:
             sendResponse(connection: connection, status: 404, body: [
@@ -429,12 +439,29 @@ class TestAPIServer: ObservableObject {
             return
         }
 
-        let hasKey = KeychainHelper.hasKey(for: provider)
+        // Debug: Get raw keychain status
+        let keychainKey = provider.keychainKey
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.meetingrecorder.app",
+            kSecAttrAccount as String: keychainKey,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
 
-        // Don't return actual key for security - just confirm it exists
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        let hasKey = KeychainHelper.hasKey(for: provider)
+        let keyPreview = KeychainHelper.readKey(for: provider).map { String($0.prefix(8)) + "..." } ?? "nil"
+
         sendResponse(connection: connection, status: 200, body: [
             "provider": provider.displayName,
-            "isConfigured": hasKey
+            "isConfigured": hasKey,
+            "keychainKey": keychainKey,
+            "osStatus": status,
+            "osStatusName": SecCopyErrorMessageString(status, nil) as String? ?? "unknown",
+            "keyPreview": keyPreview
         ])
     }
 
@@ -461,20 +488,43 @@ class TestAPIServer: ObservableObject {
             return
         }
 
+        // Optional: specify provider directly
+        let providerRaw = body?["provider"] as? String
+        let provider = providerRaw.flatMap { TranscriptionProvider(rawValue: $0) }
+        let language = body?["language"] as? String
+        let diarization = body?["diarization"] as? Bool ?? true
+
         do {
-            let result = try await TranscriptionService.shared.transcribe(audioPath: audioPath)
+            // Use TranscriptionProcess directly for full control
+            var options = TranscriptionProcessOptions()
+            options.provider = provider
+            options.language = language
+            options.enableDiarization = diarization
+            options.generateTitle = false  // Skip title generation for API testing
+            options.validateQuality = false  // Skip quality validation for speed
+
+            let result = try await TranscriptionProcess.shared.transcribe(
+                audioPath: audioPath,
+                options: options
+            )
 
             sendResponse(connection: connection, status: 200, body: [
                 "success": true,
                 "text": result.text,
                 "duration": result.duration,
                 "costCents": result.costCents,
-                "model": result.model.rawValue,
-                "speakerCount": result.speakerCount ?? 0
+                "provider": result.provider.rawValue,
+                "providerDisplayName": result.provider.displayName,
+                "modelId": result.modelId,
+                "speakerCount": result.speakerCount ?? 0,
+                "processingTime": result.processingTime,
+                "wasCompressed": result.wasCompressed,
+                "wasSilenceCropped": result.wasSilenceCropped
             ])
         } catch {
             sendResponse(connection: connection, status: 500, body: [
-                "error": error.localizedDescription
+                "error": error.localizedDescription,
+                "errorType": String(describing: type(of: error))
             ])
         }
     }
@@ -623,6 +673,253 @@ class TestAPIServer: ObservableObject {
                 "error": error.localizedDescription
             ])
         }
+    }
+
+    // MARK: - Debug Handlers
+
+    /// Get detailed info about an audio file
+    private func handleAudioInfo(body: [String: Any]?, connection: NWConnection) async {
+        guard let audioPath = body?["audioPath"] as? String else {
+            sendResponse(connection: connection, status: 400, body: ["error": "Missing audioPath"])
+            return
+        }
+
+        let fileURL = URL(fileURLWithPath: audioPath)
+
+        // Check file exists
+        guard FileManager.default.fileExists(atPath: audioPath) else {
+            sendResponse(connection: connection, status: 404, body: ["error": "File not found", "path": audioPath])
+            return
+        }
+
+        // Get file attributes
+        let attributes = try? FileManager.default.attributesOfItem(atPath: audioPath)
+        let fileSize = attributes?[.size] as? Int64 ?? 0
+
+        // Read first 100 bytes to check header
+        var headerHex = ""
+        var headerAscii = ""
+        if let handle = FileHandle(forReadingAtPath: audioPath) {
+            let headerData = handle.readData(ofLength: 100)
+            headerHex = headerData.map { String(format: "%02x", $0) }.joined(separator: " ")
+            headerAscii = String(data: headerData, encoding: .ascii)?.replacingOccurrences(of: "\0", with: ".") ?? ""
+            try? handle.close()
+        }
+
+        // Get audio duration using AVFoundation
+        let duration = await AudioCompressor.shared.getAudioDuration(filePath: audioPath)
+
+        // Try to read the full file and compute MD5
+        var canReadFully = false
+        var readError: String? = nil
+        var md5Hash = ""
+        do {
+            let data = try Data(contentsOf: fileURL)
+            canReadFully = data.count == fileSize
+            // Compute MD5
+            md5Hash = data.withUnsafeBytes { bytes in
+                var digest = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+                _ = CC_MD5(bytes.baseAddress, CC_LONG(data.count), &digest)
+                return digest.map { String(format: "%02x", $0) }.joined()
+            }
+        } catch {
+            readError = error.localizedDescription
+        }
+
+        sendResponse(connection: connection, status: 200, body: [
+            "path": audioPath,
+            "exists": true,
+            "fileSize": fileSize,
+            "fileSizeMB": Double(fileSize) / 1_000_000.0,
+            "extension": fileURL.pathExtension,
+            "duration": duration ?? 0,
+            "headerHex": headerHex,
+            "headerAscii": headerAscii,
+            "canReadFully": canReadFully,
+            "readError": readError ?? "",
+            "md5": md5Hash
+        ])
+    }
+
+    /// Transcribe directly with AssemblyAI, bypassing all preprocessing
+    private func handleTranscribeRaw(body: [String: Any]?, connection: NWConnection) async {
+        guard let audioPath = body?["audioPath"] as? String else {
+            sendResponse(connection: connection, status: 400, body: ["error": "Missing audioPath"])
+            return
+        }
+
+        let providerRaw = body?["provider"] as? String ?? "assemblyai"
+        guard let provider = TranscriptionProvider(rawValue: providerRaw) else {
+            sendResponse(connection: connection, status: 400, body: ["error": "Invalid provider"])
+            return
+        }
+
+        let fileURL = URL(fileURLWithPath: audioPath)
+
+        guard FileManager.default.fileExists(atPath: audioPath) else {
+            sendResponse(connection: connection, status: 404, body: ["error": "File not found"])
+            return
+        }
+
+        // Read file
+        guard let audioData = try? Data(contentsOf: fileURL) else {
+            sendResponse(connection: connection, status: 500, body: ["error": "Failed to read audio file"])
+            return
+        }
+
+        let fileSize = audioData.count
+        let startTime = CFAbsoluteTimeGetCurrent()
+
+        do {
+            switch provider {
+            case .assemblyai:
+                let result = try await transcribeRawAssemblyAI(audioData: audioData, fileExtension: fileURL.pathExtension)
+                let elapsed = CFAbsoluteTimeGetCurrent() - startTime
+                sendResponse(connection: connection, status: 200, body: [
+                    "success": true,
+                    "provider": "AssemblyAI",
+                    "text": result.text,
+                    "duration": result.duration,
+                    "confidence": result.confidence,
+                    "elapsed": elapsed,
+                    "inputSize": fileSize
+                ])
+
+            case .openai:
+                let result = try await transcribeRawOpenAI(audioData: audioData, fileExtension: fileURL.pathExtension)
+                let elapsed = CFAbsoluteTimeGetCurrent() - startTime
+                sendResponse(connection: connection, status: 200, body: [
+                    "success": true,
+                    "provider": "OpenAI",
+                    "text": result,
+                    "elapsed": elapsed,
+                    "inputSize": fileSize
+                ])
+
+            default:
+                sendResponse(connection: connection, status: 400, body: ["error": "Provider \(provider.displayName) not supported for raw transcription"])
+            }
+        } catch {
+            sendResponse(connection: connection, status: 500, body: [
+                "error": error.localizedDescription,
+                "provider": provider.displayName
+            ])
+        }
+    }
+
+    /// Raw AssemblyAI transcription - no preprocessing
+    private func transcribeRawAssemblyAI(audioData: Data, fileExtension: String) async throws -> (text: String, duration: Double, confidence: Double) {
+        guard let apiKey = KeychainHelper.readAssemblyAIKey() else {
+            throw NSError(domain: "TestAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "No AssemblyAI API key"])
+        }
+
+        // Step 1: Upload
+        var uploadRequest = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/upload")!)
+        uploadRequest.httpMethod = "POST"
+        uploadRequest.setValue(apiKey, forHTTPHeaderField: "authorization")
+
+        let contentType = fileExtension == "wav" ? "audio/wav" : fileExtension == "mp3" ? "audio/mpeg" : "audio/mp4"
+        uploadRequest.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        uploadRequest.httpBody = audioData
+        uploadRequest.timeoutInterval = 120
+
+        let (uploadData, uploadResponse) = try await URLSession.shared.data(for: uploadRequest)
+
+        guard let uploadHttpResponse = uploadResponse as? HTTPURLResponse, uploadHttpResponse.statusCode == 200,
+              let uploadJson = try? JSONSerialization.jsonObject(with: uploadData) as? [String: Any],
+              let uploadUrl = uploadJson["upload_url"] as? String else {
+            let errorMsg = String(data: uploadData, encoding: .utf8) ?? "Unknown"
+            throw NSError(domain: "AssemblyAI", code: 1, userInfo: [NSLocalizedDescriptionKey: "Upload failed: \(errorMsg)"])
+        }
+
+        // Step 2: Create transcript
+        var transcriptRequest = URLRequest(url: URL(string: "https://api.assemblyai.com/v2/transcript")!)
+        transcriptRequest.httpMethod = "POST"
+        transcriptRequest.setValue(apiKey, forHTTPHeaderField: "authorization")
+        transcriptRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        transcriptRequest.httpBody = try JSONSerialization.data(withJSONObject: [
+            "audio_url": uploadUrl,
+            "speaker_labels": true,
+            "language_detection": true  // CRITICAL: Auto-detect language to avoid garbage on non-English audio
+        ])
+        transcriptRequest.timeoutInterval = 30
+
+        let (transcriptData, transcriptResponse) = try await URLSession.shared.data(for: transcriptRequest)
+
+        guard let transcriptHttpResponse = transcriptResponse as? HTTPURLResponse, transcriptHttpResponse.statusCode == 200,
+              let transcriptJson = try? JSONSerialization.jsonObject(with: transcriptData) as? [String: Any],
+              let transcriptId = transcriptJson["id"] as? String else {
+            let errorMsg = String(data: transcriptData, encoding: .utf8) ?? "Unknown"
+            throw NSError(domain: "AssemblyAI", code: 2, userInfo: [NSLocalizedDescriptionKey: "Transcript creation failed: \(errorMsg)"])
+        }
+
+        // Step 3: Poll for completion
+        let pollUrl = URL(string: "https://api.assemblyai.com/v2/transcript/\(transcriptId)")!
+        var pollRequest = URLRequest(url: pollUrl)
+        pollRequest.setValue(apiKey, forHTTPHeaderField: "authorization")
+
+        for _ in 0..<60 {  // Max 2 minutes
+            try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+
+            let (pollData, _) = try await URLSession.shared.data(for: pollRequest)
+
+            guard let pollJson = try? JSONSerialization.jsonObject(with: pollData) as? [String: Any],
+                  let status = pollJson["status"] as? String else {
+                continue
+            }
+
+            if status == "completed" {
+                let text = pollJson["text"] as? String ?? ""
+                let duration = pollJson["audio_duration"] as? Double ?? 0
+                let confidence = pollJson["confidence"] as? Double ?? 0
+                return (text, duration, confidence)
+            } else if status == "error" {
+                let errorMsg = pollJson["error"] as? String ?? "Unknown error"
+                throw NSError(domain: "AssemblyAI", code: 3, userInfo: [NSLocalizedDescriptionKey: "Transcription failed: \(errorMsg)"])
+            }
+        }
+
+        throw NSError(domain: "AssemblyAI", code: 4, userInfo: [NSLocalizedDescriptionKey: "Transcription timeout"])
+    }
+
+    /// Raw OpenAI transcription - no preprocessing
+    private func transcribeRawOpenAI(audioData: Data, fileExtension: String) async throws -> String {
+        guard let apiKey = KeychainHelper.readOpenAIKey() else {
+            throw NSError(domain: "TestAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "No OpenAI API key"])
+        }
+
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/transcriptions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 300
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.\(fileExtension)\"\r\n".data(using: .utf8)!)
+
+        let mimeType = fileExtension == "wav" ? "audio/wav" : fileExtension == "mp3" ? "audio/mpeg" : "audio/mp4"
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(audioData)
+        body.append("\r\n".data(using: .utf8)!)
+
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\nwhisper-1\r\n".data(using: .utf8)!)
+
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorMsg = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw NSError(domain: "OpenAI", code: 1, userInfo: [NSLocalizedDescriptionKey: "Transcription failed: \(errorMsg)"])
+        }
+
+        struct OpenAIResponse: Codable { let text: String }
+        let resp = try JSONDecoder().decode(OpenAIResponse.self, from: data)
+        return resp.text
     }
 
     // MARK: - Response Helpers

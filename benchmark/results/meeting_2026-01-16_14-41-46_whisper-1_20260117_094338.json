@@ -1,0 +1,3439 @@
+{
+  "model": "whisper-1",
+  "model_name": "Whisper v2",
+  "provider": "openai",
+  "text": "Mas basicamente a gente também consome de uma view que eles criam para cada fluxo, a gente baixa os documentos, chama um, dois canvas, tem um .xtemplater que a gente preenche e a gente retorna na via .cpj um evento cadastrado para aquele documento. Então, isso é que está bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, o vernil assim dos fluxos. E quais são os principais problemas? Controle de execução, então hoje todos esses fluxos ou são manuais ou eles são scheduled, a gente não tem isso ainda no tela. Controle de persistência de execuções, então a gente precisa saber o que já foi executado para evitar duplo processamento e a gente também precisa saber algumas informações específicas de fluxo. Então, quantos créditos foram gastos, o evento que foi criado, o arquivo que foi gerado, são métricas que não são as métricas de execução do tela somente, então não pode ter características de fluxo. E por esse evento .cpj que foi gerado, alguns fluxos o cliente também quer saber se tem possibilidade de acordo ou não, são mais informações específicas de fluxo. E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra. Então, toda vez que chega um cara da AWS falando eu quero uma automação, faço isso, faço isso, a gente duplica um work, sobe, marca um schedule e tudo mais. Então tem muita duplicação e um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um rendover ali para o time técnico. Então seria legal eles terem autonomia de criar mais automações com tela e algo do tipo. Além de mais automações, se já fossem só capazes de consumir essa integração, sem depender do renan ou do igão para executar manualmente, já é tipo, acho que é meio que assim, table 6, deveria ter isso com certeza. Justo. Entre esses vários workers que vocês tem aí, as views do CPJ a serem consumidas são todas diferentes? Então. Desses aqui eu sei que todos são, Bruno. Todos são views. Eles criam lá, alguns fluxos eles consomem até mais de um. Uma coisa que, pode falar. Isso, para cada uma hora eu vou lá, vejo quais são os eventos novos para ser processados no dia, vejo quais eu já processei e processo outros. Acho que às vezes não tem como eles chamarem a gente por uma ausência de equipe técnica lá e esse tipo de coisa, né. Daí a gente meio que tem que resolver por esse lado. Por exemplo, lá no PC, quem chamaria a gente lá? A maioria desses é quase tudo bicho, né. Nesse caso é o nifio, o nifio do dia, entre 2 e 3 dias, o que eu já processei e o que falta processar. Eu sei que isso aqui é verdade nesse fluxo aqui, geralmente são logs que tem sentido. Uma coisa que eu queria falar é que uma grande dificuldade de fazer uma base comum para integrações é que tem um certo nível de implementação bespoke que sempre vai acontecer. Então, por exemplo, essas views tem que ser consumidas através de um bastion que tem um IP fixo que o time do CPJ vai ter que construir as views lá especificamente que a gente vai consumir e permitir o acesso desse banco de dados por esse IP fixo. Faz sentido a gente fazer algo multitenante com essa administração no tela? Puta, acho que no tela não. Faz sentido talvez a gente ter isso na plataforma tecnológica do tela, facilitar essa operação e ter toda a parte de monitoramento e tudo mais. Mas esse nível mais bespoke eu acho que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de Core Deployment de ser mais fácil e monitorável de conseguir fazer isso. E a segunda coisa é que para mim todo o resto é claramente, obviamente, a gente deveria suportar no workflow. Então tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer esse desenvolvimento. Correto. Eu não sei se vai atropelar, talvez coisas que a gente esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco nessa reunião, que está com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa, engenharia de soluções, para tentar contornar isso de alguma forma, ou de gerar feature requests para o tela durante essa reunião aqui, ou mais só para mostrar depois o que está acontecendo. Acho que tem mais coisa para além do disparo. Na Thread lá tinha algumas coisas de logs, de visibilidade também, que acho que vale a pena entender para ver se é tooling para a Core Deployment ou se é coisa para o tela. Tipo, acho que de uma forma geral, só para dar todo um contexto, a gente teve aquela cola do tooling e do mapeamento de soluções. O que eu estou vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral. Mas tem aí esse fluxo de allow, tem o fluxo em cima do DNW, e lá na direita tem os fluxos de cadastro, tem o fluxo de publicação. E agora a gente está fazendo um trabalho de conseguir visualizar que está tendo esses casos de uso. Cadastro, publicações, o DNW. E a gente está vendo o que está sendo construído, não somente no macro, mas agora também no micro. Dentro de cada uma dessas coisas, o que está sendo criado e o que está sendo repetido em diversos outros casos de uso. Então, por exemplo, para a gente conseguir definir como um tipo estratégico a gente fazer uma parada super robusta para a AWW, por exemplo, acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado da equipe de soluções, para querer fazer uma parada muito boa nesse sentido. Mas, por exemplo, uma coisa que eu estava vendo com o Engasso, era que, por exemplo, para cadastro de processos e publicações, são duas implementações que a gente tem feito muito, mas que a gente não tem criado soluções para acompanhar a necessidade delas. Tipo, a gente já criou muitas soluções para, por exemplo, cadastro para extração de PDFs, tem a solução de cálculos, tem a solução de defesa. Publicações, a gente não tem nada. Nenhum daqueles níveis de soluções que a gente viu, níveis que a gente pensou, tipo, template de canvas, módulo de workflow, apps próprios, API própria, cadastro de processos e publicações, a gente não tem quase nada. Tem só, por enquanto, a integração com o LegalOne, que a Maria fez. Então, é, por exemplo, duas áreas que a gente pode definir como estratégico ter criado coisas para melhorar elas. Mas eu acho que um ponto super importante para a gente pensar é, a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa e precisou criar alguma coisa por fora, a gente imediatamente criar feature requests para aquilo e a gente conseguir ir mapeando. O ponto é, aquela coisa está pedindo, está sendo muito solicitada para a gente conseguir gerar backlog melhor para o produto. Por exemplo, será que está na hora de pegar aquele hub de integrações que a gente fez e colocar lá no tela? A gente pode começar a enxergar essas coisinhas e ir priorizando. Bruno, eu vou pôr a fila aqui, só que eu ia isso quando a pessoa que não é técnica vai falar, geralmente vai falar merda. Vou só pôr lá a fila rapidinho, porque, o que é o meu sonho como DS? E aí eu vou falar e você vai dizer, cara, isso não tem a menor possibilidade de acontecer, mas tudo bem. Cara, a integração talvez, cada um tem que ser feito a uma, cada SE vai ter que fazer para cada sistema ser de um jeito, mesmo, ah, eu sei usar, vai entrar com o seu esforço, seu esforço em um cliente de um jeito, em outro de outro, aí eu já não sei. Mas, consumir essa integração usando tela deveria ser fácil, deveria ser uma maneira fácil de ele pegar e, sei lá, cara, sem ter que expor API key, sem ter que criar um código no Code Execution, replicar esse código cada vez, isso é que meio que minha hipótese aqui de o que é a solução ideal. É possível? Não sei. Estou simplificando? Provavelmente. Mas, assim, seria essa a minha provocação, seria legal pensar como a saída final. O que é a primeira e instinta que eu uso para fazer isso? Ah, eu enxergo por causa da definição. Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar, depois de conseguir utilizar isso, não tem lugar. O que é a diferença? Eu não tenho a mínima razão de fazer isso. Esse é o próximo passo. A hardware é uma estratégia que a gente usa para fazer a construção do código. O que é a primeira e instinta que eu uso para fazer isso? Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar, depois de conseguir utilizar isso, não tem lugar. O que é a primeira e instinta que eu uso para fazer isso? Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar, depois de conseguir utilizar isso, não tem lugar. O que é a primeira e instinta que eu uso para fazer isso? Eu acho que vale a pena passar pelo resto das coisas aí. Acho que tem mais áreas de foco para além de leitura e atuação no sistema da pessoa. Isso. Eu vou fazer o seguinte. Eu devia ter feito isso no começo. Foi mal. Mas só para acertar aqui o que eu acho que dá para a gente conversar e não fugir muito, porque vocês têm um tempo redundido. A ideia aqui é mostrar esses exemplos, a gente atacar o que é genérico e o que a gente quer resolver. Eu tenho aqui três propostas de solução mais ou menos com o que a gente vai ver de problema. Eu queria discutir isso, sendo que a terceira proposta está bem no campo das ideias ainda, mas só para passar aqui nos fluxos dos outros clientes, bem rápido. Tem o fluxo da Rosenthal, que a Maria está pegando, e basicamente são cadastros de processos que integram com o Legal One e de publicações. E pelo que ela colocou na thread, o principal gargalo é o controle de execução, e por isso ela precisa fazer um app. É a mesma coisa de controle de persistência de execuções, então saber o que aconteceu fora aquelas execuções de chamar o Taylor e resolver. Então são persistências específicas. E tem o ponto da integração com o Legal One, uma outra integração, que isso é um ponto super importante, porque conversando com a Maria, ela teve um super ramp-up em entender como que funcionava a integração, ela é bem trick a API, então ela já tem super aprendizado como que a gente reutiliza esse aprendizado. O controle de execução seria como que a gente controla o schedule, nesse caso ela fez uma front-end específica para upload. Mas o input é unicamente o planilha ou a pessoa tem que adicionar informação extra para cada caso? Maria? São só planilhas. Planilhas ou é uma planilha com vários casos? É uma planilha com vários casos, tanto para publicações quanto para cadastro. Foi por isso que tem algumas operações que a gente tem que fazer ali nos dois fluxos, que a gente precisa muito do map. Eu ia falar inclusive que o maior problema que eu tenho para poder utilizar o workflow é map, porque eu conseguiria fazer esses dois fluxos através do workflow, se tivesse. Os dois fluxos seriam basicamente uma planilha com talvez alguma coisa de transformação no meio e depois mandar para o map e rodar para cada item em um caso específico. Isso, e ali no de cadastro a gente tem uma extração dos documentos, que é um pouquinho a mais que nos publicações a gente não tem nenhum pass, por exemplo de documento, mas no cadastro de processos a gente tem esse upload também, que a gente faz um mapeamento entre um processo e um documento. Basicamente é isso. No caso, o controle de persistência de execuções ali significa também que cada execução pode ou não falhar e tudo mais, e vocês querem ter visibilidade do status de cada instância específica de caso ali. Isso, porque são vários steps. Como eu falei ontem na Thread, cadastrar o processo já é muito bom, mas um processo fica perdido se a gente não cadastrar um compromisso. Você cadastra e depois cria um compromisso. Então é muito importante que o cliente veja que a gente cadastrou, mas a gente não criou o compromisso. O importante é você fazer um workflow que faz um caso único e aí você teria um outro workflow que simplesmente ia fazer o mapeamento. Mas esse workflow que faz o mapeamento só é necessário porque talvez tenha transformações extras que você tenha que fazer na planilha, ou juntar duas planilhas para montar cada item, por exemplo. Nesse caso de cadastro de processos tem várias transformações ali no meio, publicações nem tanto, mas cadastro de processos tem bastante. No meio entre receber a planilha e disparar cada caso, né? Isso, exatamente. A gente recebe e tem que bater na API para poder pegar alguns dados, juntar tudo, fazer coisas através de código, aí sim mandar para o Telo, enfim, tem alguns processos ali no meio. Entendi. Tá, legal. Então no caso seria importante que toda instância disparada no workflow, no caso único, que é o canvas da integração 1, integração 2, integração 3, fosse uma test que tivesse um lugar para você ver quantos rodaram para aquele patch ID específico, ou naquele dia, não sei o que, e que status tem de cada uma daquelas execuções. Isso, cada step, né? Isso, que nem dá para fazer no workstation hoje, só que menos visibilidade de que step falhou, que erro e tudo mais. Hum, isso. Tá, faz bastante sentido. E o da VESC? Tietchan, quer falar aí do da VESC? Você não deu muito detalhe, eu não sabia o que colocar aqui. Tá, preenchei lá depois direito. Mas o do Gisela Paula parece bastante com o posental, mas lá é menos manual. Lá a gente tem mais acesso à API, né? Então a gente consegue, por exemplo, em vez de uma planilha, eu faço um request, e esse request me devolve quais são as publicações. E aí eu preciso mapear cada uma, etc. Mesma coisa com os casos. Retorno uma lista de casos, cada caso eu acesso uma API para puxar o documento, e aí envio para o tela, etc. Mas são bem parecidos, tantos casos de publicações como de cadastro. É um trigger, que é cron, a gente precisa de um map, execução de código e chamada do tela, basicamente é isso. E aí essa questão da visibilidade dos processos realmente é muito importante também. Então, o cadastro lá do Gisela Paula, sei lá, nove passos, alguma coisa assim. É importante saber se todos os pedidos foram feitos, se todo, enfim, o cadastro como um todo. Então isso também é uma coisa, né? São métricas personalizadas, eu diria. Porque quando a gente checa lá a métrica do tela na Workstation, é mais relacionado ao próprio tela, né? O passeamento. Mas não ao fluxo como um todo. Isso aí também é um gap. O que seria importante você ver na Workstation nessa visão aí? Não, na Workstation, tipo, eu não sei se na Workstation, o que eu estou falando é que na Workstation eu consigo ter, não é a Workstation, perdão, é o Usage, né? A aba nova lá. Eu consigo ter acesso às execuções da Completion API, né? Mas não necessariamente o meu cadastro, no princípio. Que seria um workflow... Exato, isso aí eu passo por fora, via código, guardando as métricas, etc. E que tipo de métricas você guarda nesse caso? Por exemplo, o tela identificou 10 pedidos, eu fiz a request para os 10 pedidos, 7 deram certo, 3 deram errado, porque o tipo do pedido não existia lá na API, alguma coisa assim, entendeu? Eu vou guardando tudo o que está sendo feito dentro do sistema do cliente. Se está dando certo ou não está dando certo. Poderia ser um erro, né? Poderia ser um erro que você boboja no workflow, né? Poderia, poderia ser um erro. Exato, dá para um erro. E você poderia, inclusive, re-rodar depois de fazer algum ajuste no workflow. Sim. Acho que foi quantos eu consegui que ele falou, né? Tipo, schedule, match e outras coisas, né? Não, nem fluxos não, eu queria depois falar já de soluções. Pode dar uma sacada na solução só para entender melhor a conversa para onde vai. Boa. Não, não, fala aí, Bruno, fala aí. Eu não sei se eu vou conseguir fazer isso. Eu não sei se eu vou conseguir fazer isso. Eu não sei se eu vou conseguir fazer isso. Eu não sei se eu vou conseguir fazer isso. Hum, faltam coisas. Além do... Além do workflow, acho que ainda faltam funcionalidades de visibilidade operacional ali, né? De... até esse que falhou, com que erro, tem algum jeito fácil de bobulhar erros, tem algum jeito fácil de mapear um sheet de Excel para algo interável. A gente está começando a fazer coisas nessa direção, mas eu acho que tem gaps operacionais ali. Hoje... Não daria para você mandar um map pro map um... Quer dizer, até daria, né? Mas o problema é que você quer pegar um Excel e quebrar ele em uma lista de objetos e depois fazer certas operações com ele e depois mandar para o inteirador. Eu acho que isso no engine do workflow a gente não tem, obviamente, mapeado porque é uma operação muito específica com um tipo específico de arquivo. Então a gente teria que dar funcionalidades no Code Execution para conseguir interfacear com esse tipo de arquivo, por exemplo. Você dá pra aprender, né? Também, isso é uma das coisas, é a melhor coisa. ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ...",
+  "latency_seconds": 112.18,
+  "prompt_used": null,
+  "language_hint": "pt",
+  "duration_seconds": 3554.169921875,
+  "estimated_cost_cents": 35.54,
+  "segments": [
+    {
+      "speaker": null,
+      "start": 0.0,
+      "end": 18.0,
+      "text": " Mas basicamente a gente também consome de uma view que eles criam para cada fluxo, a gente baixa os documentos, chama um, dois canvas, tem um .xtemplater que a gente preenche e a gente retorna na via .cpj um evento cadastrado para aquele documento."
+    },
+    {
+      "speaker": null,
+      "start": 18.0,
+      "end": 28.0,
+      "text": " Então, isso é que está bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, o vernil assim dos fluxos."
+    },
+    {
+      "speaker": null,
+      "start": 28.0,
+      "end": 40.0,
+      "text": " E quais são os principais problemas? Controle de execução, então hoje todos esses fluxos ou são manuais ou eles são scheduled, a gente não tem isso ainda no tela."
+    },
+    {
+      "speaker": null,
+      "start": 40.0,
+      "end": 52.0,
+      "text": " Controle de persistência de execuções, então a gente precisa saber o que já foi executado para evitar duplo processamento e a gente também precisa saber algumas informações específicas de fluxo."
+    },
+    {
+      "speaker": null,
+      "start": 52.0,
+      "end": 65.0,
+      "text": " Então, quantos créditos foram gastos, o evento que foi criado, o arquivo que foi gerado, são métricas que não são as métricas de execução do tela somente, então não pode ter características de fluxo."
+    },
+    {
+      "speaker": null,
+      "start": 65.0,
+      "end": 80.0,
+      "text": " E por esse evento .cpj que foi gerado, alguns fluxos o cliente também quer saber se tem possibilidade de acordo ou não, são mais informações específicas de fluxo."
+    },
+    {
+      "speaker": null,
+      "start": 80.0,
+      "end": 92.0,
+      "text": " E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra."
+    },
+    {
+      "speaker": null,
+      "start": 92.0,
+      "end": 101.0,
+      "text": " Então, toda vez que chega um cara da AWS falando eu quero uma automação, faço isso, faço isso, a gente duplica um work, sobe, marca um schedule e tudo mais."
+    },
+    {
+      "speaker": null,
+      "start": 101.0,
+      "end": 110.0,
+      "text": " Então tem muita duplicação e um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um rendover ali para o time técnico."
+    },
+    {
+      "speaker": null,
+      "start": 110.0,
+      "end": 117.0,
+      "text": " Então seria legal eles terem autonomia de criar mais automações com tela e algo do tipo."
+    },
+    {
+      "speaker": null,
+      "start": 118.0,
+      "end": 135.0,
+      "text": " Além de mais automações, se já fossem só capazes de consumir essa integração, sem depender do renan ou do igão para executar manualmente, já é tipo, acho que é meio que assim, table 6, deveria ter isso com certeza."
+    },
+    {
+      "speaker": null,
+      "start": 136.0,
+      "end": 150.0,
+      "text": " Justo. Entre esses vários workers que vocês tem aí, as views do CPJ a serem consumidas são todas diferentes?"
+    },
+    {
+      "speaker": null,
+      "start": 150.0,
+      "end": 152.0,
+      "text": " Então."
+    },
+    {
+      "speaker": null,
+      "start": 152.0,
+      "end": 178.0,
+      "text": " Desses aqui eu sei que todos são, Bruno. Todos são views. Eles criam lá, alguns fluxos eles consomem até mais de um."
+    },
+    {
+      "speaker": null,
+      "start": 179.0,
+      "end": 183.0,
+      "text": " Uma coisa que, pode falar."
+    },
+    {
+      "speaker": null,
+      "start": 183.0,
+      "end": 207.0,
+      "text": " Isso, para cada uma hora eu vou lá, vejo quais são os eventos novos para ser processados no dia, vejo quais eu já processei e processo outros."
+    },
+    {
+      "speaker": null,
+      "start": 213.0,
+      "end": 228.0,
+      "text": " Acho que às vezes não tem como eles chamarem a gente por uma ausência de equipe técnica lá e esse tipo de coisa, né."
+    },
+    {
+      "speaker": null,
+      "start": 228.0,
+      "end": 231.0,
+      "text": " Daí a gente meio que tem que resolver por esse lado."
+    },
+    {
+      "speaker": null,
+      "start": 232.0,
+      "end": 236.0,
+      "text": " Por exemplo, lá no PC, quem chamaria a gente lá?"
+    },
+    {
+      "speaker": null,
+      "start": 243.0,
+      "end": 250.0,
+      "text": " A maioria desses é quase tudo bicho, né."
+    },
+    {
+      "speaker": null,
+      "start": 273.0,
+      "end": 280.0,
+      "text": " Nesse caso é o nifio, o nifio do dia, entre 2 e 3 dias, o que eu já processei e o que falta processar."
+    },
+    {
+      "speaker": null,
+      "start": 286.0,
+      "end": 292.0,
+      "text": " Eu sei que isso aqui é verdade nesse fluxo aqui, geralmente são logs que tem sentido."
+    },
+    {
+      "speaker": null,
+      "start": 292.0,
+      "end": 312.0,
+      "text": " Uma coisa que eu queria falar é que uma grande dificuldade de fazer uma base comum para integrações é que tem um certo nível de implementação bespoke que sempre vai acontecer."
+    },
+    {
+      "speaker": null,
+      "start": 312.0,
+      "end": 333.0,
+      "text": " Então, por exemplo, essas views tem que ser consumidas através de um bastion que tem um IP fixo que o time do CPJ vai ter que construir as views lá especificamente que a gente vai consumir e permitir o acesso desse banco de dados por esse IP fixo."
+    },
+    {
+      "speaker": null,
+      "start": 334.0,
+      "end": 342.0,
+      "text": " Faz sentido a gente fazer algo multitenante com essa administração no tela?"
+    },
+    {
+      "speaker": null,
+      "start": 342.0,
+      "end": 345.0,
+      "text": " Puta, acho que no tela não."
+    },
+    {
+      "speaker": null,
+      "start": 345.0,
+      "end": 355.0,
+      "text": " Faz sentido talvez a gente ter isso na plataforma tecnológica do tela, facilitar essa operação e ter toda a parte de monitoramento e tudo mais."
+    },
+    {
+      "speaker": null,
+      "start": 355.0,
+      "end": 368.0,
+      "text": " Mas esse nível mais bespoke eu acho que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de Core Deployment de ser mais fácil e monitorável de conseguir fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 369.0,
+      "end": 377.0,
+      "text": " E a segunda coisa é que para mim todo o resto é claramente, obviamente, a gente deveria suportar no workflow."
+    },
+    {
+      "speaker": null,
+      "start": 378.0,
+      "end": 384.0,
+      "text": " Então tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer esse desenvolvimento."
+    },
+    {
+      "speaker": null,
+      "start": 386.0,
+      "end": 387.0,
+      "text": " Correto."
+    },
+    {
+      "speaker": null,
+      "start": 388.0,
+      "end": 399.0,
+      "text": " Eu não sei se vai atropelar, talvez coisas que a gente esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco nessa reunião,"
+    },
+    {
+      "speaker": null,
+      "start": 399.0,
+      "end": 409.0,
+      "text": " que está com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa,"
+    },
+    {
+      "speaker": null,
+      "start": 409.0,
+      "end": 424.0,
+      "text": " engenharia de soluções, para tentar contornar isso de alguma forma, ou de gerar feature requests para o tela durante essa reunião aqui,"
+    },
+    {
+      "speaker": null,
+      "start": 424.0,
+      "end": 427.0,
+      "text": " ou mais só para mostrar depois o que está acontecendo."
+    },
+    {
+      "speaker": null,
+      "start": 427.0,
+      "end": 435.0,
+      "text": " Acho que tem mais coisa para além do disparo. Na Thread lá tinha algumas coisas de logs, de visibilidade também,"
+    },
+    {
+      "speaker": null,
+      "start": 435.0,
+      "end": 444.0,
+      "text": " que acho que vale a pena entender para ver se é tooling para a Core Deployment ou se é coisa para o tela."
+    },
+    {
+      "speaker": null,
+      "start": 444.0,
+      "end": 455.0,
+      "text": " Tipo, acho que de uma forma geral, só para dar todo um contexto, a gente teve aquela cola do tooling e do mapeamento de soluções."
+    },
+    {
+      "speaker": null,
+      "start": 456.0,
+      "end": 469.0,
+      "text": " O que eu estou vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral."
+    },
+    {
+      "speaker": null,
+      "start": 469.0,
+      "end": 477.0,
+      "text": " Mas tem aí esse fluxo de allow, tem o fluxo em cima do DNW, e lá na direita tem os fluxos de cadastro, tem o fluxo de publicação."
+    },
+    {
+      "speaker": null,
+      "start": 478.0,
+      "end": 485.0,
+      "text": " E agora a gente está fazendo um trabalho de conseguir visualizar que está tendo esses casos de uso. Cadastro, publicações, o DNW."
+    },
+    {
+      "speaker": null,
+      "start": 485.0,
+      "end": 491.0,
+      "text": " E a gente está vendo o que está sendo construído, não somente no macro, mas agora também no micro."
+    },
+    {
+      "speaker": null,
+      "start": 491.0,
+      "end": 501.0,
+      "text": " Dentro de cada uma dessas coisas, o que está sendo criado e o que está sendo repetido em diversos outros casos de uso."
+    },
+    {
+      "speaker": null,
+      "start": 502.0,
+      "end": 513.0,
+      "text": " Então, por exemplo, para a gente conseguir definir como um tipo estratégico a gente fazer uma parada super robusta para a AWW, por exemplo,"
+    },
+    {
+      "speaker": null,
+      "start": 513.0,
+      "end": 524.0,
+      "text": " acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado da equipe de soluções, para querer fazer uma parada muito boa nesse sentido."
+    },
+    {
+      "speaker": null,
+      "start": 524.0,
+      "end": 531.0,
+      "text": " Mas, por exemplo, uma coisa que eu estava vendo com o Engasso, era que, por exemplo, para cadastro de processos e publicações,"
+    },
+    {
+      "speaker": null,
+      "start": 531.0,
+      "end": 541.0,
+      "text": " são duas implementações que a gente tem feito muito, mas que a gente não tem criado soluções para acompanhar a necessidade delas."
+    },
+    {
+      "speaker": null,
+      "start": 541.0,
+      "end": 552.0,
+      "text": " Tipo, a gente já criou muitas soluções para, por exemplo, cadastro para extração de PDFs, tem a solução de cálculos, tem a solução de defesa."
+    },
+    {
+      "speaker": null,
+      "start": 552.0,
+      "end": 561.0,
+      "text": " Publicações, a gente não tem nada. Nenhum daqueles níveis de soluções que a gente viu, níveis que a gente pensou, tipo, template de canvas,"
+    },
+    {
+      "speaker": null,
+      "start": 561.0,
+      "end": 570.0,
+      "text": " módulo de workflow, apps próprios, API própria, cadastro de processos e publicações, a gente não tem quase nada."
+    },
+    {
+      "speaker": null,
+      "start": 570.0,
+      "end": 575.0,
+      "text": " Tem só, por enquanto, a integração com o LegalOne, que a Maria fez."
+    },
+    {
+      "speaker": null,
+      "start": 575.0,
+      "end": 583.0,
+      "text": " Então, é, por exemplo, duas áreas que a gente pode definir como estratégico ter criado coisas para melhorar elas."
+    },
+    {
+      "speaker": null,
+      "start": 583.0,
+      "end": 594.0,
+      "text": " Mas eu acho que um ponto super importante para a gente pensar é, a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa"
+    },
+    {
+      "speaker": null,
+      "start": 594.0,
+      "end": 603.0,
+      "text": " e precisou criar alguma coisa por fora, a gente imediatamente criar feature requests para aquilo e a gente conseguir ir mapeando."
+    },
+    {
+      "speaker": null,
+      "start": 603.0,
+      "end": 612.0,
+      "text": " O ponto é, aquela coisa está pedindo, está sendo muito solicitada para a gente conseguir gerar backlog melhor para o produto."
+    },
+    {
+      "speaker": null,
+      "start": 612.0,
+      "end": 618.0,
+      "text": " Por exemplo, será que está na hora de pegar aquele hub de integrações que a gente fez e colocar lá no tela?"
+    },
+    {
+      "speaker": null,
+      "start": 618.0,
+      "end": 623.0,
+      "text": " A gente pode começar a enxergar essas coisinhas e ir priorizando."
+    },
+    {
+      "speaker": null,
+      "start": 623.0,
+      "end": 630.0,
+      "text": " Bruno, eu vou pôr a fila aqui, só que eu ia isso quando a pessoa que não é técnica vai falar, geralmente vai falar merda."
+    },
+    {
+      "speaker": null,
+      "start": 631.0,
+      "end": 639.0,
+      "text": " Vou só pôr lá a fila rapidinho, porque, o que é o meu sonho como DS?"
+    },
+    {
+      "speaker": null,
+      "start": 639.0,
+      "end": 643.0,
+      "text": " E aí eu vou falar e você vai dizer, cara, isso não tem a menor possibilidade de acontecer, mas tudo bem."
+    },
+    {
+      "speaker": null,
+      "start": 643.0,
+      "end": 652.0,
+      "text": " Cara, a integração talvez, cada um tem que ser feito a uma, cada SE vai ter que fazer para cada sistema ser de um jeito,"
+    },
+    {
+      "speaker": null,
+      "start": 652.0,
+      "end": 659.0,
+      "text": " mesmo, ah, eu sei usar, vai entrar com o seu esforço, seu esforço em um cliente de um jeito, em outro de outro, aí eu já não sei."
+    },
+    {
+      "speaker": null,
+      "start": 659.0,
+      "end": 668.0,
+      "text": " Mas, consumir essa integração usando tela deveria ser fácil, deveria ser uma maneira fácil de ele pegar e, sei lá,"
+    },
+    {
+      "speaker": null,
+      "start": 668.0,
+      "end": 673.0,
+      "text": " cara, sem ter que expor API key, sem ter que criar um código no Code Execution, replicar esse código cada vez,"
+    },
+    {
+      "speaker": null,
+      "start": 673.0,
+      "end": 680.0,
+      "text": " isso é que meio que minha hipótese aqui de o que é a solução ideal."
+    },
+    {
+      "speaker": null,
+      "start": 680.0,
+      "end": 684.0,
+      "text": " É possível? Não sei. Estou simplificando? Provavelmente."
+    },
+    {
+      "speaker": null,
+      "start": 684.0,
+      "end": 689.0,
+      "text": " Mas, assim, seria essa a minha provocação, seria legal pensar como a saída final."
+    },
+    {
+      "speaker": null,
+      "start": 714.0,
+      "end": 718.0,
+      "text": " O que é a primeira e instinta que eu uso para fazer isso?"
+    },
+    {
+      "speaker": null,
+      "start": 718.0,
+      "end": 721.0,
+      "text": " Ah, eu enxergo por causa da definição."
+    },
+    {
+      "speaker": null,
+      "start": 721.0,
+      "end": 727.0,
+      "text": " Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar,"
+    },
+    {
+      "speaker": null,
+      "start": 727.0,
+      "end": 730.0,
+      "text": " depois de conseguir utilizar isso, não tem lugar."
+    },
+    {
+      "speaker": null,
+      "start": 730.0,
+      "end": 732.0,
+      "text": " O que é a diferença?"
+    },
+    {
+      "speaker": null,
+      "start": 732.0,
+      "end": 734.0,
+      "text": " Eu não tenho a mínima razão de fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 735.0,
+      "end": 738.0,
+      "text": " Esse é o próximo passo."
+    },
+    {
+      "speaker": null,
+      "start": 738.0,
+      "end": 745.0,
+      "text": " A hardware é uma estratégia que a gente usa para fazer a construção do código."
+    },
+    {
+      "speaker": null,
+      "start": 748.0,
+      "end": 751.0,
+      "text": " O que é a primeira e instinta que eu uso para fazer isso?"
+    },
+    {
+      "speaker": null,
+      "start": 751.0,
+      "end": 756.0,
+      "text": " Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar,"
+    },
+    {
+      "speaker": null,
+      "start": 756.0,
+      "end": 761.0,
+      "text": " depois de conseguir utilizar isso, não tem lugar."
+    },
+    {
+      "speaker": null,
+      "start": 761.0,
+      "end": 765.0,
+      "text": " O que é a primeira e instinta que eu uso para fazer isso?"
+    },
+    {
+      "speaker": null,
+      "start": 765.0,
+      "end": 769.0,
+      "text": " Eu não tenho a mínima propriedade de ser justificado pela definição, então, se você pegar,"
+    },
+    {
+      "speaker": null,
+      "start": 769.0,
+      "end": 773.0,
+      "text": " depois de conseguir utilizar isso, não tem lugar."
+    },
+    {
+      "speaker": null,
+      "start": 776.0,
+      "end": 779.0,
+      "text": " O que é a primeira e instinta que eu uso para fazer isso?"
+    },
+    {
+      "speaker": null,
+      "start": 779.0,
+      "end": 782.0,
+      "text": " Eu acho que vale a pena passar pelo resto das coisas aí."
+    },
+    {
+      "speaker": null,
+      "start": 782.0,
+      "end": 788.0,
+      "text": " Acho que tem mais áreas de foco para além de leitura e atuação no sistema da pessoa."
+    },
+    {
+      "speaker": null,
+      "start": 789.0,
+      "end": 790.0,
+      "text": " Isso."
+    },
+    {
+      "speaker": null,
+      "start": 793.0,
+      "end": 795.0,
+      "text": " Eu vou fazer o seguinte."
+    },
+    {
+      "speaker": null,
+      "start": 795.0,
+      "end": 797.0,
+      "text": " Eu devia ter feito isso no começo."
+    },
+    {
+      "speaker": null,
+      "start": 797.0,
+      "end": 798.0,
+      "text": " Foi mal."
+    },
+    {
+      "speaker": null,
+      "start": 798.0,
+      "end": 803.0,
+      "text": " Mas só para acertar aqui o que eu acho que dá para a gente conversar e não fugir muito,"
+    },
+    {
+      "speaker": null,
+      "start": 803.0,
+      "end": 805.0,
+      "text": " porque vocês têm um tempo redundido."
+    },
+    {
+      "speaker": null,
+      "start": 805.0,
+      "end": 811.0,
+      "text": " A ideia aqui é mostrar esses exemplos, a gente atacar o que é genérico e o que a gente quer resolver."
+    },
+    {
+      "speaker": null,
+      "start": 812.0,
+      "end": 819.0,
+      "text": " Eu tenho aqui três propostas de solução mais ou menos com o que a gente vai ver de problema."
+    },
+    {
+      "speaker": null,
+      "start": 819.0,
+      "end": 826.0,
+      "text": " Eu queria discutir isso, sendo que a terceira proposta está bem no campo das ideias ainda,"
+    },
+    {
+      "speaker": null,
+      "start": 826.0,
+      "end": 833.0,
+      "text": " mas só para passar aqui nos fluxos dos outros clientes, bem rápido."
+    },
+    {
+      "speaker": null,
+      "start": 834.0,
+      "end": 837.0,
+      "text": " Tem o fluxo da Rosenthal, que a Maria está pegando,"
+    },
+    {
+      "speaker": null,
+      "start": 837.0,
+      "end": 845.0,
+      "text": " e basicamente são cadastros de processos que integram com o Legal One e de publicações."
+    },
+    {
+      "speaker": null,
+      "start": 845.0,
+      "end": 851.0,
+      "text": " E pelo que ela colocou na thread, o principal gargalo é o controle de execução,"
+    },
+    {
+      "speaker": null,
+      "start": 851.0,
+      "end": 853.0,
+      "text": " e por isso ela precisa fazer um app."
+    },
+    {
+      "speaker": null,
+      "start": 853.0,
+      "end": 856.0,
+      "text": " É a mesma coisa de controle de persistência de execuções,"
+    },
+    {
+      "speaker": null,
+      "start": 856.0,
+      "end": 863.0,
+      "text": " então saber o que aconteceu fora aquelas execuções de chamar o Taylor e resolver."
+    },
+    {
+      "speaker": null,
+      "start": 863.0,
+      "end": 866.0,
+      "text": " Então são persistências específicas."
+    },
+    {
+      "speaker": null,
+      "start": 866.0,
+      "end": 871.0,
+      "text": " E tem o ponto da integração com o Legal One, uma outra integração,"
+    },
+    {
+      "speaker": null,
+      "start": 871.0,
+      "end": 874.0,
+      "text": " que isso é um ponto super importante, porque conversando com a Maria,"
+    },
+    {
+      "speaker": null,
+      "start": 874.0,
+      "end": 878.0,
+      "text": " ela teve um super ramp-up em entender como que funcionava a integração,"
+    },
+    {
+      "speaker": null,
+      "start": 878.0,
+      "end": 885.0,
+      "text": " ela é bem trick a API, então ela já tem super aprendizado como que a gente reutiliza"
+    },
+    {
+      "speaker": null,
+      "start": 885.0,
+      "end": 887.0,
+      "text": " esse aprendizado."
+    },
+    {
+      "speaker": null,
+      "start": 891.0,
+      "end": 895.0,
+      "text": " O controle de execução seria como que a gente controla o schedule,"
+    },
+    {
+      "speaker": null,
+      "start": 895.0,
+      "end": 900.0,
+      "text": " nesse caso ela fez uma front-end específica para upload."
+    },
+    {
+      "speaker": null,
+      "start": 901.0,
+      "end": 907.0,
+      "text": " Mas o input é unicamente o planilha ou a pessoa tem que adicionar informação extra para cada caso?"
+    },
+    {
+      "speaker": null,
+      "start": 908.0,
+      "end": 909.0,
+      "text": " Maria?"
+    },
+    {
+      "speaker": null,
+      "start": 909.0,
+      "end": 911.0,
+      "text": " São só planilhas."
+    },
+    {
+      "speaker": null,
+      "start": 911.0,
+      "end": 915.0,
+      "text": " Planilhas ou é uma planilha com vários casos?"
+    },
+    {
+      "speaker": null,
+      "start": 915.0,
+      "end": 919.0,
+      "text": " É uma planilha com vários casos, tanto para publicações quanto para cadastro."
+    },
+    {
+      "speaker": null,
+      "start": 919.0,
+      "end": 923.0,
+      "text": " Foi por isso que tem algumas operações que a gente tem que fazer ali nos dois fluxos,"
+    },
+    {
+      "speaker": null,
+      "start": 923.0,
+      "end": 925.0,
+      "text": " que a gente precisa muito do map."
+    },
+    {
+      "speaker": null,
+      "start": 925.0,
+      "end": 930.0,
+      "text": " Eu ia falar inclusive que o maior problema que eu tenho para poder utilizar o workflow é map,"
+    },
+    {
+      "speaker": null,
+      "start": 930.0,
+      "end": 934.0,
+      "text": " porque eu conseguiria fazer esses dois fluxos através do workflow, se tivesse."
+    },
+    {
+      "speaker": null,
+      "start": 935.0,
+      "end": 941.0,
+      "text": " Os dois fluxos seriam basicamente uma planilha com talvez alguma coisa de transformação no meio"
+    },
+    {
+      "speaker": null,
+      "start": 941.0,
+      "end": 946.0,
+      "text": " e depois mandar para o map e rodar para cada item em um caso específico."
+    },
+    {
+      "speaker": null,
+      "start": 946.0,
+      "end": 951.0,
+      "text": " Isso, e ali no de cadastro a gente tem uma extração dos documentos,"
+    },
+    {
+      "speaker": null,
+      "start": 951.0,
+      "end": 954.0,
+      "text": " que é um pouquinho a mais que nos publicações a gente não tem nenhum pass,"
+    },
+    {
+      "speaker": null,
+      "start": 954.0,
+      "end": 958.0,
+      "text": " por exemplo de documento, mas no cadastro de processos a gente tem esse upload também,"
+    },
+    {
+      "speaker": null,
+      "start": 958.0,
+      "end": 961.0,
+      "text": " que a gente faz um mapeamento entre um processo e um documento."
+    },
+    {
+      "speaker": null,
+      "start": 962.0,
+      "end": 964.0,
+      "text": " Basicamente é isso."
+    },
+    {
+      "speaker": null,
+      "start": 964.0,
+      "end": 976.0,
+      "text": " No caso, o controle de persistência de execuções ali significa também que"
+    },
+    {
+      "speaker": null,
+      "start": 976.0,
+      "end": 979.0,
+      "text": " cada execução pode ou não falhar e tudo mais,"
+    },
+    {
+      "speaker": null,
+      "start": 979.0,
+      "end": 985.0,
+      "text": " e vocês querem ter visibilidade do status de cada instância específica de caso ali."
+    },
+    {
+      "speaker": null,
+      "start": 985.0,
+      "end": 987.0,
+      "text": " Isso, porque são vários steps."
+    },
+    {
+      "speaker": null,
+      "start": 987.0,
+      "end": 991.0,
+      "text": " Como eu falei ontem na Thread, cadastrar o processo já é muito bom,"
+    },
+    {
+      "speaker": null,
+      "start": 991.0,
+      "end": 994.0,
+      "text": " mas um processo fica perdido se a gente não cadastrar um compromisso."
+    },
+    {
+      "speaker": null,
+      "start": 994.0,
+      "end": 998.0,
+      "text": " Você cadastra e depois cria um compromisso."
+    },
+    {
+      "speaker": null,
+      "start": 998.0,
+      "end": 1001.0,
+      "text": " Então é muito importante que o cliente veja que a gente cadastrou,"
+    },
+    {
+      "speaker": null,
+      "start": 1001.0,
+      "end": 1003.0,
+      "text": " mas a gente não criou o compromisso."
+    },
+    {
+      "speaker": null,
+      "start": 1003.0,
+      "end": 1013.0,
+      "text": " O importante é você fazer um workflow que faz um caso único"
+    },
+    {
+      "speaker": null,
+      "start": 1014.0,
+      "end": 1018.0,
+      "text": " e aí você teria um outro workflow que simplesmente ia fazer o mapeamento."
+    },
+    {
+      "speaker": null,
+      "start": 1018.0,
+      "end": 1025.0,
+      "text": " Mas esse workflow que faz o mapeamento só é necessário porque talvez tenha transformações extras"
+    },
+    {
+      "speaker": null,
+      "start": 1025.0,
+      "end": 1028.0,
+      "text": " que você tenha que fazer na planilha,"
+    },
+    {
+      "speaker": null,
+      "start": 1028.0,
+      "end": 1032.0,
+      "text": " ou juntar duas planilhas para montar cada item, por exemplo."
+    },
+    {
+      "speaker": null,
+      "start": 1032.0,
+      "end": 1036.0,
+      "text": " Nesse caso de cadastro de processos tem várias transformações ali no meio,"
+    },
+    {
+      "speaker": null,
+      "start": 1036.0,
+      "end": 1040.0,
+      "text": " publicações nem tanto, mas cadastro de processos tem bastante."
+    },
+    {
+      "speaker": null,
+      "start": 1040.0,
+      "end": 1043.0,
+      "text": " No meio entre receber a planilha e disparar cada caso, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1043.0,
+      "end": 1044.0,
+      "text": " Isso, exatamente."
+    },
+    {
+      "speaker": null,
+      "start": 1044.0,
+      "end": 1049.0,
+      "text": " A gente recebe e tem que bater na API para poder pegar alguns dados,"
+    },
+    {
+      "speaker": null,
+      "start": 1049.0,
+      "end": 1052.0,
+      "text": " juntar tudo, fazer coisas através de código,"
+    },
+    {
+      "speaker": null,
+      "start": 1052.0,
+      "end": 1056.0,
+      "text": " aí sim mandar para o Telo, enfim, tem alguns processos ali no meio."
+    },
+    {
+      "speaker": null,
+      "start": 1056.0,
+      "end": 1057.0,
+      "text": " Entendi."
+    },
+    {
+      "speaker": null,
+      "start": 1058.0,
+      "end": 1059.0,
+      "text": " Tá, legal."
+    },
+    {
+      "speaker": null,
+      "start": 1059.0,
+      "end": 1065.0,
+      "text": " Então no caso seria importante que toda instância disparada no workflow,"
+    },
+    {
+      "speaker": null,
+      "start": 1065.0,
+      "end": 1070.0,
+      "text": " no caso único, que é o canvas da integração 1, integração 2, integração 3,"
+    },
+    {
+      "speaker": null,
+      "start": 1070.0,
+      "end": 1077.0,
+      "text": " fosse uma test que tivesse um lugar para você ver quantos rodaram para aquele patch ID específico,"
+    },
+    {
+      "speaker": null,
+      "start": 1077.0,
+      "end": 1079.0,
+      "text": " ou naquele dia, não sei o que,"
+    },
+    {
+      "speaker": null,
+      "start": 1079.0,
+      "end": 1082.0,
+      "text": " e que status tem de cada uma daquelas execuções."
+    },
+    {
+      "speaker": null,
+      "start": 1082.0,
+      "end": 1084.0,
+      "text": " Isso, cada step, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1084.0,
+      "end": 1087.0,
+      "text": " Isso, que nem dá para fazer no workstation hoje,"
+    },
+    {
+      "speaker": null,
+      "start": 1087.0,
+      "end": 1094.0,
+      "text": " só que menos visibilidade de que step falhou, que erro e tudo mais."
+    },
+    {
+      "speaker": null,
+      "start": 1094.0,
+      "end": 1095.0,
+      "text": " Hum, isso."
+    },
+    {
+      "speaker": null,
+      "start": 1095.0,
+      "end": 1098.0,
+      "text": " Tá, faz bastante sentido."
+    },
+    {
+      "speaker": null,
+      "start": 1101.0,
+      "end": 1103.0,
+      "text": " E o da VESC?"
+    },
+    {
+      "speaker": null,
+      "start": 1104.0,
+      "end": 1106.0,
+      "text": " Tietchan, quer falar aí do da VESC?"
+    },
+    {
+      "speaker": null,
+      "start": 1106.0,
+      "end": 1109.0,
+      "text": " Você não deu muito detalhe, eu não sabia o que colocar aqui."
+    },
+    {
+      "speaker": null,
+      "start": 1109.0,
+      "end": 1111.0,
+      "text": " Tá, preenchei lá depois direito."
+    },
+    {
+      "speaker": null,
+      "start": 1111.0,
+      "end": 1117.0,
+      "text": " Mas o do Gisela Paula parece bastante com o posental, mas lá é menos manual."
+    },
+    {
+      "speaker": null,
+      "start": 1117.0,
+      "end": 1119.0,
+      "text": " Lá a gente tem mais acesso à API, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1119.0,
+      "end": 1122.0,
+      "text": " Então a gente consegue, por exemplo, em vez de uma planilha,"
+    },
+    {
+      "speaker": null,
+      "start": 1122.0,
+      "end": 1125.0,
+      "text": " eu faço um request, e esse request me devolve quais são as publicações."
+    },
+    {
+      "speaker": null,
+      "start": 1125.0,
+      "end": 1128.0,
+      "text": " E aí eu preciso mapear cada uma, etc."
+    },
+    {
+      "speaker": null,
+      "start": 1128.0,
+      "end": 1130.0,
+      "text": " Mesma coisa com os casos."
+    },
+    {
+      "speaker": null,
+      "start": 1130.0,
+      "end": 1132.0,
+      "text": " Retorno uma lista de casos,"
+    },
+    {
+      "speaker": null,
+      "start": 1132.0,
+      "end": 1136.0,
+      "text": " cada caso eu acesso uma API para puxar o documento,"
+    },
+    {
+      "speaker": null,
+      "start": 1136.0,
+      "end": 1138.0,
+      "text": " e aí envio para o tela, etc."
+    },
+    {
+      "speaker": null,
+      "start": 1138.0,
+      "end": 1141.0,
+      "text": " Mas são bem parecidos, tantos casos de publicações como de cadastro."
+    },
+    {
+      "speaker": null,
+      "start": 1141.0,
+      "end": 1143.0,
+      "text": " É um trigger, que é cron,"
+    },
+    {
+      "speaker": null,
+      "start": 1143.0,
+      "end": 1145.0,
+      "text": " a gente precisa de um map,"
+    },
+    {
+      "speaker": null,
+      "start": 1145.0,
+      "end": 1148.0,
+      "text": " execução de código e chamada do tela, basicamente é isso."
+    },
+    {
+      "speaker": null,
+      "start": 1149.0,
+      "end": 1153.0,
+      "text": " E aí essa questão da visibilidade dos processos realmente é muito importante também."
+    },
+    {
+      "speaker": null,
+      "start": 1153.0,
+      "end": 1158.0,
+      "text": " Então, o cadastro lá do Gisela Paula, sei lá, nove passos, alguma coisa assim."
+    },
+    {
+      "speaker": null,
+      "start": 1158.0,
+      "end": 1162.0,
+      "text": " É importante saber se todos os pedidos foram feitos, se todo, enfim, o cadastro como um todo."
+    },
+    {
+      "speaker": null,
+      "start": 1162.0,
+      "end": 1164.0,
+      "text": " Então isso também é uma coisa, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1164.0,
+      "end": 1166.0,
+      "text": " São métricas personalizadas, eu diria."
+    },
+    {
+      "speaker": null,
+      "start": 1166.0,
+      "end": 1170.0,
+      "text": " Porque quando a gente checa lá a métrica do tela na Workstation,"
+    },
+    {
+      "speaker": null,
+      "start": 1170.0,
+      "end": 1172.0,
+      "text": " é mais relacionado ao próprio tela, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1172.0,
+      "end": 1173.0,
+      "text": " O passeamento."
+    },
+    {
+      "speaker": null,
+      "start": 1173.0,
+      "end": 1175.0,
+      "text": " Mas não ao fluxo como um todo."
+    },
+    {
+      "speaker": null,
+      "start": 1175.0,
+      "end": 1177.0,
+      "text": " Isso aí também é um gap."
+    },
+    {
+      "speaker": null,
+      "start": 1177.0,
+      "end": 1181.0,
+      "text": " O que seria importante você ver na Workstation nessa visão aí?"
+    },
+    {
+      "speaker": null,
+      "start": 1183.0,
+      "end": 1186.0,
+      "text": " Não, na Workstation, tipo, eu não sei se na Workstation,"
+    },
+    {
+      "speaker": null,
+      "start": 1186.0,
+      "end": 1189.0,
+      "text": " o que eu estou falando é que na Workstation eu consigo ter,"
+    },
+    {
+      "speaker": null,
+      "start": 1189.0,
+      "end": 1191.0,
+      "text": " não é a Workstation, perdão, é o Usage, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1191.0,
+      "end": 1193.0,
+      "text": " A aba nova lá."
+    },
+    {
+      "speaker": null,
+      "start": 1193.0,
+      "end": 1199.0,
+      "text": " Eu consigo ter acesso às execuções da Completion API, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1199.0,
+      "end": 1202.0,
+      "text": " Mas não necessariamente o meu cadastro, no princípio."
+    },
+    {
+      "speaker": null,
+      "start": 1204.0,
+      "end": 1206.0,
+      "text": " Que seria um workflow..."
+    },
+    {
+      "speaker": null,
+      "start": 1206.0,
+      "end": 1210.0,
+      "text": " Exato, isso aí eu passo por fora, via código, guardando as métricas, etc."
+    },
+    {
+      "speaker": null,
+      "start": 1213.0,
+      "end": 1216.0,
+      "text": " E que tipo de métricas você guarda nesse caso?"
+    },
+    {
+      "speaker": null,
+      "start": 1217.0,
+      "end": 1224.0,
+      "text": " Por exemplo, o tela identificou 10 pedidos, eu fiz a request para os 10 pedidos,"
+    },
+    {
+      "speaker": null,
+      "start": 1224.0,
+      "end": 1229.0,
+      "text": " 7 deram certo, 3 deram errado, porque o tipo do pedido não existia lá na API,"
+    },
+    {
+      "speaker": null,
+      "start": 1229.0,
+      "end": 1231.0,
+      "text": " alguma coisa assim, entendeu?"
+    },
+    {
+      "speaker": null,
+      "start": 1231.0,
+      "end": 1235.0,
+      "text": " Eu vou guardando tudo o que está sendo feito dentro do sistema do cliente."
+    },
+    {
+      "speaker": null,
+      "start": 1235.0,
+      "end": 1237.0,
+      "text": " Se está dando certo ou não está dando certo."
+    },
+    {
+      "speaker": null,
+      "start": 1237.0,
+      "end": 1241.0,
+      "text": " Poderia ser um erro, né? Poderia ser um erro que você boboja no workflow, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1241.0,
+      "end": 1243.0,
+      "text": " Poderia, poderia ser um erro."
+    },
+    {
+      "speaker": null,
+      "start": 1245.0,
+      "end": 1248.0,
+      "text": " Exato, dá para um erro."
+    },
+    {
+      "speaker": null,
+      "start": 1249.0,
+      "end": 1252.0,
+      "text": " E você poderia, inclusive, re-rodar depois de fazer algum ajuste no workflow."
+    },
+    {
+      "speaker": null,
+      "start": 1254.0,
+      "end": 1255.0,
+      "text": " Sim."
+    },
+    {
+      "speaker": null,
+      "start": 1261.0,
+      "end": 1263.0,
+      "text": " Acho que foi quantos eu consegui que ele falou, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1263.0,
+      "end": 1267.0,
+      "text": " Tipo, schedule, match e outras coisas, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1275.0,
+      "end": 1279.0,
+      "text": " Não, nem fluxos não, eu queria depois falar já de soluções."
+    },
+    {
+      "speaker": null,
+      "start": 1279.0,
+      "end": 1285.0,
+      "text": " Pode dar uma sacada na solução só para entender melhor a conversa para onde vai."
+    },
+    {
+      "speaker": null,
+      "start": 1285.0,
+      "end": 1286.0,
+      "text": " Boa."
+    },
+    {
+      "speaker": null,
+      "start": 1287.0,
+      "end": 1289.0,
+      "text": " Não, não, fala aí, Bruno, fala aí."
+    },
+    {
+      "speaker": null,
+      "start": 1291.0,
+      "end": 1293.0,
+      "text": " Eu não sei se eu vou conseguir fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 1294.0,
+      "end": 1297.0,
+      "text": " Eu não sei se eu vou conseguir fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 1298.0,
+      "end": 1302.0,
+      "text": " Eu não sei se eu vou conseguir fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 1302.0,
+      "end": 1304.0,
+      "text": " Eu não sei se eu vou conseguir fazer isso."
+    },
+    {
+      "speaker": null,
+      "start": 1305.0,
+      "end": 1308.0,
+      "text": " Hum, faltam coisas. Além do..."
+    },
+    {
+      "speaker": null,
+      "start": 1309.0,
+      "end": 1315.0,
+      "text": " Além do workflow, acho que ainda faltam funcionalidades de visibilidade operacional ali, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1315.0,
+      "end": 1320.0,
+      "text": " De... até esse que falhou, com que erro, tem algum jeito fácil de bobulhar erros,"
+    },
+    {
+      "speaker": null,
+      "start": 1320.0,
+      "end": 1326.0,
+      "text": " tem algum jeito fácil de mapear um sheet de Excel para algo interável."
+    },
+    {
+      "speaker": null,
+      "start": 1326.0,
+      "end": 1332.0,
+      "text": " A gente está começando a fazer coisas nessa direção, mas eu acho que tem gaps operacionais ali."
+    },
+    {
+      "speaker": null,
+      "start": 1335.0,
+      "end": 1336.0,
+      "text": " Hoje..."
+    },
+    {
+      "speaker": null,
+      "start": 1339.0,
+      "end": 1342.0,
+      "text": " Não daria para você mandar um map pro map um..."
+    },
+    {
+      "speaker": null,
+      "start": 1343.0,
+      "end": 1344.0,
+      "text": " Quer dizer, até daria, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1344.0,
+      "end": 1350.0,
+      "text": " Mas o problema é que você quer pegar um Excel e quebrar ele em uma lista de objetos"
+    },
+    {
+      "speaker": null,
+      "start": 1350.0,
+      "end": 1354.0,
+      "text": " e depois fazer certas operações com ele e depois mandar para o inteirador."
+    },
+    {
+      "speaker": null,
+      "start": 1355.0,
+      "end": 1360.0,
+      "text": " Eu acho que isso no engine do workflow a gente não tem, obviamente, mapeado"
+    },
+    {
+      "speaker": null,
+      "start": 1360.0,
+      "end": 1363.0,
+      "text": " porque é uma operação muito específica com um tipo específico de arquivo."
+    },
+    {
+      "speaker": null,
+      "start": 1363.0,
+      "end": 1367.0,
+      "text": " Então a gente teria que dar funcionalidades no Code Execution"
+    },
+    {
+      "speaker": null,
+      "start": 1367.0,
+      "end": 1370.0,
+      "text": " para conseguir interfacear com esse tipo de arquivo, por exemplo."
+    },
+    {
+      "speaker": null,
+      "start": 1375.0,
+      "end": 1377.0,
+      "text": " Você dá pra aprender, né?"
+    },
+    {
+      "speaker": null,
+      "start": 1383.0,
+      "end": 1385.0,
+      "text": " Também, isso é uma das coisas, é a melhor coisa."
+    },
+    {
+      "speaker": null,
+      "start": 1405.0,
+      "end": 1409.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1409.0,
+      "end": 1413.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1413.0,
+      "end": 1418.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1418.0,
+      "end": 1424.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1424.0,
+      "end": 1430.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1430.0,
+      "end": 1436.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1436.0,
+      "end": 1442.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1442.0,
+      "end": 1449.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1449.0,
+      "end": 1456.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1456.0,
+      "end": 1462.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1462.0,
+      "end": 1468.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1468.0,
+      "end": 1474.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1474.0,
+      "end": 1480.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1480.0,
+      "end": 1486.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1486.0,
+      "end": 1492.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1492.0,
+      "end": 1498.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1498.0,
+      "end": 1504.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1504.0,
+      "end": 1510.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1510.0,
+      "end": 1516.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1516.0,
+      "end": 1522.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1522.0,
+      "end": 1528.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1528.0,
+      "end": 1534.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1534.0,
+      "end": 1540.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1540.0,
+      "end": 1546.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1546.0,
+      "end": 1552.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1552.0,
+      "end": 1558.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1558.0,
+      "end": 1564.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1564.0,
+      "end": 1570.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1570.0,
+      "end": 1576.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1576.0,
+      "end": 1582.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1582.0,
+      "end": 1588.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1588.0,
+      "end": 1594.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1594.0,
+      "end": 1600.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1600.0,
+      "end": 1606.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1606.0,
+      "end": 1612.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1612.0,
+      "end": 1618.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1618.0,
+      "end": 1624.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1624.0,
+      "end": 1630.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1630.0,
+      "end": 1636.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1636.0,
+      "end": 1642.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1642.0,
+      "end": 1648.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1648.0,
+      "end": 1654.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1654.0,
+      "end": 1660.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1660.0,
+      "end": 1666.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1666.0,
+      "end": 1672.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1672.0,
+      "end": 1678.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1678.0,
+      "end": 1684.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1684.0,
+      "end": 1690.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1690.0,
+      "end": 1696.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1696.0,
+      "end": 1702.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1702.0,
+      "end": 1708.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1708.0,
+      "end": 1714.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1714.0,
+      "end": 1720.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1720.0,
+      "end": 1726.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1726.0,
+      "end": 1732.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1732.0,
+      "end": 1738.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1738.0,
+      "end": 1744.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1744.0,
+      "end": 1750.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1750.0,
+      "end": 1756.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1756.0,
+      "end": 1762.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1762.0,
+      "end": 1768.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1768.0,
+      "end": 1774.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1774.0,
+      "end": 1780.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1780.0,
+      "end": 1786.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1786.0,
+      "end": 1792.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1792.0,
+      "end": 1798.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1798.0,
+      "end": 1804.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1804.0,
+      "end": 1810.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1810.0,
+      "end": 1816.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1816.0,
+      "end": 1822.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1822.0,
+      "end": 1828.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1828.0,
+      "end": 1834.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1834.0,
+      "end": 1840.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1840.0,
+      "end": 1846.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1846.0,
+      "end": 1852.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1852.0,
+      "end": 1858.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1858.0,
+      "end": 1864.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1864.0,
+      "end": 1870.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1870.0,
+      "end": 1876.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1876.0,
+      "end": 1882.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1882.0,
+      "end": 1888.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1888.0,
+      "end": 1894.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1894.0,
+      "end": 1900.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1900.0,
+      "end": 1906.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1906.0,
+      "end": 1912.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1912.0,
+      "end": 1918.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1918.0,
+      "end": 1924.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1924.0,
+      "end": 1930.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1930.0,
+      "end": 1936.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1936.0,
+      "end": 1944.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1944.0,
+      "end": 1952.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1952.0,
+      "end": 1958.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1958.0,
+      "end": 1966.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1966.0,
+      "end": 1972.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1972.0,
+      "end": 1978.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1978.0,
+      "end": 1984.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1984.0,
+      "end": 1990.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1990.0,
+      "end": 1996.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 1996.0,
+      "end": 2002.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2002.0,
+      "end": 2008.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2008.0,
+      "end": 2014.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2014.0,
+      "end": 2020.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2020.0,
+      "end": 2026.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2026.0,
+      "end": 2032.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2032.0,
+      "end": 2038.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2038.0,
+      "end": 2044.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2044.0,
+      "end": 2050.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2050.0,
+      "end": 2056.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2056.0,
+      "end": 2062.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2062.0,
+      "end": 2068.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2068.0,
+      "end": 2074.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2074.0,
+      "end": 2080.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2080.0,
+      "end": 2086.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2086.0,
+      "end": 2092.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2092.0,
+      "end": 2098.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2098.0,
+      "end": 2104.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2104.0,
+      "end": 2110.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2110.0,
+      "end": 2116.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2116.0,
+      "end": 2122.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2122.0,
+      "end": 2128.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2128.0,
+      "end": 2134.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2134.0,
+      "end": 2140.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2140.0,
+      "end": 2146.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2146.0,
+      "end": 2152.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2152.0,
+      "end": 2158.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2158.0,
+      "end": 2164.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2164.0,
+      "end": 2170.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2170.0,
+      "end": 2176.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2176.0,
+      "end": 2182.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2182.0,
+      "end": 2188.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2188.0,
+      "end": 2194.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2194.0,
+      "end": 2200.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2200.0,
+      "end": 2206.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2206.0,
+      "end": 2212.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2212.0,
+      "end": 2218.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2218.0,
+      "end": 2226.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2226.0,
+      "end": 2232.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2232.0,
+      "end": 2238.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2238.0,
+      "end": 2244.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2244.0,
+      "end": 2250.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2250.0,
+      "end": 2256.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2256.0,
+      "end": 2262.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2262.0,
+      "end": 2268.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2268.0,
+      "end": 2274.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2274.0,
+      "end": 2280.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2280.0,
+      "end": 2286.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2286.0,
+      "end": 2292.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2292.0,
+      "end": 2298.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2298.0,
+      "end": 2304.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2304.0,
+      "end": 2310.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2310.0,
+      "end": 2316.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2316.0,
+      "end": 2322.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2322.0,
+      "end": 2328.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2328.0,
+      "end": 2334.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2334.0,
+      "end": 2340.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2340.0,
+      "end": 2346.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2346.0,
+      "end": 2352.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2352.0,
+      "end": 2358.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2358.0,
+      "end": 2364.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2364.0,
+      "end": 2370.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2370.0,
+      "end": 2376.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2376.0,
+      "end": 2382.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2382.0,
+      "end": 2388.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2388.0,
+      "end": 2394.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2394.0,
+      "end": 2400.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2400.0,
+      "end": 2406.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2406.0,
+      "end": 2412.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2412.0,
+      "end": 2418.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2418.0,
+      "end": 2424.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2424.0,
+      "end": 2430.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2430.0,
+      "end": 2436.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2436.0,
+      "end": 2442.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2442.0,
+      "end": 2448.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2448.0,
+      "end": 2454.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2454.0,
+      "end": 2460.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2460.0,
+      "end": 2466.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2466.0,
+      "end": 2472.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2472.0,
+      "end": 2478.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2478.0,
+      "end": 2484.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2484.0,
+      "end": 2490.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2490.0,
+      "end": 2496.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2496.0,
+      "end": 2502.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2502.0,
+      "end": 2508.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2508.0,
+      "end": 2514.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2514.0,
+      "end": 2520.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2520.0,
+      "end": 2526.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2526.0,
+      "end": 2532.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2532.0,
+      "end": 2538.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2538.0,
+      "end": 2544.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2544.0,
+      "end": 2550.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2550.0,
+      "end": 2556.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2556.0,
+      "end": 2564.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2564.0,
+      "end": 2570.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2570.0,
+      "end": 2576.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2576.0,
+      "end": 2582.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2582.0,
+      "end": 2588.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2588.0,
+      "end": 2594.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2594.0,
+      "end": 2600.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2600.0,
+      "end": 2606.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2606.0,
+      "end": 2612.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2612.0,
+      "end": 2618.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2618.0,
+      "end": 2624.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2624.0,
+      "end": 2630.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2630.0,
+      "end": 2638.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2638.0,
+      "end": 2644.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2644.0,
+      "end": 2650.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2650.0,
+      "end": 2656.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2656.0,
+      "end": 2662.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2662.0,
+      "end": 2668.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2668.0,
+      "end": 2674.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2674.0,
+      "end": 2680.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2680.0,
+      "end": 2686.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2686.0,
+      "end": 2692.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2692.0,
+      "end": 2698.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2698.0,
+      "end": 2704.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2704.0,
+      "end": 2710.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2710.0,
+      "end": 2716.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2716.0,
+      "end": 2722.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2722.0,
+      "end": 2728.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2728.0,
+      "end": 2734.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2734.0,
+      "end": 2740.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2740.0,
+      "end": 2746.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2746.0,
+      "end": 2752.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2752.0,
+      "end": 2758.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2758.0,
+      "end": 2764.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2764.0,
+      "end": 2770.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2770.0,
+      "end": 2776.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2776.0,
+      "end": 2782.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2782.0,
+      "end": 2788.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2788.0,
+      "end": 2794.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2794.0,
+      "end": 2800.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2800.0,
+      "end": 2806.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2806.0,
+      "end": 2812.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2812.0,
+      "end": 2818.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2818.0,
+      "end": 2824.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2824.0,
+      "end": 2830.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2830.0,
+      "end": 2836.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2836.0,
+      "end": 2842.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2842.0,
+      "end": 2848.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2848.0,
+      "end": 2854.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2854.0,
+      "end": 2860.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2860.0,
+      "end": 2866.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2866.0,
+      "end": 2872.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2872.0,
+      "end": 2882.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2882.0,
+      "end": 2890.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2890.0,
+      "end": 2896.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2896.0,
+      "end": 2904.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2906.0,
+      "end": 2914.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2916.0,
+      "end": 2924.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2926.0,
+      "end": 2932.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2932.0,
+      "end": 2938.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2938.0,
+      "end": 2944.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2944.0,
+      "end": 2950.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2950.0,
+      "end": 2956.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2956.0,
+      "end": 2962.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2962.0,
+      "end": 2968.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2968.0,
+      "end": 2974.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2974.0,
+      "end": 2984.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2986.0,
+      "end": 2992.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 2994.0,
+      "end": 3002.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3002.0,
+      "end": 3006.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3006.0,
+      "end": 3010.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3010.0,
+      "end": 3014.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3014.0,
+      "end": 3020.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3020.0,
+      "end": 3026.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3026.0,
+      "end": 3034.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3034.0,
+      "end": 3042.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3042.0,
+      "end": 3050.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3050.0,
+      "end": 3058.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3058.0,
+      "end": 3068.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3068.0,
+      "end": 3076.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3076.0,
+      "end": 3084.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3084.0,
+      "end": 3090.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3090.0,
+      "end": 3096.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3096.0,
+      "end": 3102.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3102.0,
+      "end": 3108.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3108.0,
+      "end": 3114.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3114.0,
+      "end": 3120.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3120.0,
+      "end": 3126.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3126.0,
+      "end": 3132.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3132.0,
+      "end": 3138.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3138.0,
+      "end": 3144.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3144.0,
+      "end": 3150.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3150.0,
+      "end": 3158.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3158.0,
+      "end": 3164.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3164.0,
+      "end": 3170.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3170.0,
+      "end": 3176.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3176.0,
+      "end": 3182.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3182.0,
+      "end": 3188.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3188.0,
+      "end": 3194.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3194.0,
+      "end": 3200.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3200.0,
+      "end": 3206.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3206.0,
+      "end": 3212.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3212.0,
+      "end": 3218.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3218.0,
+      "end": 3224.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3224.0,
+      "end": 3230.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3230.0,
+      "end": 3236.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3236.0,
+      "end": 3242.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3242.0,
+      "end": 3248.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3248.0,
+      "end": 3254.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3254.0,
+      "end": 3260.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3260.0,
+      "end": 3266.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3266.0,
+      "end": 3272.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3272.0,
+      "end": 3278.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3278.0,
+      "end": 3284.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3284.0,
+      "end": 3290.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3290.0,
+      "end": 3296.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3296.0,
+      "end": 3302.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3302.0,
+      "end": 3308.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3308.0,
+      "end": 3314.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3314.0,
+      "end": 3320.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3320.0,
+      "end": 3328.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3328.0,
+      "end": 3338.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3338.0,
+      "end": 3346.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3346.0,
+      "end": 3354.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3354.0,
+      "end": 3362.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3362.0,
+      "end": 3370.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3370.0,
+      "end": 3380.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3380.0,
+      "end": 3388.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3388.0,
+      "end": 3396.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3396.0,
+      "end": 3404.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3406.0,
+      "end": 3416.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3416.0,
+      "end": 3424.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3424.0,
+      "end": 3434.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3434.0,
+      "end": 3442.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3442.0,
+      "end": 3450.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3450.0,
+      "end": 3456.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3456.0,
+      "end": 3464.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3464.0,
+      "end": 3472.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3472.0,
+      "end": 3482.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3482.0,
+      "end": 3488.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3488.0,
+      "end": 3496.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3496.0,
+      "end": 3502.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3502.0,
+      "end": 3508.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3508.0,
+      "end": 3514.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3514.0,
+      "end": 3520.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3520.0,
+      "end": 3526.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3526.0,
+      "end": 3532.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3532.0,
+      "end": 3538.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3538.0,
+      "end": 3546.0,
+      "text": " ..."
+    },
+    {
+      "speaker": null,
+      "start": 3546.0,
+      "end": 3554.0,
+      "text": " ..."
+    }
+  ]
+}

@@ -11,6 +11,8 @@ import ScreenCaptureKit
 import AVFoundation
 import Combine
 import CoreGraphics
+import CoreAudio
+import AudioToolbox
 
 /// Errors that can occur during audio capture
 enum AudioCaptureError: LocalizedError {
@@ -114,11 +116,12 @@ class AudioCaptureManager: NSObject, ObservableObject {
     private var meetingTitle: String = "Meeting"
     private var sourceApp: String?
 
-    // Audio format settings - optimized for OpenAI's 25MB limit
-    // 16kHz mono AAC at 32kbps = ~4KB/sec = ~104 min max in 25MB
-    private let targetSampleRate: Double = 16000
+    // Audio format settings - record at good quality, downscale for API if needed
+    // 44.1kHz mono AAC at 96kbps = ~12KB/sec = ~0.7MB/min (good speech quality)
+    // Downscaling to 16kHz/32kbps happens in TranscriptionService before API call
+    private let targetSampleRate: Double = 44100
     private let targetChannels: UInt32 = 1
-    private let targetBitRate: Int = 32000  // 32kbps for maximum compression while maintaining speech quality
+    private let targetBitRate: Int = 96000  // 96kbps for good quality recording
 
     // Audio mixing - we'll mix mic into system audio
     private var micMixer: AVAudioMixerNode?
@@ -142,6 +145,17 @@ class AudioCaptureManager: NSObject, ObservableObject {
     private var currentSilenceDuration: TimeInterval = 0
     private var silenceWarningDismissedForThisRecording: Bool = false
     private let silenceThresholdDb: Float = -40.0  // Below this is considered silence
+
+    // Debug mode - saves separate mic and system audio files for analysis
+    private var debugSavesSeparateAudio: Bool {
+        UserDefaults.standard.bool(forKey: "debugSavesSeparateAudio")
+    }
+    private var debugMicWriter: AVAssetWriter?
+    private var debugMicInput: AVAssetWriterInput?
+    private var debugSystemWriter: AVAssetWriter?
+    private var debugSystemInput: AVAssetWriterInput?
+    private var debugMicSessionStarted: Bool = false
+    private var debugSystemSessionStarted: Bool = false
 
     // Settings from UserDefaults
     private var autoStopOnSilence: Bool {
@@ -287,6 +301,11 @@ class AudioCaptureManager: NSObject, ObservableObject {
         systemAudioInput?.markAsFinished()
         micAudioInput?.markAsFinished()
 
+        // Finish debug writers if active
+        if debugSavesSeparateAudio {
+            await finishDebugWriters()
+        }
+
         await withCheckedContinuation { continuation in
             assetWriter?.finishWriting {
                 continuation.resume()
@@ -307,6 +326,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
             try await DatabaseManager.shared.update(meeting)
             currentMeeting = meeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             logInfo("[AudioCapture] Recording stopped. Duration: \(String(format: "%.1f", duration))s")
             logInfo("[AudioCapture] Saved to: \(outputURL.path)")
@@ -324,16 +344,64 @@ class AudioCaptureManager: NSObject, ObservableObject {
         return outputURL
     }
 
+    /// Check if current recording is short (< 1 minute) - useful for discard prompts
+    var isShortRecording: Bool {
+        return currentDuration < 60
+    }
+
+    /// Discard the current recording without saving/transcribing
+    /// Deletes the audio file and removes the meeting from the database
+    func discardRecording() async {
+        guard isRecording, let outputURL = lastRecordingURL else {
+            return
+        }
+
+        state = .stopping
+        durationTimer?.invalidate()
+        durationTimer = nil
+
+        // Stop system audio capture
+        if let stream = stream {
+            try? await stream.stopCapture()
+        }
+
+        // Stop microphone capture
+        audioEngine?.stop()
+
+        // Cancel writing (don't finish cleanly since we're discarding)
+        assetWriter?.cancelWriting()
+
+        await cleanupResources()
+
+        // Delete the audio file
+        try? FileManager.default.removeItem(at: outputURL)
+
+        // Delete from database
+        if let meeting = currentMeeting {
+            try? await DatabaseManager.shared.delete(meeting.id)
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+            logInfo("[AudioCapture] Recording discarded: \(meeting.title)")
+        }
+
+        isRecording = false
+        state = .idle
+        currentDuration = 0
+        currentMeeting = nil
+        lastRecordingURL = nil
+    }
+
     /// Transcribe a meeting using OpenAI API
     /// - Parameter meeting: The meeting to transcribe
     func transcribeMeeting(_ meeting: Meeting) async {
         var updatedMeeting = meeting
         updatedMeeting.status = .transcribing
+        updatedMeeting.errorMessage = nil
         let meetingId = meeting.id
 
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
             transcriptionProgress = "Transcribing..."
 
             // Show transcribing state in the notch island
@@ -359,13 +427,10 @@ class AudioCaptureManager: NSObject, ObservableObject {
             updatedMeeting.speakerCount = result.speakerCount
             updatedMeeting.diarizationSegments = result.diarizationSegments
 
-            // Auto-generate a smart title from transcript (cheap GPT-4o-mini call)
-            if !result.text.isEmpty {
-                transcriptionProgress = "Generating title..."
-                if let generatedTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
-                    updatedMeeting.title = generatedTitle
-                    logInfo("[AudioCapture] Auto-generated title: \(generatedTitle)")
-                }
+            // Use title from transcription process (generated automatically)
+            if let generatedTitle = result.title {
+                updatedMeeting.title = generatedTitle
+                logInfo("[AudioCapture] Auto-generated title: \(generatedTitle)")
             }
 
             try await DatabaseManager.shared.update(updatedMeeting)
@@ -417,6 +482,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
 
             try? await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
             transcriptionProgress = nil
             errorMessage = errorMsg
 
@@ -447,6 +513,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
             meeting.errorMessage = "Transcription cancelled"
             try? await DatabaseManager.shared.update(meeting)
             currentMeeting = meeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
             transcriptionProgress = nil
 
             ToastController.shared.showWarning(
@@ -520,6 +587,65 @@ class AudioCaptureManager: NSObject, ObservableObject {
         if let input = systemAudioInput, assetWriter?.canAdd(input) == true {
             assetWriter?.add(input)
         }
+
+        // Debug mode: set up separate files for mic and system audio
+        if debugSavesSeparateAudio {
+            try setupDebugWriters(baseURL: url)
+        }
+    }
+
+    /// Set up separate writers for mic and system audio (debug mode)
+    private func setupDebugWriters(baseURL: URL) throws {
+        let baseName = baseURL.deletingPathExtension().lastPathComponent
+        let folder = baseURL.deletingLastPathComponent()
+
+        // Mic audio file
+        let micURL = folder.appendingPathComponent("\(baseName)_MIC.m4a")
+        try? FileManager.default.removeItem(at: micURL)
+        debugMicWriter = try AVAssetWriter(outputURL: micURL, fileType: .m4a)
+
+        // Mic settings - 48kHz mono to match what we capture
+        let micSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: 48000.0,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderBitRateKey: 96000,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        debugMicInput = AVAssetWriterInput(mediaType: .audio, outputSettings: micSettings)
+        debugMicInput?.expectsMediaDataInRealTime = true
+        if let input = debugMicInput, debugMicWriter?.canAdd(input) == true {
+            debugMicWriter?.add(input)
+        }
+
+        // System audio file
+        let sysURL = folder.appendingPathComponent("\(baseName)_SYSTEM.m4a")
+        try? FileManager.default.removeItem(at: sysURL)
+        debugSystemWriter = try AVAssetWriter(outputURL: sysURL, fileType: .m4a)
+
+        // System settings - preserve original format (48kHz stereo)
+        let sysSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: 48000.0,
+            AVNumberOfChannelsKey: 2,
+            AVEncoderBitRateKey: 128000,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        debugSystemInput = AVAssetWriterInput(mediaType: .audio, outputSettings: sysSettings)
+        debugSystemInput?.expectsMediaDataInRealTime = true
+        if let input = debugSystemInput, debugSystemWriter?.canAdd(input) == true {
+            debugSystemWriter?.add(input)
+        }
+
+        // Start writing
+        debugMicWriter?.startWriting()
+        debugSystemWriter?.startWriting()
+        debugMicSessionStarted = false
+        debugSystemSessionStarted = false
+
+        logInfo("[AudioCapture] Debug mode: saving separate audio files")
+        logInfo("[AudioCapture]   Mic: \(micURL.lastPathComponent)")
+        logInfo("[AudioCapture]   System: \(sysURL.lastPathComponent)")
     }
 
     private func startSystemAudioCapture() async throws {
@@ -592,98 +718,191 @@ class AudioCaptureManager: NSObject, ObservableObject {
         audioEngine = AVAudioEngine()
         guard let engine = audioEngine else { return }
 
+        // Set specific microphone if one is selected in settings
+        configureSelectedMicrophone(for: engine)
+
         let inputNode = engine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
+        let outputFormat = inputNode.outputFormat(forBus: 0)
 
-        // Create target format for mixing - 48kHz stereo float to match system audio
-        // ScreenCaptureKit delivers 48kHz stereo, so we convert mic to match
-        guard let targetFormat = AVAudioFormat(
-            commonFormat: .pcmFormatFloat32,
-            sampleRate: 48000,
-            channels: 2,
-            interleaved: false
-        ) else {
-            logError("[AudioCapture] Failed to create target audio format")
-            throw AudioCaptureError.writerFailed(NSError(domain: "AudioCapture", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio format"]))
-        }
-        mixFormat = targetFormat
+        logInfo("[AudioCapture] Mic format: \(outputFormat.sampleRate)Hz, \(outputFormat.channelCount)ch")
 
-        // Create converter from mic format to target format
-        if inputFormat.sampleRate != targetFormat.sampleRate || inputFormat.channelCount != targetFormat.channelCount {
-            micConverter = AVAudioConverter(from: inputFormat, to: targetFormat)
-            logDebug("[AudioCapture] Mic converter created: \(inputFormat.sampleRate)Hz \(inputFormat.channelCount)ch → \(targetFormat.sampleRate)Hz \(targetFormat.channelCount)ch")
-        }
+        // We do our own resampling in processMicBuffer (linear interpolation)
+        // This avoids AVAudioConverter's stateful issues
 
-        // Install tap for mic audio
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, time in
+        // Install tap using the node's native format
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: outputFormat) { [weak self] buffer, time in
             self?.processMicBuffer(buffer)
         }
 
         try engine.start()
-        logInfo("[AudioCapture] Microphone capture started: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount) channels")
+        logInfo("[AudioCapture] Microphone capture started")
     }
 
+    /// Debug counter for mic buffer logging
+    private static var micBufferCount = 0
+
     /// Process mic buffer and queue samples for mixing
+    /// Runs on audio thread - uses simple linear interpolation for resampling
     private func processMicBuffer(_ buffer: AVAudioPCMBuffer) {
         guard isRecording else { return }
 
-        var samplesToQueue: [Float] = []
+        guard let channelData = buffer.floatChannelData else { return }
+        let inputFrames = Int(buffer.frameLength)
+        guard inputFrames > 0 else { return }
 
-        // Convert if needed
-        if let converter = micConverter, let targetFormat = mixFormat {
-            // Create output buffer
-            let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * targetFormat.sampleRate / buffer.format.sampleRate) + 100
-            guard let convertedBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCapacity) else {
-                return
-            }
+        let inputRate = buffer.format.sampleRate
+        let outputRate: Double = 48000  // Target rate to match ScreenCaptureKit
 
-            var error: NSError?
-            let inputBlock: AVAudioConverterInputBlock = { _, outStatus in
-                outStatus.pointee = .haveData
-                return buffer
-            }
+        // Log first few buffers for debugging
+        Self.micBufferCount += 1
+        if Self.micBufferCount <= 5 {
+            logDebug("[AudioCapture] Mic buffer #\(Self.micBufferCount): \(inputFrames) frames @ \(inputRate)Hz")
+        }
 
-            let status = converter.convert(to: convertedBuffer, error: &error, withInputFrom: inputBlock)
-            if status == .error {
-                logWarning("[AudioCapture] Mic conversion error: \(error?.localizedDescription ?? "unknown")")
-                return
-            }
+        // Extract mono samples from input (use first channel)
+        // Keep it simple - just copy the samples
+        var monoSamples = [Float](repeating: 0, count: inputFrames)
+        for i in 0..<inputFrames {
+            monoSamples[i] = channelData[0][i]
+        }
 
-            // Extract float samples from converted buffer (stereo interleaved for mixing)
-            if let channelData = convertedBuffer.floatChannelData {
-                let frameCount = Int(convertedBuffer.frameLength)
-                for i in 0..<frameCount {
-                    // Average channels or duplicate mono to stereo
-                    let left = channelData[0][i]
-                    let right = convertedBuffer.format.channelCount > 1 ? channelData[1][i] : left
-                    samplesToQueue.append(left)
-                    samplesToQueue.append(right)
-                }
-            }
+        // For 48kHz input (which is common), skip resampling entirely
+        // Only resample if sample rates actually differ significantly
+        var outputSamples: [Float]
+        if abs(inputRate - outputRate) < 100 {
+            // No resampling needed - rates are close enough
+            outputSamples = monoSamples
         } else {
-            // No conversion needed, extract samples directly
-            if let channelData = buffer.floatChannelData {
-                let frameCount = Int(buffer.frameLength)
-                for i in 0..<frameCount {
-                    let left = channelData[0][i]
-                    let right = buffer.format.channelCount > 1 ? channelData[1][i] : left
-                    samplesToQueue.append(left)
-                    samplesToQueue.append(right)
+            // Resample using linear interpolation
+            let ratio = outputRate / inputRate
+            let outputCount = Int(ceil(Double(inputFrames) * ratio))
+            outputSamples = [Float](repeating: 0, count: outputCount)
+
+            for i in 0..<outputCount {
+                let srcPos = Double(i) / ratio
+                let srcIdx = Int(srcPos)
+                let frac = Float(srcPos - Double(srcIdx))
+
+                if srcIdx + 1 < inputFrames {
+                    outputSamples[i] = monoSamples[srcIdx] * (1.0 - frac) + monoSamples[srcIdx + 1] * frac
+                } else if srcIdx < inputFrames {
+                    outputSamples[i] = monoSamples[srcIdx]
                 }
+            }
+
+            if Self.micBufferCount <= 5 {
+                logDebug("[AudioCapture] Resampled \(inputFrames) → \(outputCount) samples")
             }
         }
 
-        // Queue samples for mixing
-        if !samplesToQueue.isEmpty {
-            micSamplesLock.lock()
-            pendingMicSamples.append(contentsOf: samplesToQueue)
-            // Limit buffer size to ~1 second of audio (48000 * 2 channels)
-            let maxSamples = 48000 * 2
-            if pendingMicSamples.count > maxSamples {
-                pendingMicSamples.removeFirst(pendingMicSamples.count - maxSamples)
-            }
-            micSamplesLock.unlock()
+        // Queue mono samples - we'll handle stereo conversion during mixing
+        // This way we don't assume interleaved vs non-interleaved storage
+        micSamplesLock.lock()
+        pendingMicSamples.append(contentsOf: outputSamples)
+        // Keep max ~1 second buffer (48000 mono samples)
+        let maxSamples = 48000
+        if pendingMicSamples.count > maxSamples {
+            pendingMicSamples.removeFirst(pendingMicSamples.count - maxSamples)
         }
+        micSamplesLock.unlock()
+
+        // Debug mode: write raw mic audio to separate file
+        if debugSavesSeparateAudio {
+            writeDebugMicAudio(buffer)
+        }
+    }
+
+    /// Write raw mic audio to debug file
+    private func writeDebugMicAudio(_ buffer: AVAudioPCMBuffer) {
+        guard let writer = debugMicWriter,
+              let input = debugMicInput,
+              writer.status == .writing,
+              input.isReadyForMoreMediaData else {
+            return
+        }
+
+        // Convert AVAudioPCMBuffer to CMSampleBuffer
+        guard let sampleBuffer = createSampleBuffer(from: buffer) else {
+            return
+        }
+
+        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        if !debugMicSessionStarted && presentationTime.isValid {
+            writer.startSession(atSourceTime: presentationTime)
+            debugMicSessionStarted = true
+        }
+
+        guard debugMicSessionStarted else { return }
+
+        input.append(sampleBuffer)
+    }
+
+    /// Convert AVAudioPCMBuffer to CMSampleBuffer
+    private func createSampleBuffer(from pcmBuffer: AVAudioPCMBuffer) -> CMSampleBuffer? {
+        let format = pcmBuffer.format
+        let frameCount = pcmBuffer.frameLength
+
+        var formatDescription: CMAudioFormatDescription?
+        let status = CMAudioFormatDescriptionCreate(
+            allocator: kCFAllocatorDefault,
+            asbd: format.streamDescription,
+            layoutSize: 0,
+            layout: nil,
+            magicCookieSize: 0,
+            magicCookie: nil,
+            extensions: nil,
+            formatDescriptionOut: &formatDescription
+        )
+
+        guard status == noErr, let formatDesc = formatDescription else {
+            return nil
+        }
+
+        // Create block buffer from audio data
+        guard let channelData = pcmBuffer.floatChannelData else { return nil }
+
+        let dataSize = Int(frameCount) * MemoryLayout<Float>.size
+        var blockBuffer: CMBlockBuffer?
+
+        // Create block buffer
+        let blockStatus = CMBlockBufferCreateWithMemoryBlock(
+            allocator: kCFAllocatorDefault,
+            memoryBlock: nil,
+            blockLength: dataSize,
+            blockAllocator: kCFAllocatorDefault,
+            customBlockSource: nil,
+            offsetToData: 0,
+            dataLength: dataSize,
+            flags: 0,
+            blockBufferOut: &blockBuffer
+        )
+
+        guard blockStatus == kCMBlockBufferNoErr, let block = blockBuffer else {
+            return nil
+        }
+
+        // Copy data
+        CMBlockBufferReplaceDataBytes(
+            with: channelData[0],
+            blockBuffer: block,
+            offsetIntoDestination: 0,
+            dataLength: dataSize
+        )
+
+        // Create sample buffer
+        var sampleBuffer: CMSampleBuffer?
+        let sampleStatus = CMAudioSampleBufferCreateReadyWithPacketDescriptions(
+            allocator: kCFAllocatorDefault,
+            dataBuffer: block,
+            formatDescription: formatDesc,
+            sampleCount: CMItemCount(frameCount),
+            presentationTimeStamp: CMTime(value: 0, timescale: CMTimeScale(format.sampleRate)),
+            packetDescriptions: nil,
+            sampleBufferOut: &sampleBuffer
+        )
+
+        guard sampleStatus == noErr else { return nil }
+        return sampleBuffer
     }
 
     private func handleSystemAudioBuffer(_ sampleBuffer: CMSampleBuffer) {
@@ -708,6 +927,11 @@ class AudioCaptureManager: NSObject, ObservableObject {
             return
         }
 
+        // Debug mode: write raw system audio to separate file BEFORE mixing
+        if debugSavesSeparateAudio {
+            writeDebugSystemAudio(sampleBuffer)
+        }
+
         // Calculate audio power level for silence detection
         if autoStopOnSilence {
             let powerLevel = calculateAudioPowerLevel(sampleBuffer)
@@ -727,8 +951,56 @@ class AudioCaptureManager: NSObject, ObservableObject {
         }
     }
 
+    /// Write raw system audio to debug file (before mixing)
+    private func writeDebugSystemAudio(_ sampleBuffer: CMSampleBuffer) {
+        guard let writer = debugSystemWriter,
+              let input = debugSystemInput,
+              writer.status == .writing else {
+            return
+        }
+
+        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        if !debugSystemSessionStarted && presentationTime.isValid {
+            writer.startSession(atSourceTime: presentationTime)
+            debugSystemSessionStarted = true
+        }
+
+        guard debugSystemSessionStarted, input.isReadyForMoreMediaData else {
+            return
+        }
+
+        input.append(sampleBuffer)
+    }
+
+    /// Log format info once
+    private static var hasLoggedFormat = false
+
     /// Mix pending mic samples into the system audio buffer
     private func mixMicIntoSystemAudio(_ systemBuffer: CMSampleBuffer) -> CMSampleBuffer? {
+        // Get format description to understand the audio layout
+        guard let formatDesc = CMSampleBufferGetFormatDescription(systemBuffer) else {
+            return nil
+        }
+
+        // Log format info once at start
+        if !Self.hasLoggedFormat {
+            Self.hasLoggedFormat = true
+            if let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDesc)?.pointee {
+                logInfo("[AudioCapture] System audio format:")
+                logInfo("  Sample rate: \(asbd.mSampleRate)")
+                logInfo("  Channels: \(asbd.mChannelsPerFrame)")
+                logInfo("  Bits per channel: \(asbd.mBitsPerChannel)")
+                logInfo("  Bytes per frame: \(asbd.mBytesPerFrame)")
+                logInfo("  Bytes per packet: \(asbd.mBytesPerPacket)")
+                logInfo("  Frames per packet: \(asbd.mFramesPerPacket)")
+                logInfo("  Format flags: \(asbd.mFormatFlags)")
+                // kAudioFormatFlagIsFloat = 1, kAudioFormatFlagIsNonInterleaved = 32
+                let isFloat = (asbd.mFormatFlags & 1) != 0
+                let isNonInterleaved = (asbd.mFormatFlags & 32) != 0
+                logInfo("  Is Float: \(isFloat), Is Non-Interleaved: \(isNonInterleaved)")
+            }
+        }
+
         // Get the audio buffer list from the system sample buffer
         guard let blockBuffer = CMSampleBufferGetDataBuffer(systemBuffer) else {
             return nil
@@ -742,16 +1014,29 @@ class AudioCaptureManager: NSObject, ObservableObject {
             return nil
         }
 
-        // ScreenCaptureKit delivers Float32 samples (4 bytes per sample)
-        // Stereo = 2 channels, so each frame is 8 bytes
-        let bytesPerSample = 4
-        let channels = 2
-        let bytesPerFrame = bytesPerSample * channels
-        let frameCount = length / bytesPerFrame
+        // Get format info
+        guard let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDesc)?.pointee else {
+            return nil
+        }
+
+        let isNonInterleaved = (asbd.mFormatFlags & 32) != 0
+        let channels = Int(asbd.mChannelsPerFrame)
+        let bytesPerSample = Int(asbd.mBitsPerChannel / 8)
 
         // Get mic samples to mix
+        let frameCount: Int
+        if isNonInterleaved {
+            // Non-interleaved: each channel's data is separate
+            // Total length / channels / bytes per sample = frames
+            frameCount = length / channels / bytesPerSample
+        } else {
+            // Interleaved: samples alternate L,R,L,R
+            frameCount = length / (channels * bytesPerSample)
+        }
+
+        // Get mic samples (stored as mono)
         micSamplesLock.lock()
-        let samplesNeeded = frameCount * channels  // stereo samples
+        let samplesNeeded = frameCount  // One sample per frame (mono)
         let micSamples: [Float]
         if pendingMicSamples.count >= samplesNeeded {
             micSamples = Array(pendingMicSamples.prefix(samplesNeeded))
@@ -764,16 +1049,50 @@ class AudioCaptureManager: NSObject, ObservableObject {
         micSamplesLock.unlock()
 
         // Mix: add mic samples to system audio samples
-        // Mic level can be adjusted here (0.8 = 80% volume)
-        let micLevel: Float = 0.8
-
+        // Boost mic level significantly - most mics are quiet relative to system audio
+        // User-configurable gain (default 10x) + soft limiting to prevent clipping
+        let micBoostSetting = UserDefaults.standard.double(forKey: "micBoostLevel")
+        let micLevel: Float = Float(micBoostSetting > 0 ? micBoostSetting : 10.0)
         let floatPointer = UnsafeMutableRawPointer(data).assumingMemoryBound(to: Float.self)
-        let sampleCount = length / bytesPerSample
 
-        for i in 0..<min(sampleCount, micSamples.count) {
-            // Add mic sample to system sample, clamp to prevent clipping
-            let mixed = floatPointer[i] + (micSamples[i] * micLevel)
-            floatPointer[i] = max(-1.0, min(1.0, mixed))
+        // Soft limiter function - sounds better than hard clipping
+        @inline(__always) func softLimit(_ x: Float) -> Float {
+            // tanh provides smooth limiting, scale to get close to ±1.0
+            return tanh(x)
+        }
+
+        if isNonInterleaved && channels == 2 {
+            // Non-interleaved stereo: first half is L channel, second half is R channel
+            // Buffer layout: [L0, L1, L2, ..., Ln, R0, R1, R2, ..., Rn]
+            for i in 0..<frameCount {
+                if i < micSamples.count {
+                    let micSample = micSamples[i] * micLevel
+
+                    // Left channel (first half of buffer)
+                    let mixedL = floatPointer[i] + micSample
+                    floatPointer[i] = softLimit(mixedL)
+
+                    // Right channel (second half of buffer)
+                    let mixedR = floatPointer[frameCount + i] + micSample
+                    floatPointer[frameCount + i] = softLimit(mixedR)
+                }
+            }
+        } else {
+            // Interleaved: samples alternate L,R,L,R
+            // Buffer layout: [L0, R0, L1, R1, L2, R2, ...]
+            for i in 0..<frameCount {
+                if i < micSamples.count {
+                    let micSample = micSamples[i] * micLevel
+
+                    // Left sample
+                    let mixedL = floatPointer[i * 2] + micSample
+                    floatPointer[i * 2] = softLimit(mixedL)
+
+                    // Right sample
+                    let mixedR = floatPointer[i * 2 + 1] + micSample
+                    floatPointer[i * 2 + 1] = softLimit(mixedR)
+                }
+            }
         }
 
         // Return nil to indicate we modified the buffer in place
@@ -781,6 +1100,7 @@ class AudioCaptureManager: NSObject, ObservableObject {
     }
 
     /// Calculate RMS power level from audio sample buffer in dB
+    /// Note: ScreenCaptureKit delivers Float32 stereo audio at 48kHz
     private func calculateAudioPowerLevel(_ sampleBuffer: CMSampleBuffer) -> Float {
         guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
             return -100.0  // Very quiet if we can't read
@@ -794,17 +1114,20 @@ class AudioCaptureManager: NSObject, ObservableObject {
             return -100.0
         }
 
-        // Convert to 16-bit samples (assuming 16-bit PCM or that we're working with Int16 samples)
-        let sampleCount = length / 2
+        // ScreenCaptureKit delivers Float32 samples (4 bytes per sample)
+        let bytesPerSample = 4
+        let sampleCount = length / bytesPerSample
         guard sampleCount > 0 else { return -100.0 }
 
-        let samples = UnsafeBufferPointer(start: UnsafeRawPointer(data).assumingMemoryBound(to: Int16.self), count: sampleCount)
+        let samples = UnsafeBufferPointer(
+            start: UnsafeRawPointer(data).assumingMemoryBound(to: Float.self),
+            count: sampleCount
+        )
 
-        // Calculate RMS
+        // Calculate RMS - Float32 samples are already in -1.0 to 1.0 range
         var sumOfSquares: Float = 0.0
         for sample in samples {
-            let floatSample = Float(sample) / Float(Int16.max)
-            sumOfSquares += floatSample * floatSample
+            sumOfSquares += sample * sample
         }
 
         let rms = sqrt(sumOfSquares / Float(sampleCount))
@@ -927,6 +1250,155 @@ class AudioCaptureManager: NSObject, ObservableObject {
         silenceMonitorTimer = nil
     }
 
+    /// Configure the selected microphone for the audio engine
+    private func configureSelectedMicrophone(for engine: AVAudioEngine) {
+        let selectedUID = UserDefaults.standard.string(forKey: "selectedMicrophoneUID") ?? ""
+
+        guard !selectedUID.isEmpty else {
+            logDebug("[AudioCapture] Using system default microphone")
+            return
+        }
+
+        // Find the device ID for the selected UID
+        guard let deviceID = getAudioDeviceID(forUID: selectedUID) else {
+            logWarning("[AudioCapture] Selected microphone not found, using system default")
+            return
+        }
+
+        // Set the audio unit's input device
+        let inputNode = engine.inputNode
+        let audioUnit = inputNode.audioUnit
+
+        guard let au = audioUnit else {
+            logWarning("[AudioCapture] Could not get audio unit, using system default")
+            return
+        }
+
+        var deviceIDCopy = deviceID
+        let status = AudioUnitSetProperty(
+            au,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &deviceIDCopy,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+
+        if status == noErr {
+            if let deviceName = getDeviceName(deviceID: deviceID) {
+                logInfo("[AudioCapture] Using microphone: \(deviceName)")
+            }
+        } else {
+            logWarning("[AudioCapture] Failed to set microphone (error \(status)), using system default")
+        }
+    }
+
+    /// Get the AudioDeviceID for a given UID
+    private func getAudioDeviceID(forUID uid: String) -> AudioDeviceID? {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var dataSize: UInt32 = 0
+        var status = AudioObjectGetPropertyDataSize(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            &dataSize
+        )
+
+        guard status == noErr else { return nil }
+
+        let deviceCount = Int(dataSize) / MemoryLayout<AudioDeviceID>.size
+        var deviceIDs = [AudioDeviceID](repeating: 0, count: deviceCount)
+
+        status = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            &dataSize,
+            &deviceIDs
+        )
+
+        guard status == noErr else { return nil }
+
+        for deviceID in deviceIDs {
+            if let deviceUID = getDeviceUID(deviceID: deviceID), deviceUID == uid {
+                return deviceID
+            }
+        }
+
+        return nil
+    }
+
+    /// Get the UID of a device
+    private func getDeviceUID(deviceID: AudioDeviceID) -> String? {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceUID,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var uid: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+
+        let status = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nil, &dataSize, &uid)
+
+        guard status == noErr, let deviceUID = uid else { return nil }
+        return deviceUID as String
+    }
+
+    /// Get the name of a device
+    private func getDeviceName(deviceID: AudioDeviceID) -> String? {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceNameCFString,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var name: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+
+        let status = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nil, &dataSize, &name)
+
+        guard status == noErr, let deviceName = name else { return nil }
+        return deviceName as String
+    }
+
+    /// Finish debug audio writers
+    private func finishDebugWriters() async {
+        debugMicInput?.markAsFinished()
+        debugSystemInput?.markAsFinished()
+
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let group = DispatchGroup()
+
+            if let micWriter = debugMicWriter, micWriter.status == .writing {
+                group.enter()
+                micWriter.finishWriting {
+                    group.leave()
+                }
+            }
+
+            if let sysWriter = debugSystemWriter, sysWriter.status == .writing {
+                group.enter()
+                sysWriter.finishWriting {
+                    group.leave()
+                }
+            }
+
+            group.notify(queue: .main) {
+                continuation.resume()
+            }
+        }
+
+        logInfo("[AudioCapture] Debug audio files saved")
+    }
+
     private func cleanupResources() async {
         stream = nil
         streamOutput = nil
@@ -942,6 +1414,14 @@ class AudioCaptureManager: NSObject, ObservableObject {
         micAudioInput = nil
         firstSampleTime = nil
         sessionStarted = false
+
+        // Clean up debug writers
+        debugMicWriter = nil
+        debugMicInput = nil
+        debugSystemWriter = nil
+        debugSystemInput = nil
+        debugMicSessionStarted = false
+        debugSystemSessionStarted = false
 
         // Clean up mic mixing resources
         micMixer = nil
@@ -1188,6 +1668,7 @@ class MicRecorderWithTranscription: ObservableObject {
         do {
             try await DatabaseManager.shared.update(meeting)
             currentMeeting = meeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             print("[MicRecorderWithTranscription] Recording stopped. Duration: \(String(format: "%.1f", duration))s")
 
@@ -1203,12 +1684,14 @@ class MicRecorderWithTranscription: ObservableObject {
     private func transcribeMeeting(_ meeting: Meeting) async {
         var updatedMeeting = meeting
         updatedMeeting.status = .transcribing
+        updatedMeeting.errorMessage = nil
         status = "Transcribing..."
         let meetingId = meeting.id
 
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             // Check for API key
             guard KeychainHelper.readOpenAIKey() != nil else {
@@ -1218,6 +1701,7 @@ class MicRecorderWithTranscription: ObservableObject {
                 updatedMeeting.errorMessage = "No API key configured"
                 try? await DatabaseManager.shared.update(updatedMeeting)
                 currentMeeting = updatedMeeting
+                NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
                 // Show error notification
                 ToastController.shared.showError(
@@ -1246,13 +1730,10 @@ class MicRecorderWithTranscription: ObservableObject {
             updatedMeeting.status = .ready
             updatedMeeting.errorMessage = nil
 
-            // Auto-generate a smart title from transcript
-            if !result.text.isEmpty {
-                status = "Generating title..."
-                if let generatedTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
-                    updatedMeeting.title = generatedTitle
-                    print("[MicRecorderWithTranscription] Auto-generated title: \(generatedTitle)")
-                }
+            // Use title from transcription process (generated automatically)
+            if let generatedTitle = result.title {
+                updatedMeeting.title = generatedTitle
+                print("[MicRecorderWithTranscription] Auto-generated title: \(generatedTitle)")
             }
 
             try await DatabaseManager.shared.update(updatedMeeting)
@@ -1305,6 +1786,7 @@ class MicRecorderWithTranscription: ObservableObject {
 
             try? await DatabaseManager.shared.update(updatedMeeting)
             currentMeeting = updatedMeeting
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
             status = nil
             errorMessage = errorMsg
 

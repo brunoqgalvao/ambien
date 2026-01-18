@@ -433,12 +433,36 @@ struct NotchWrapperView: View {
     }
 
     private func stopRecording() {
-        Task { @MainActor in
-            defer { onStop() }
-            do {
-                _ = try await audioManager.stopRecording()
-            } catch {
-                print("[RecordingIsland] Stop error: \(error)")
+        // Check if short recording - show discard dialog
+        if audioManager.isShortRecording {
+            DiscardRecordingController.shared.show(
+                duration: audioManager.currentDuration,
+                onKeep: { [audioManager, onStop] in
+                    Task { @MainActor in
+                        defer { onStop() }
+                        do {
+                            _ = try await audioManager.stopRecording()
+                        } catch {
+                            print("[RecordingIsland] Stop error: \(error)")
+                        }
+                    }
+                },
+                onDiscard: { [audioManager, onStop] in
+                    Task { @MainActor in
+                        await audioManager.discardRecording()
+                        onStop()
+                    }
+                }
+            )
+        } else {
+            // Long recording - just stop normally
+            Task { @MainActor in
+                defer { onStop() }
+                do {
+                    _ = try await audioManager.stopRecording()
+                } catch {
+                    print("[RecordingIsland] Stop error: \(error)")
+                }
             }
         }
     }
@@ -553,12 +577,36 @@ struct FloatingPillView: View {
     }
 
     private func stopRecording() {
-        Task { @MainActor in
-            defer { onStop() }
-            do {
-                _ = try await audioManager.stopRecording()
-            } catch {
-                print("[RecordingIsland] Stop error: \(error)")
+        // Check if short recording - show discard dialog
+        if audioManager.isShortRecording {
+            DiscardRecordingController.shared.show(
+                duration: audioManager.currentDuration,
+                onKeep: { [audioManager, onStop] in
+                    Task { @MainActor in
+                        defer { onStop() }
+                        do {
+                            _ = try await audioManager.stopRecording()
+                        } catch {
+                            print("[RecordingIsland] Stop error: \(error)")
+                        }
+                    }
+                },
+                onDiscard: { [audioManager, onStop] in
+                    Task { @MainActor in
+                        await audioManager.discardRecording()
+                        onStop()
+                    }
+                }
+            )
+        } else {
+            // Long recording - just stop normally
+            Task { @MainActor in
+                defer { onStop() }
+                do {
+                    _ = try await audioManager.stopRecording()
+                } catch {
+                    print("[RecordingIsland] Stop error: \(error)")
+                }
             }
         }
     }
@@ -1090,4 +1138,226 @@ struct TranscribingPillView: View {
         }
     }
     .frame(width: 150, height: 100)
+}
+
+// MARK: - Discard Recording Controller
+// Shows a floating dialog asking if user wants to keep or discard short recordings
+
+class DiscardRecordingController {
+    static let shared = DiscardRecordingController()
+
+    private var window: NSPanel?
+    private var onKeep: (() -> Void)?
+    private var onDiscard: (() -> Void)?
+
+    private init() {}
+
+    @MainActor
+    func show(duration: TimeInterval, onKeep: @escaping () -> Void, onDiscard: @escaping () -> Void) {
+        self.onKeep = onKeep
+        self.onDiscard = onDiscard
+
+        guard window == nil else {
+            window?.orderFront(nil)
+            return
+        }
+
+        let hasNotch = NotchInfo.hasNotch
+
+        let content = DiscardRecordingDialogView(
+            duration: duration,
+            onKeep: { [weak self] in
+                self?.handleKeep()
+            },
+            onDiscard: { [weak self] in
+                self?.handleDiscard()
+            }
+        )
+
+        let hostingView = NSHostingView(rootView: content)
+
+        let windowSize = NSSize(width: 280, height: 130)
+
+        let panel = NSPanel(
+            contentRect: NSRect(origin: .zero, size: windowSize),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.level = .statusBar + 2  // Above the recording island
+        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        panel.isMovableByWindowBackground = false
+        panel.hidesOnDeactivate = false
+
+        hostingView.frame = NSRect(origin: .zero, size: windowSize)
+        panel.contentView = hostingView
+
+        // Position below the notch/recording island
+        positionWindow(panel, hasNotch: hasNotch)
+
+        self.window = panel
+
+        // Animate in
+        panel.alphaValue = 0
+        panel.orderFront(nil)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().alphaValue = 1
+        }
+    }
+
+    private func hide() {
+        guard let panel = window else { return }
+
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.15
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            panel.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            panel.orderOut(nil)
+            self?.window = nil
+            self?.onKeep = nil
+            self?.onDiscard = nil
+        })
+    }
+
+    private func handleKeep() {
+        let action = onKeep
+        hide()
+        action?()
+    }
+
+    private func handleDiscard() {
+        let action = onDiscard
+        hide()
+        action?()
+    }
+
+    private func positionWindow(_ panel: NSPanel, hasNotch: Bool) {
+        guard let screen = NSScreen.main else { return }
+
+        let screenFrame = screen.frame
+        let windowWidth = panel.frame.width
+        let windowHeight = panel.frame.height
+
+        // Center horizontally, position below notch area
+        let x = screenFrame.midX - windowWidth / 2
+        let y: CGFloat
+
+        if hasNotch {
+            y = screenFrame.maxY - NotchInfo.notchHeight - windowHeight - 12
+        } else {
+            y = screenFrame.maxY - 60 - 36 - windowHeight - 12
+        }
+
+        panel.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+}
+
+// MARK: - Discard Recording Dialog View
+
+struct DiscardRecordingDialogView: View {
+    let duration: TimeInterval
+    let onKeep: () -> Void
+    let onDiscard: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            // Icon and title
+            HStack(spacing: 8) {
+                Image(systemName: "waveform.circle")
+                    .font(.system(size: 18))
+                    .foregroundColor(.orange)
+
+                Text("Short Recording")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            // Message
+            Text("This recording is only \(formatDuration(duration)). Do you want to keep it or discard it?")
+                .font(.system(size: 12))
+                .foregroundColor(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+
+            // Buttons
+            HStack(spacing: 12) {
+                // Discard button
+                Button(action: onDiscard) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 10))
+                        Text("Discard")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.red.opacity(0.8))
+                    )
+                }
+                .buttonStyle(.plain)
+
+                // Keep button
+                Button(action: onKeep) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10))
+                        Text("Keep")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.green.opacity(0.8))
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(white: 0.12))
+                .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
+        )
+    }
+
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let seconds = Int(duration)
+        if seconds < 60 {
+            return "\(seconds) second\(seconds == 1 ? "" : "s")"
+        }
+        let minutes = seconds / 60
+        let remainingSeconds = seconds % 60
+        if remainingSeconds == 0 {
+            return "\(minutes) minute\(minutes == 1 ? "" : "s")"
+        }
+        return "\(minutes):\(String(format: "%02d", remainingSeconds))"
+    }
+}
+
+// MARK: - Discard Dialog Preview
+
+#Preview("Discard Dialog") {
+    ZStack {
+        Color(white: 0.3)
+
+        DiscardRecordingDialogView(
+            duration: 23,
+            onKeep: { print("Keep") },
+            onDiscard: { print("Discard") }
+        )
+    }
+    .frame(width: 350, height: 200)
 }

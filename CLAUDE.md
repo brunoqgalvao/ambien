@@ -90,12 +90,61 @@ When creating new Swift files:
 
 ---
 
+## ⚠️ CRITICAL: Always Verify Build with MCP
+
+**After ANY code change, ALWAYS verify the build compiles using MCP xcodebuild tools.**
+
+### Build Verification Workflow
+
+1. **After editing Swift files** → Run `build_sim` or `build_macos` to verify compilation
+2. **After adding new files** → Build to catch missing imports or project configuration issues
+3. **After refactoring** → Build to ensure no broken references
+
+### MCP Tools to Use
+
+| Tool | When to Use |
+|------|-------------|
+| `mcp__xcodebuildmcp__build_sim` | Build for iOS Simulator |
+| `mcp__xcodebuildmcp__build_macos` | Build for macOS (this project) |
+| `mcp__xcodebuildmcp__build_run_macos` | Build and run macOS app |
+| `mcp__xcodebuildmcp__clean` | Clean build folder if issues persist |
+
+### Before Declaring "Done"
+
+```
+// ✅ GOOD - Always verify
+1. Make code changes
+2. Run mcp__xcodebuildmcp__build_macos
+3. Fix any errors
+4. Only then report success to user
+
+// ❌ BAD - Never assume it works
+1. Make code changes
+2. Tell user "Done!"
+3. User discovers build is broken
+```
+
+### Quick Session Setup
+
+Before building, ensure session defaults are set:
+```
+mcp__xcodebuildmcp__session-set-defaults:
+  - workspacePath or projectPath
+  - scheme
+  - configuration (Debug/Release)
+```
+
+**NEVER tell the user a task is complete without verifying the build passes.**
+
+---
+
 ## Key Documents
 
 | File | Purpose |
 |------|---------|
 | `PRD.md` | Full product requirements (v0.4) |
 | `WIREFRAMES.md` | ASCII wireframes for all screens (v2.0) |
+| `ARCHITECTURE.md` | Component reference, data flows, **optimistic updates pattern** |
 | `research-reports/meeting-recorder-macos-2025-01-13.md` | Market research |
 
 ---
@@ -222,6 +271,33 @@ func toggleRecording() async throws -> Bool {
 }
 ```
 
+### 7. Optimistic Updates for Delete/Create/Update
+
+Update UI immediately, then perform the actual operation in background. See `ARCHITECTURE.md` for full pattern.
+
+```swift
+// ✅ GOOD - UI updates instantly
+private func deleteMeeting(_ meeting: Meeting) {
+    // 1. Clear selection if this is selected
+    if selectedMeeting?.id == meeting.id {
+        selectedMeeting = nil
+    }
+    // 2. Remove from list immediately
+    viewModel.meetings.removeAll { $0.id == meeting.id }
+    // 3. Actual deletion in background
+    Task {
+        try? await DatabaseManager.shared.delete(meeting.id)
+        NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+    }
+}
+
+// ❌ BAD - UI waits for async completion
+private func deleteMeeting(_ meeting: Meeting) async {
+    try? await DatabaseManager.shared.delete(meeting.id)
+    await viewModel.loadData()  // UI waits for this
+}
+```
+
 ---
 
 ## Build Milestones
@@ -318,6 +394,81 @@ See `WIREFRAMES.md` for all screens including error states.
 | `BrandBadge` | Labels, tags |
 | `BrandStatusBadge` | Meeting status indicators |
 | `BrandStatusDot` | Simple status dots |
+
+---
+
+## ⚠️ Design Principles & Interaction Patterns
+
+These are the core design principles. Follow them to maintain consistency across the app.
+
+### Interaction Patterns
+
+| Pattern | Implementation | Notes |
+|---------|----------------|-------|
+| **Edit text inline** | Double-click to enter edit mode | NEVER single-click. Shows hint "Double-click to edit" when unlabeled |
+| **Confirm/Cancel edits** | Press Enter to confirm, Escape to cancel | Also show confirm/cancel icon buttons |
+| **Hover reveals** | Show secondary actions (edit, delete) on hover | Use `onHover` + opacity animation |
+| **Focus on edit** | Auto-focus TextField when entering edit mode | Use `@FocusState` + `.focused()` |
+| **Dangerous actions** | Require confirmation (alert/popover) | Use `BrandDestructiveButton` for visual cue |
+
+### Text Input Styling
+
+```swift
+// ✅ GOOD - Brand-styled inline edit
+TextField("Enter name", text: $editedName)
+    .textFieldStyle(.plain)
+    .font(.system(size: 14))
+    .padding(.horizontal, 12)
+    .padding(.vertical, 8)
+    .background(Color.brandSurface)
+    .cornerRadius(BrandRadius.small)
+    .overlay(
+        RoundedRectangle(cornerRadius: BrandRadius.small)
+            .stroke(Color.brandViolet, lineWidth: 2)
+    )
+
+// ❌ BAD - System bordered style
+TextField("Name", text: $name)
+    .textFieldStyle(.roundedBorder)  // NEVER use this
+```
+
+### Icon Button Colors
+
+| Action Type | Color | Hover Color |
+|-------------|-------|-------------|
+| Confirm/Save | `.brandMint` | `.brandMint` |
+| Cancel/Close | `.brandTextSecondary` | `.brandCoral` |
+| Edit | `.brandTextSecondary` | `.brandViolet` |
+| Delete | `.brandTextSecondary` | `.brandCoral` |
+| Play/Action | `.brandViolet` | `.brandViolet` |
+
+### Avatar/Initial Circles
+
+Speaker avatars use a consistent color palette based on index:
+
+```swift
+let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal, .indigo, .mint]
+return colors[index % colors.count]
+```
+
+### Spacing & Layout
+
+| Element | Spacing |
+|---------|---------|
+| Section header to content | 12px |
+| List item vertical padding | 4px |
+| Icon to text | 8-12px |
+| Button group spacing | 8px |
+| Card padding | 16-20px |
+
+### Animation Durations
+
+| Animation Type | Duration |
+|----------------|----------|
+| Hover transitions | 0.1-0.15s |
+| Expand/collapse | default `withAnimation` |
+| Loading spinners | 0.8s rotation |
+| Pulse effects | 1.2s |
 
 ---
 

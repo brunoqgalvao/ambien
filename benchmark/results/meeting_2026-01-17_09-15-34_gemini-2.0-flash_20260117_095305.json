@@ -1,0 +1,31 @@
+{
+  "model": "gemini-2.0-flash",
+  "model_name": "Gemini 2.0 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A] Se prepare.\n[Speaker A] Se prepare.\n[Speaker B] Olá, mozão. Tá na hora de parar a fralda agora, hein?",
+  "latency_seconds": 3.48,
+  "duration_seconds": 27.028027,
+  "estimated_cost_cents": 0.03,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization.\n\nInstructions:\n1. Identify different speakers and label them as Speaker A, Speaker B, Speaker C, etc.\n2. Format the output as:\n   [Speaker...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "Se prepare.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Se prepare.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Olá, mozão. Tá na hora de parar a fralda agora, hein?",
+      "start": null,
+      "end": null
+    }
+  ]
+}

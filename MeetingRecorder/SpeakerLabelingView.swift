@@ -93,6 +93,8 @@ struct SpeakerLabelRow: View {
 
     @State private var isEditing = false
     @State private var editedName: String = ""
+    @State private var isHovered = false
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -107,57 +109,88 @@ struct SpeakerLabelRow: View {
                 )
 
             if isEditing {
-                // Edit mode
-                TextField("Name", text: $editedName, onCommit: {
-                    onLabelChanged(editedName)
-                    isEditing = false
-                })
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 150)
+                // Edit mode - brand-styled inline text field
+                HStack(spacing: 8) {
+                    TextField("Enter name", text: $editedName)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 14))
+                        .focused($isFocused)
+                        .onSubmit {
+                            commitEdit()
+                        }
+                        .onExitCommand {
+                            cancelEdit()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.brandSurface)
+                        .cornerRadius(BrandRadius.small)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: BrandRadius.small)
+                                .stroke(Color.brandViolet, lineWidth: 2)
+                        )
+                        .frame(maxWidth: 180)
 
-                Button(action: {
-                    onLabelChanged(editedName)
-                    isEditing = false
-                }) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                }
-                .buttonStyle(.plain)
+                    // Confirm button
+                    BrandIconButton(icon: "checkmark", size: 28, color: .brandMint, hoverColor: .brandMint) {
+                        commitEdit()
+                    }
 
-                Button(action: {
-                    isEditing = false
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-            } else {
-                // Display mode
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(currentLabel)
-                        .font(.subheadline.weight(.medium))
-
-                    if !isLabeled {
-                        Text("Click to name")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                    // Cancel button
+                    BrandIconButton(icon: "xmark", size: 28, color: .brandTextSecondary, hoverColor: .brandCoral) {
+                        cancelEdit()
                     }
                 }
-
-                Spacer()
-
-                Button(action: {
-                    editedName = isLabeled ? currentLabel : ""
-                    isEditing = true
-                }) {
-                    Image(systemName: "pencil.circle")
-                        .foregroundColor(.brandViolet)
+                .onAppear {
+                    isFocused = true
                 }
-                .buttonStyle(.plain)
-                .help("Edit speaker name")
+            } else {
+                // Display mode - double-click to edit
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(currentLabel)
+                            .font(.subheadline.weight(.medium))
+
+                        if !isLabeled {
+                            Text("Double-click to name")
+                                .font(.caption2)
+                                .foregroundColor(.brandTextSecondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Show pencil on hover
+                    if isHovered {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 11))
+                            .foregroundColor(.brandTextSecondary)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    startEditing()
+                }
+                .onHover { hovering in
+                    isHovered = hovering
+                }
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func startEditing() {
+        editedName = isLabeled ? currentLabel : ""
+        isEditing = true
+    }
+
+    private func commitEdit() {
+        onLabelChanged(editedName)
+        isEditing = false
+    }
+
+    private func cancelEdit() {
+        isEditing = false
     }
 
     private func colorForSpeaker(_ speakerId: String) -> Color {

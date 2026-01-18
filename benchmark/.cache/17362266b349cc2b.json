@@ -1,0 +1,43 @@
+{
+  "model": "gemini-2.5-flash",
+  "model_name": "Gemini 2.5 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A, 0:00] é para cada fluxo. A gente baixa os documentos, eh, chama um DocuSign Canvas, tem um DocuSign template que a gente preenche e a gente retorna. Mas basicamente a gente também consome uma view que eles criam, eh, para cada fluxo. A gente baixa os documentos, eh, chama um DocuSign Canvas, tem um DocuSign template que a gente preenche e a gente retorna na via CPJ um evento cadastrado para aquele documento. Então, isso é, isso é bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, eh, o overview assim, dos fluxos, né?\n[Speaker A, 0:39] E quais são os principais problemas? Eh, controle de execução. Então, hoje a gente não, todos esses fluxos ou são manuais ou eles são schedule. A gente não tem isso ainda no, no Tela. Eh, controle de persistência das execuções. Então, a gente precisa saber o que que já foi executado para evitar duplo processamento. E a gente também precisa saber, eh, algumas informações específicas do fluxo. Então, eh, quantos créditos foram gastos, o evento que foi criado, o arquivo que foi gerado. São, são métricas que não são as métricas de execução do Tela, somente. Então, podem ter características do fluxo. Tipo, que, eh,\n[Speaker A, 1:18] Tipo, esse evento do CPJ foi gerado, eh, alguns fluxos o time também quer saber se tem possibilidade de acordo ou não. São, são mais informações específicas do fluxo.\n[Speaker A, 1:31] Nesse sentido, tá?\n[Speaker A, 1:33] Sim.\n[Speaker A, 1:36] E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra. Então, toda vez que chega um cara na show e fala, eu quero uma automação para fazer isso, a gente duplica um worker, eh, sobe, marca um schedule e tudo mais. Então, tem muita duplicação. E um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um handover ali para o time interno. Então, seria legal eles terem autonomia de criar mais automações com tela e, e algo tipo, conseguir gerenciar.\n[Speaker B, 2:09] Além do mais automações, se eles já fossem só capazes de consumir essa integração sem depender do Renan ou do Igão para executar manualmente, já é tipo, acho que é meio que assim, table stakes, deveria ter isso.\n[Speaker A, 2:25] Com certeza.\n[Speaker B, 2:27] Justo.\n[Speaker B, 2:29] O, as, entre esses vários workers que vocês têm aí, as views do CPJ a serem consumidas são todas diferentes?",
+  "latency_seconds": 10.64,
+  "duration_seconds": 161.378685,
+  "estimated_cost_cents": 0.6937,
+  "actual_cost": true,
+  "tokens": {
+    "input": 5335,
+    "output": 641,
+    "total": 7246
+  },
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization and timestamps.\n\nRULES:\n1. Label speakers as Speaker A, Speaker B, etc. based on voice.\n2. Group consecutive speech from the same speaker i...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "é para cada fluxo. A gente baixa os documentos, eh, chama um DocuSign Canvas, tem um DocuSign template que a gente preenche e a gente retorna. Mas basicamente a gente também consome uma view que eles criam, eh, para cada fluxo. A gente baixa os documentos, eh, chama um DocuSign Canvas, tem um DocuSign template que a gente preenche e a gente retorna na via CPJ um evento cadastrado para aquele documento. Então, isso é, isso é bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, eh, o overview assim, dos fluxos, né? E quais são os principais problemas? Eh, controle de execução. Então, hoje a gente não, todos esses fluxos ou são manuais ou eles são schedule. A gente não tem isso ainda no, no Tela. Eh, controle de persistência das execuções. Então, a gente precisa saber o que que já foi executado para evitar duplo processamento. E a gente também precisa saber, eh, algumas informações específicas do fluxo. Então, eh, quantos créditos foram gastos, o evento que foi criado, o arquivo que foi gerado. São, são métricas que não são as métricas de execução do Tela, somente. Então, podem ter características do fluxo. Tipo, que, eh, Tipo, esse evento do CPJ foi gerado, eh, alguns fluxos o time também quer saber se tem possibilidade de acordo ou não. São, são mais informações específicas do fluxo. Nesse sentido, tá? Sim. E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra. Então, toda vez que chega um cara na show e fala, eu quero uma automação para fazer isso, a gente duplica um worker, eh, sobe, marca um schedule e tudo mais. Então, tem muita duplicação. E um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um handover ali para o time interno. Então, seria legal eles terem autonomia de criar mais automações com tela e, e algo tipo, conseguir gerenciar.",
+      "start": 0,
+      "end": 129
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Além do mais automações, se eles já fossem só capazes de consumir essa integração sem depender do Renan ou do Igão para executar manualmente, já é tipo, acho que é meio que assim, table stakes, deveria ter isso.",
+      "start": 129,
+      "end": 145
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Com certeza.",
+      "start": 145,
+      "end": 147
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Justo. O, as, entre esses vários workers que vocês têm aí, as views do CPJ a serem consumidas são todas diferentes?",
+      "start": 147,
+      "end": null
+    }
+  ]
+}

@@ -414,8 +414,7 @@ struct APIKeyStepView: View {
                 // Validation status
                 if isValidating {
                     HStack {
-                        ProgressView()
-                            .scaleEffect(0.7)
+                        BrandLoadingIndicator(size: .small)
                         Text("Validating...")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -476,8 +475,7 @@ struct APIKeyStepView: View {
 
                     Button(action: validateAndFinish) {
                         if isValidating {
-                            ProgressView()
-                                .scaleEffect(0.7)
+                            BrandLoadingIndicator(size: .small, color: .white)
                         } else {
                             Text("Finish Setup")
                         }

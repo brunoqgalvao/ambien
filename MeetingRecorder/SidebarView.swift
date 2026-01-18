@@ -38,7 +38,14 @@ struct SidebarView: View {
                     badge: viewModel.pendingTranscriptions > 0 ? viewModel.pendingTranscriptions : nil,
                     action: { selectedItem = .meetings }
                 )
-                
+
+                SidebarButton(
+                    icon: "folder.fill",
+                    label: "Projects",
+                    isSelected: selectedItem == .projects,
+                    action: { selectedItem = .projects }
+                )
+
                 SidebarButton(
                     icon: "mic.fill",
                     label: "Dictations",
@@ -53,12 +60,15 @@ struct SidebarView: View {
                     action: { selectedItem = .templates }
                 )
 
-                SidebarButton(
-                    icon: "chart.bar.fill",
-                    label: "Analytics",
-                    isSelected: selectedItem == .analytics,
-                    action: { selectedItem = .analytics }
-                )
+                // Analytics - only visible for beta testers (shows cost data)
+                if FeatureFlags.shared.showCosts {
+                    SidebarButton(
+                        icon: "chart.bar.fill",
+                        label: "Analytics",
+                        isSelected: selectedItem == .analytics,
+                        action: { selectedItem = .analytics }
+                    )
+                }
             }
             .padding(.top, 52)
             

@@ -2,12 +2,85 @@
 //  SettingsView.swift
 //  MeetingRecorder
 //
-//  Full settings panel with toolbar-style tabs:
-//  General, API, Costs, About
+//  Sidebar-based settings with grouped sections:
+//  App (General, Recording, Dictation) | Services (AI Providers, Templates) | Audit (Usage) | About
 //
 
 import SwiftUI
 import AVFoundation
+import CoreAudio
+import ServiceManagement
+
+// MARK: - Feature Flags
+
+/// Centralized feature flag management
+/// Beta features are hidden by default and only visible to beta testers
+class FeatureFlags: ObservableObject {
+    static let shared = FeatureFlags()
+
+    /// Key for UserDefaults storage
+    private let betaTesterKey = "betaTesterEnabled"
+
+    /// Whether the user has opted into beta testing mode
+    /// This shows experimental features like cost tracking
+    @Published var isBetaTester: Bool {
+        didSet {
+            UserDefaults.standard.set(isBetaTester, forKey: betaTesterKey)
+        }
+    }
+
+    private init() {
+        self.isBetaTester = UserDefaults.standard.bool(forKey: betaTesterKey)
+    }
+
+    // MARK: - Feature Checks
+
+    /// Whether to show cost information in the UI (API logs, meeting cards, etc.)
+    var showCosts: Bool { isBetaTester }
+
+    /// Whether to show the Usage section in Settings
+    var showUsageSection: Bool { isBetaTester }
+}
+
+// MARK: - Launch at Login Manager
+
+class LaunchAtLoginManager: ObservableObject {
+    static let shared = LaunchAtLoginManager()
+
+    @Published var isEnabled: Bool = false
+
+    private init() {
+        refreshStatus()
+    }
+
+    func refreshStatus() {
+        if #available(macOS 13.0, *) {
+            isEnabled = SMAppService.mainApp.status == .enabled
+        } else {
+            isEnabled = false
+        }
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        // Optimistic update
+        let previousValue = isEnabled
+        isEnabled = enabled
+
+        if #available(macOS 13.0, *) {
+            do {
+                if enabled {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                print("[LaunchAtLogin] Failed to \(enabled ? "enable" : "disable"): \(error)")
+                // Revert on failure
+                self.isEnabled = previousValue
+            }
+        }
+    }
+}
 
 // MARK: - Settings Window Controller
 
@@ -31,7 +104,8 @@ class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 600, height: 520))
+        window.setContentSize(NSSize(width: 720, height: 560))
+        window.minSize = NSSize(width: 640, height: 480)
         window.center()
         window.isReleasedWhenClosed = false
 
@@ -42,267 +116,777 @@ class SettingsWindowController {
     }
 }
 
+// MARK: - Settings Navigation
+
+enum SettingsSection: String, CaseIterable, Identifiable {
+    // App group
+    case general = "General"
+    case recording = "Recording"
+    case dictation = "Dictation"
+
+    // Services group
+    case aiProviders = "AI Providers"
+    case templates = "Templates"
+
+    // Audit group
+    case usage = "Usage"
+
+    // Support group
+    case about = "About"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .general: return "gear"
+        case .recording: return "waveform"
+        case .dictation: return "mic.fill"
+        case .aiProviders: return "cpu"
+        case .templates: return "doc.text.magnifyingglass"
+        case .usage: return "chart.bar.fill"
+        case .about: return "info.circle.fill"
+        }
+    }
+
+    var group: SettingsSectionGroup {
+        switch self {
+        case .general, .recording, .dictation: return .app
+        case .aiProviders, .templates: return .services
+        case .usage: return .audit
+        case .about: return .support
+        }
+    }
+
+    /// Whether this section requires beta tester access
+    var requiresBeta: Bool {
+        switch self {
+        case .usage: return true
+        default: return false
+        }
+    }
+}
+
+enum SettingsSectionGroup: String, CaseIterable {
+    case app = "App"
+    case services = "Services"
+    case audit = "Audit"
+    case support = "Support"
+
+    var sections: [SettingsSection] {
+        SettingsSection.allCases.filter { $0.group == self }
+    }
+}
+
 // MARK: - Main Settings View
 
 struct FullSettingsView: View {
-    @State private var selectedTab: SettingsTab = .general
+    @State private var selectedSection: SettingsSection = .general
+    @ObservedObject private var featureFlags = FeatureFlags.shared
 
-    enum SettingsTab: String, CaseIterable {
-        case general = "General"
-        case templates = "Templates"
-        case models = "Models"
-        case api = "API"
-        case costs = "Costs"
-        case about = "About"
-
-        var icon: String {
-            switch self {
-            case .general: return "gear"
-            case .templates: return "doc.text.magnifyingglass"
-            case .models: return "cpu"
-            case .api: return "key.fill"
-            case .costs: return "dollarsign.circle.fill"
-            case .about: return "info.circle.fill"
-            }
+    /// Sections visible based on feature flags
+    private func visibleSections(in group: SettingsSectionGroup) -> [SettingsSection] {
+        group.sections.filter { section in
+            !section.requiresBeta || featureFlags.isBetaTester
         }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header with title
-            HStack {
-                Text("Settings")
-                    .font(.brandDisplay(24, weight: .bold))
-                Spacer()
-            }
-            .padding(.horizontal, 32)
-            .padding(.top, 24)
-            .padding(.bottom, 16)
+        HStack(spacing: 0) {
+            // Sidebar
+            SettingsSidebar(
+                selectedSection: $selectedSection,
+                visibleSections: visibleSections
+            )
+            .frame(width: 200)
 
-            // Toolbar-style tab selector
-            HStack(spacing: 4) {
-                ForEach(SettingsTab.allCases, id: \.self) { tab in
-                    SettingsTabButton(
-                        tab: tab,
-                        isSelected: selectedTab == tab,
-                        action: { selectedTab = tab }
-                    )
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 12)
-
-            Divider()
+            BrandDivider(vertical: true)
 
             // Content
             ScrollView {
-                Group {
-                    switch selectedTab {
-                    case .general:
-                        GeneralSettingsTab()
-                    case .templates:
-                        SummaryTemplatesSettingsTab()
-                    case .models:
-                        ModelsSettingsTab()
-                    case .api:
-                        APISettingsTab()
-                    case .costs:
-                        CostsSettingsTab()
-                    case .about:
-                        AboutSettingsTab()
-                    }
-                }
-                .frame(maxWidth: 600, alignment: .leading)
-                .padding(32)
+                settingsContent
+                    .frame(maxWidth: 520, alignment: .leading)
+                    .padding(32)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.brandBackground)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.brandBackground)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var settingsContent: some View {
+        switch selectedSection {
+        case .general:
+            GeneralSettingsContent()
+        case .recording:
+            RecordingSettingsContent()
+        case .dictation:
+            DictationSettingsContent()
+        case .aiProviders:
+            AIProvidersSettingsContent()
+        case .templates:
+            SummaryTemplatesSettingsTab()
+        case .usage:
+            UsageSettingsContent()
+        case .about:
+            AboutSettingsContent()
+        }
     }
 }
 
-struct SettingsTabButton: View {
-    let tab: FullSettingsView.SettingsTab
+// MARK: - Settings Sidebar
+
+struct SettingsSidebar: View {
+    @Binding var selectedSection: SettingsSection
+    let visibleSections: (SettingsSectionGroup) -> [SettingsSection]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            Text("Settings")
+                .font(.brandDisplay(20, weight: .bold))
+                .foregroundColor(.brandTextPrimary)
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 20)
+
+            // Groups
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    ForEach(SettingsSectionGroup.allCases, id: \.self) { group in
+                        let sections = visibleSections(group)
+                        if !sections.isEmpty {
+                            SettingsSidebarGroup(
+                                group: group,
+                                sections: sections,
+                                selectedSection: $selectedSection
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 20)
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.brandSurface.opacity(0.5))
+    }
+}
+
+struct SettingsSidebarGroup: View {
+    let group: SettingsSectionGroup
+    let sections: [SettingsSection]
+    @Binding var selectedSection: SettingsSection
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            // Group label
+            Text(group.rawValue.uppercased())
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.brandTextSecondary)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
+
+            // Sections
+            ForEach(sections) { section in
+                SettingsSidebarItem(
+                    section: section,
+                    isSelected: selectedSection == section,
+                    action: { selectedSection = section }
+                )
+            }
+        }
+    }
+}
+
+struct SettingsSidebarItem: View {
+    let section: SettingsSection
     let isSelected: Bool
     let action: () -> Void
 
+    @State private var isHovered = false
+
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: 20))
-                Text(tab.rawValue)
-                    .font(.caption)
+            HStack(spacing: 10) {
+                Image(systemName: section.icon)
+                    .font(.system(size: 13))
+                    .foregroundColor(isSelected ? .white : .brandTextSecondary)
+                    .frame(width: 20)
+
+                Text(section.rawValue)
+                    .font(.system(size: 13, weight: isSelected ? .medium : .regular))
+                    .foregroundColor(isSelected ? .white : .brandTextPrimary)
+
+                Spacer()
             }
-            .frame(width: 70, height: 50)
-            .background(isSelected ? Color.brandViolet.opacity(0.1) : Color.clear)
-            .cornerRadius(8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: BrandRadius.small)
+                    .fill(isSelected ? Color.brandViolet : (isHovered ? Color.brandViolet.opacity(0.08) : Color.clear))
+            )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundColor(isSelected ? .accentColor : .secondary)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: 0.1)) {
+                isHovered = hovering
+            }
+        }
     }
 }
 
-// MARK: - General Tab
+// MARK: - Audio Device Manager
 
-struct GeneralSettingsTab: View {
+/// Represents an audio input device (microphone)
+struct AudioInputDevice: Identifiable, Hashable {
+    let id: AudioDeviceID
+    let name: String
+    let uid: String
+
+    static func == (lhs: AudioInputDevice, rhs: AudioInputDevice) -> Bool {
+        lhs.uid == rhs.uid
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(uid)
+    }
+}
+
+/// Manager for enumerating and selecting audio input devices
+class AudioDeviceManager: ObservableObject {
+    static let shared = AudioDeviceManager()
+
+    @Published var inputDevices: [AudioInputDevice] = []
+    @Published var selectedDeviceUID: String = ""
+
+    private init() {
+        refreshDevices()
+        loadSelectedDevice()
+    }
+
+    /// Refresh the list of available input devices
+    func refreshDevices() {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var dataSize: UInt32 = 0
+        var status = AudioObjectGetPropertyDataSize(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            &dataSize
+        )
+
+        guard status == noErr else {
+            print("[AudioDeviceManager] Failed to get devices size: \(status)")
+            return
+        }
+
+        let deviceCount = Int(dataSize) / MemoryLayout<AudioDeviceID>.size
+        var deviceIDs = [AudioDeviceID](repeating: 0, count: deviceCount)
+
+        status = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            &dataSize,
+            &deviceIDs
+        )
+
+        guard status == noErr else {
+            print("[AudioDeviceManager] Failed to get devices: \(status)")
+            return
+        }
+
+        var devices: [AudioInputDevice] = []
+
+        for deviceID in deviceIDs {
+            if hasInputChannels(deviceID: deviceID) {
+                if let name = getDeviceName(deviceID: deviceID),
+                   let uid = getDeviceUID(deviceID: deviceID) {
+                    devices.append(AudioInputDevice(id: deviceID, name: name, uid: uid))
+                }
+            }
+        }
+
+        DispatchQueue.main.async {
+            self.inputDevices = devices
+            if !devices.contains(where: { $0.uid == self.selectedDeviceUID }) {
+                self.selectedDeviceUID = ""
+            }
+        }
+    }
+
+    private func hasInputChannels(deviceID: AudioDeviceID) -> Bool {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyStreamConfiguration,
+            mScope: kAudioDevicePropertyScopeInput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var dataSize: UInt32 = 0
+        let status = AudioObjectGetPropertyDataSize(deviceID, &propertyAddress, 0, nil, &dataSize)
+
+        guard status == noErr, dataSize > 0 else { return false }
+
+        let bufferListPointer = UnsafeMutablePointer<AudioBufferList>.allocate(capacity: 1)
+        defer { bufferListPointer.deallocate() }
+
+        let getStatus = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nil, &dataSize, bufferListPointer)
+
+        guard getStatus == noErr else { return false }
+
+        let bufferList = bufferListPointer.pointee
+        return bufferList.mNumberBuffers > 0 && bufferList.mBuffers.mNumberChannels > 0
+    }
+
+    private func getDeviceName(deviceID: AudioDeviceID) -> String? {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceNameCFString,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var name: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+
+        let status = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nil, &dataSize, &name)
+
+        guard status == noErr, let deviceName = name else { return nil }
+        return deviceName as String
+    }
+
+    private func getDeviceUID(deviceID: AudioDeviceID) -> String? {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDeviceUID,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var uid: CFString?
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+
+        let status = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nil, &dataSize, &uid)
+
+        guard status == noErr, let deviceUID = uid else { return nil }
+        return deviceUID as String
+    }
+
+    private func loadSelectedDevice() {
+        selectedDeviceUID = UserDefaults.standard.string(forKey: "selectedMicrophoneUID") ?? ""
+    }
+
+    func selectDevice(uid: String) {
+        // Optimistic update
+        selectedDeviceUID = uid
+        UserDefaults.standard.set(uid, forKey: "selectedMicrophoneUID")
+
+        if !uid.isEmpty, let device = inputDevices.first(where: { $0.uid == uid }) {
+            setDefaultInputDevice(deviceID: device.id)
+        }
+    }
+
+    private func setDefaultInputDevice(deviceID: AudioDeviceID) {
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+
+        var deviceIDCopy = deviceID
+        let status = AudioObjectSetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &propertyAddress,
+            0,
+            nil,
+            UInt32(MemoryLayout<AudioDeviceID>.size),
+            &deviceIDCopy
+        )
+
+        if status != noErr {
+            print("[AudioDeviceManager] Failed to set default input device: \(status)")
+        }
+    }
+
+    var selectedDeviceName: String {
+        if selectedDeviceUID.isEmpty {
+            return "System Default"
+        }
+        return inputDevices.first(where: { $0.uid == selectedDeviceUID })?.name ?? "System Default"
+    }
+}
+
+// MARK: - General Settings Content
+
+struct GeneralSettingsContent: View {
+    @AppStorage("appTheme") private var appTheme = "system"
+    @ObservedObject private var featureFlags = FeatureFlags.shared
+    @ObservedObject private var launchAtLoginManager = LaunchAtLoginManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 28) {
+            // Header
+            SettingsSectionHeader(
+                title: "General",
+                subtitle: "Startup, appearance, and beta settings"
+            )
+
+            // Startup
+            SettingsGroup(title: "Startup") {
+                BrandToggleRow(
+                    title: "Launch at login",
+                    subtitle: "Start automatically when you log in",
+                    isOn: Binding(
+                        get: { launchAtLoginManager.isEnabled },
+                        set: { launchAtLoginManager.setEnabled($0) }
+                    )
+                )
+            }
+
+            // Appearance
+            SettingsGroup(title: "Appearance") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Theme")
+                        .font(.system(size: 13))
+                        .foregroundColor(.brandTextPrimary)
+
+                    HStack(spacing: 8) {
+                        ForEach(["system", "light", "dark"], id: \.self) { theme in
+                            BrandThemeButton(
+                                title: theme.capitalized,
+                                isSelected: appTheme == theme,
+                                action: { appTheme = theme }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Beta Program
+            SettingsGroup(title: "Beta Program") {
+                VStack(alignment: .leading, spacing: 8) {
+                    BrandToggleRow(
+                        title: "Enable beta features",
+                        subtitle: nil,
+                        isOn: $featureFlags.isBetaTester
+                    )
+
+                    Text("Shows experimental features like cost tracking, API logs, and usage statistics.")
+                        .font(.caption)
+                        .foregroundColor(.brandTextSecondary)
+                        .padding(.leading, 2)
+                }
+            }
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Recording Settings Content
+
+struct RecordingSettingsContent: View {
     @AppStorage("recordingShortcut") private var recordingShortcut = "⌘⇧R"
-    @AppStorage("dictationShortcut") private var dictationShortcut = "^⌘D"
     @AppStorage("autoDetectMeetings") private var autoDetectMeetings = true
     @AppStorage("autoRecordZoom") private var autoRecordZoom = false
     @AppStorage("autoRecordMeet") private var autoRecordMeet = false
     @AppStorage("autoRecordTeams") private var autoRecordTeams = false
     @AppStorage("autoRecordSlack") private var autoRecordSlack = false
     @AppStorage("autoRecordFaceTime") private var autoRecordFaceTime = false
+    @AppStorage("autoRecordWhatsApp") private var autoRecordWhatsApp = false
     @AppStorage("cropLongSilences") private var cropLongSilences = false
-    @AppStorage("silenceCropThreshold") private var silenceCropThreshold = 300.0  // 5 min
+    @AppStorage("silenceCropThreshold") private var silenceCropThreshold = 300.0
     @AppStorage("autoStopOnSilence") private var autoStopOnSilence = true
-    @AppStorage("silenceWarningThreshold") private var silenceWarningThreshold = 300.0  // 5 min
-    @AppStorage("silenceAutoStopThreshold") private var silenceAutoStopThreshold = 600.0  // 10 min
+    @AppStorage("silenceWarningThreshold") private var silenceWarningThreshold = 300.0
+    @AppStorage("silenceAutoStopThreshold") private var silenceAutoStopThreshold = 600.0
+    @AppStorage("micBoostLevel") private var micBoostLevel = 10.0
+    @AppStorage("debugSavesSeparateAudio") private var debugSavesSeparateAudio = false
+
+    @ObservedObject private var audioDeviceManager = AudioDeviceManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 28) {
+            // Header
+            SettingsSectionHeader(
+                title: "Recording",
+                subtitle: "Audio input, meeting detection, and optimization"
+            )
+
+            // Audio Input
+            SettingsGroup(title: "Audio Input") {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Microphone selector
+                    HStack {
+                        Text("Microphone")
+                            .font(.system(size: 13))
+                        Spacer()
+                        Picker("", selection: Binding(
+                            get: { audioDeviceManager.selectedDeviceUID },
+                            set: { audioDeviceManager.selectDevice(uid: $0) }
+                        )) {
+                            Text("System Default").tag("")
+                            ForEach(audioDeviceManager.inputDevices) { device in
+                                Text(device.name).tag(device.uid)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 200)
+
+                        BrandIconButton(icon: "arrow.clockwise", size: 28, action: {
+                            audioDeviceManager.refreshDevices()
+                        })
+                        .help("Refresh device list")
+                    }
+
+                    // Mic boost
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Mic boost level")
+                                .font(.system(size: 13))
+                            Spacer()
+                            Text("\(Int(micBoostLevel))x")
+                                .font(.brandMono(13))
+                                .foregroundColor(.brandTextSecondary)
+                        }
+                        HStack(spacing: 8) {
+                            Text("1x")
+                                .font(.caption)
+                                .foregroundColor(.brandTextSecondary)
+                            Slider(value: $micBoostLevel, in: 1...20, step: 1)
+                                .tint(.brandViolet)
+                            Text("20x")
+                                .font(.caption)
+                                .foregroundColor(.brandTextSecondary)
+                        }
+                        Text("Increase if your voice is too quiet relative to system audio")
+                            .font(.caption)
+                            .foregroundColor(.brandTextSecondary)
+                    }
+
+                    BrandToggleRow(
+                        title: "Save separate audio files",
+                        subtitle: "Creates _MIC.m4a and _SYSTEM.m4a for debugging",
+                        isOn: $debugSavesSeparateAudio
+                    )
+                }
+            }
+
+            // Shortcuts
+            SettingsGroup(title: "Shortcuts") {
+                HStack {
+                    Text("Start recording")
+                        .font(.system(size: 13))
+                    Spacer()
+                    BrandShortcutDisplay(shortcut: recordingShortcut)
+                }
+            }
+
+            // Automation
+            SettingsGroup(title: "Automation") {
+                VStack(alignment: .leading, spacing: 12) {
+                    BrandToggleRow(
+                        title: "Auto-detect meetings",
+                        subtitle: nil,
+                        isOn: $autoDetectMeetings
+                    )
+
+                    if autoDetectMeetings {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Auto-record these apps:")
+                                .font(.caption)
+                                .foregroundColor(.brandTextSecondary)
+                                .padding(.bottom, 4)
+
+                            // App grid (2 columns)
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 8) {
+                                AutoRecordToggle(title: "Zoom", isOn: $autoRecordZoom, app: .zoom)
+                                AutoRecordToggle(title: "Google Meet", isOn: $autoRecordMeet, app: .googleMeet)
+                                AutoRecordToggle(title: "Teams", isOn: $autoRecordTeams, app: .teams)
+                                AutoRecordToggle(title: "Slack", isOn: $autoRecordSlack, app: .slack)
+                                AutoRecordToggle(title: "FaceTime", isOn: $autoRecordFaceTime, app: .faceTime)
+                                AutoRecordToggle(title: "WhatsApp", isOn: $autoRecordWhatsApp, app: .whatsApp)
+                            }
+                        }
+                        .padding(.leading, 4)
+                    }
+                }
+            }
+
+            // Optimization
+            SettingsGroup(title: "Optimization") {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        BrandToggleRow(
+                            title: "Crop long silences",
+                            subtitle: "Reduces file size and transcription costs",
+                            isOn: $cropLongSilences
+                        )
+
+                        if cropLongSilences {
+                            HStack {
+                                Text("Remove silences longer than")
+                                    .font(.caption)
+                                    .foregroundColor(.brandTextSecondary)
+                                TextField("", value: $silenceCropThreshold, format: .number)
+                                    .textFieldStyle(.plain)
+                                    .font(.brandMono(13))
+                                    .frame(width: 60)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.brandSurface)
+                                    .cornerRadius(BrandRadius.small)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: BrandRadius.small)
+                                            .stroke(Color.brandBorder, lineWidth: 1)
+                                    )
+                                Text("seconds")
+                                    .font(.caption)
+                                    .foregroundColor(.brandTextSecondary)
+                            }
+                            .padding(.leading, 4)
+                        }
+                    }
+
+                    BrandDivider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        BrandToggleRow(
+                            title: "Auto-stop on silence",
+                            subtitle: "Prevents recordings from running forever",
+                            isOn: $autoStopOnSilence
+                        )
+
+                        if autoStopOnSilence {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Show warning after")
+                                        .font(.caption)
+                                        .foregroundColor(.brandTextSecondary)
+                                    TextField("", value: $silenceWarningThreshold, format: .number)
+                                        .textFieldStyle(.plain)
+                                        .font(.brandMono(13))
+                                        .frame(width: 60)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.brandSurface)
+                                        .cornerRadius(BrandRadius.small)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: BrandRadius.small)
+                                                .stroke(Color.brandBorder, lineWidth: 1)
+                                        )
+                                    Text("seconds")
+                                        .font(.caption)
+                                        .foregroundColor(.brandTextSecondary)
+                                }
+
+                                HStack {
+                                    Text("Auto-stop after")
+                                        .font(.caption)
+                                        .foregroundColor(.brandTextSecondary)
+                                    TextField("", value: $silenceAutoStopThreshold, format: .number)
+                                        .textFieldStyle(.plain)
+                                        .font(.brandMono(13))
+                                        .frame(width: 60)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(Color.brandSurface)
+                                        .cornerRadius(BrandRadius.small)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: BrandRadius.small)
+                                                .stroke(Color.brandBorder, lineWidth: 1)
+                                        )
+                                    Text("seconds")
+                                        .font(.caption)
+                                        .foregroundColor(.brandTextSecondary)
+                                }
+                            }
+                            .padding(.leading, 4)
+                        }
+                    }
+                }
+            }
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Dictation Settings Content
+
+struct DictationSettingsContent: View {
+    @AppStorage("dictationShortcut") private var dictationShortcut = "^⌘D"
     @AppStorage("aiCleanupEnabled") private var aiCleanupEnabled = false
     @AppStorage("dictationStyleConfigured") private var dictationStyleConfigured = false
     @AppStorage("dictationAddPunctuation") private var dictationAddPunctuation = true
     @AppStorage("dictationAddParagraphs") private var dictationAddParagraphs = true
     @AppStorage("dictationWritingStyle") private var dictationWritingStyle = "natural"
     @AppStorage("dictationCustomPrompt") private var dictationCustomPrompt = ""
-    @AppStorage("appTheme") private var appTheme = "system"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // Recording section
-            SettingsSection(title: "Recording") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Start recording shortcut")
-                        Spacer()
-                        Text(recordingShortcut)
-                            .font(.system(.body, design: .monospaced))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.brandSurface)
-                            .cornerRadius(BrandRadius.small)
-                    }
+        VStack(alignment: .leading, spacing: 28) {
+            // Header
+            SettingsSectionHeader(
+                title: "Dictation",
+                subtitle: "Hold-to-speak and AI cleanup settings"
+            )
 
-                    Toggle("Auto-detect meetings", isOn: $autoDetectMeetings)
-
-                    if autoDetectMeetings {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Auto-record these apps:")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-
-                            Group {
-                                Toggle("Zoom", isOn: $autoRecordZoom)
-                                Toggle("Google Meet", isOn: $autoRecordMeet)
-                                Toggle("Microsoft Teams", isOn: $autoRecordTeams)
-                                Toggle("Slack Huddles", isOn: $autoRecordSlack)
-                                Toggle("FaceTime", isOn: $autoRecordFaceTime)
-                            }
-                            .toggleStyle(.checkbox)
-                            .padding(.leading, 16)
-                        }
-                    }
-
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    Toggle("Crop long silences before transcription", isOn: $cropLongSilences)
-
-                    if cropLongSilences {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Remove silences longer than")
-                                    .foregroundColor(.secondary)
-                                TextField("", value: $silenceCropThreshold, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 70)
-                                Text("seconds")
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.leading, 16)
-
-                            Text("Reduces file size and transcription costs for long recordings with breaks.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding(.leading, 16)
-                        }
-                    }
-
-                    Divider()
-                        .padding(.vertical, 4)
-
-                    Toggle("Auto-stop after extended silence", isOn: $autoStopOnSilence)
-
-                    if autoStopOnSilence {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Show warning after")
-                                    .foregroundColor(.secondary)
-                                TextField("", value: $silenceWarningThreshold, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 70)
-                                Text("seconds of silence")
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.leading, 16)
-
-                            HStack {
-                                Text("Auto-stop after")
-                                    .foregroundColor(.secondary)
-                                TextField("", value: $silenceAutoStopThreshold, format: .number)
-                                    .textFieldStyle(.roundedBorder)
-                                    .frame(width: 70)
-                                Text("seconds of silence")
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.leading, 16)
-
-                            Text("Prevents recordings from running forever if you forget to stop. You can dismiss the warning to keep recording.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding(.leading, 16)
-                        }
-                    }
+            // Shortcut
+            SettingsGroup(title: "Shortcut") {
+                HStack {
+                    Text("Hold to dictate")
+                        .font(.system(size: 13))
+                    Spacer()
+                    BrandShortcutDisplay(shortcut: dictationShortcut)
                 }
             }
 
-            // Dictation section
-            SettingsSection(title: "Dictation") {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Dictation hotkey")
-                        Spacer()
-                        Text(dictationShortcut)
-                            .font(.system(.body, design: .monospaced))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.brandSurface)
-                            .cornerRadius(BrandRadius.small)
-                    }
-
-                    Toggle("AI cleanup (grammar, filler words)", isOn: Binding(
-                        get: { aiCleanupEnabled },
-                        set: { newValue in
-                            aiCleanupEnabled = newValue
-                            if newValue { dictationStyleConfigured = true }
-                        }
-                    ))
+            // AI Cleanup
+            SettingsGroup(title: "AI Cleanup") {
+                VStack(alignment: .leading, spacing: 16) {
+                    BrandToggleRow(
+                        title: "Enable AI cleanup",
+                        subtitle: "Fix grammar, remove filler words",
+                        isOn: Binding(
+                            get: { aiCleanupEnabled },
+                            set: { newValue in
+                                aiCleanupEnabled = newValue
+                                if newValue { dictationStyleConfigured = true }
+                            }
+                        )
+                    )
 
                     if aiCleanupEnabled {
                         VStack(alignment: .leading, spacing: 12) {
-                            Toggle("Add punctuation (periods, commas)", isOn: $dictationAddPunctuation)
-                                .toggleStyle(.checkbox)
-                                .padding(.leading, 16)
+                            BrandDivider()
 
-                            Toggle("Auto-detect paragraphs", isOn: $dictationAddParagraphs)
-                                .toggleStyle(.checkbox)
-                                .padding(.leading, 16)
+                            BrandToggleRow(
+                                title: "Add punctuation",
+                                subtitle: "Periods, commas, etc.",
+                                isOn: $dictationAddPunctuation
+                            )
 
-                            VStack(alignment: .leading, spacing: 6) {
+                            BrandToggleRow(
+                                title: "Auto-detect paragraphs",
+                                subtitle: nil,
+                                isOn: $dictationAddParagraphs
+                            )
+
+                            BrandDivider()
+
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Writing style")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.brandTextPrimary)
 
                                 Picker("", selection: $dictationWritingStyle) {
                                     Text("Natural (as spoken)").tag("natural")
@@ -312,32 +896,30 @@ struct GeneralSettingsTab: View {
                                 }
                                 .labelsHidden()
                                 .pickerStyle(.radioGroup)
-                                .padding(.leading, 16)
                             }
+
+                            BrandDivider()
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Custom instructions (optional)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                Text("Custom instructions")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.brandTextPrimary)
 
                                 TextField("e.g., Always use British spelling", text: $dictationCustomPrompt)
-                                    .textFieldStyle(.roundedBorder)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.brandSurface)
+                                    .cornerRadius(BrandRadius.small)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: BrandRadius.small)
+                                            .stroke(Color.brandBorder, lineWidth: 1)
+                                    )
                             }
                         }
-                        .padding(.top, 4)
                     }
                 }
-            }
-
-            // Appearance section
-            SettingsSection(title: "Appearance") {
-                Picker("Theme", selection: $appTheme) {
-                    Text("System").tag("system")
-                    Text("Light").tag("light")
-                    Text("Dark").tag("dark")
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
             }
 
             Spacer()
@@ -345,84 +927,74 @@ struct GeneralSettingsTab: View {
     }
 }
 
-// MARK: - API Keys Tab
+// MARK: - AI Providers Settings Content (Combined API + Models)
 
-/// Status of an API key
-enum KeyStatus {
-    case unknown
-    case valid
-    case invalid
-    case notSet
-}
+struct AIProvidersSettingsContent: View {
+    @AppStorage("selectedTranscriptionModel") private var selectedModelId = "openai:gpt-4o-mini-transcribe"
 
-struct APISettingsTab: View {
     @State private var expandedProvider: TranscriptionProvider? = nil
     @State private var providerKeys: [TranscriptionProvider: String] = [:]
     @State private var providerStatuses: [TranscriptionProvider: KeyStatus] = [:]
     @State private var showKeys: [TranscriptionProvider: Bool] = [:]
 
-    // Anthropic (for chat, separate from transcription)
+    // Anthropic (for chat)
     @State private var anthropicKey: String = ""
     @State private var showAnthropicKey = false
     @State private var anthropicStatus: KeyStatus = .unknown
     @State private var anthropicExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 28) {
             // Header
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Transcription Providers")
-                    .font(.headline)
-                Text("Configure API keys for speech-to-text services")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-
-            // Transcription providers list
-            VStack(spacing: 0) {
-                ForEach(TranscriptionProvider.allCases) { provider in
-                    ProviderRow(
-                        provider: provider,
-                        isExpanded: expandedProvider == provider,
-                        apiKey: Binding(
-                            get: { providerKeys[provider] ?? "" },
-                            set: { providerKeys[provider] = $0 }
-                        ),
-                        showKey: Binding(
-                            get: { showKeys[provider] ?? false },
-                            set: { showKeys[provider] = $0 }
-                        ),
-                        status: providerStatuses[provider] ?? .unknown,
-                        onToggleExpand: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                expandedProvider = expandedProvider == provider ? nil : provider
-                            }
-                        },
-                        onSave: {
-                            saveKey(for: provider)
-                        },
-                        onDelete: {
-                            deleteKey(for: provider)
-                        }
-                    )
-
-                    if provider != TranscriptionProvider.allCases.last {
-                        Divider()
-                            .padding(.leading, 44)
-                    }
-                }
-            }
-            .background(Color.brandSurface.opacity(0.5))
-            .cornerRadius(BrandRadius.medium)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            SettingsSectionHeader(
+                title: "AI Providers",
+                subtitle: "Configure API keys and select transcription model"
             )
 
-            // Anthropic section (for chat)
-            SettingsSection(title: "Chat Provider") {
+            // Transcription providers
+            SettingsGroup(title: "Transcription") {
                 VStack(spacing: 0) {
-                    AnthropicProviderRow(
+                    ForEach(TranscriptionProvider.allCases) { provider in
+                        ProviderConfigRow(
+                            provider: provider,
+                            isExpanded: expandedProvider == provider,
+                            apiKey: Binding(
+                                get: { providerKeys[provider] ?? "" },
+                                set: { providerKeys[provider] = $0 }
+                            ),
+                            showKey: Binding(
+                                get: { showKeys[provider] ?? false },
+                                set: { showKeys[provider] = $0 }
+                            ),
+                            status: providerStatuses[provider] ?? .unknown,
+                            selectedModelId: $selectedModelId,
+                            onToggleExpand: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    expandedProvider = expandedProvider == provider ? nil : provider
+                                }
+                            },
+                            onSave: { saveKey(for: provider) },
+                            onDelete: { deleteKey(for: provider) }
+                        )
+
+                        if provider != TranscriptionProvider.allCases.last {
+                            BrandDivider()
+                                .padding(.leading, 44)
+                        }
+                    }
+                }
+                .background(Color.brandSurface.opacity(0.5))
+                .cornerRadius(BrandRadius.medium)
+                .overlay(
+                    RoundedRectangle(cornerRadius: BrandRadius.medium)
+                        .stroke(Color.brandBorder, lineWidth: 1)
+                )
+            }
+
+            // Chat provider (Anthropic)
+            SettingsGroup(title: "Chat") {
+                VStack(spacing: 0) {
+                    AnthropicConfigRow(
                         isExpanded: anthropicExpanded,
                         apiKey: $anthropicKey,
                         showKey: $showAnthropicKey,
@@ -439,26 +1011,28 @@ struct APISettingsTab: View {
                 .background(Color.brandSurface.opacity(0.5))
                 .cornerRadius(BrandRadius.medium)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: BrandRadius.medium)
+                        .stroke(Color.brandBorder, lineWidth: 1)
                 )
             }
 
-            // Info box
-            HStack(alignment: .top, spacing: 8) {
+            // Security note
+            HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "lock.shield.fill")
-                    .foregroundColor(.green)
+                    .foregroundColor(.brandMint)
+                    .font(.system(size: 16))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Your API keys are stored locally in your Mac's Keychain.")
+                    Text("Your API keys are stored securely")
                         .font(.caption)
-                    Text("They never leave your device and are encrypted by macOS.")
+                        .foregroundColor(.brandTextPrimary)
+                    Text("Encrypted in macOS Keychain. Never sent anywhere except the provider.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.brandTextSecondary)
                 }
             }
-            .padding(12)
-            .background(Color.green.opacity(0.05))
-            .cornerRadius(8)
+            .padding(14)
+            .background(Color.brandMint.opacity(0.08))
+            .cornerRadius(BrandRadius.small)
 
             Spacer()
         }
@@ -468,7 +1042,6 @@ struct APISettingsTab: View {
     }
 
     private func loadAllKeys() {
-        // Load transcription provider keys
         for provider in TranscriptionProvider.allCases {
             if let key = KeychainHelper.readKey(for: provider), !key.isEmpty {
                 providerKeys[provider] = key
@@ -479,7 +1052,6 @@ struct APISettingsTab: View {
             showKeys[provider] = false
         }
 
-        // Load Anthropic key
         if let key = KeychainHelper.readAnthropicKey(), !key.isEmpty {
             anthropicKey = key
             anthropicStatus = .valid
@@ -490,161 +1062,224 @@ struct APISettingsTab: View {
 
     private func saveKey(for provider: TranscriptionProvider) {
         guard let key = providerKeys[provider], !key.isEmpty else { return }
-        if KeychainHelper.saveKey(for: provider, key: key) {
-            providerStatuses[provider] = .valid
+        // Optimistic update
+        providerStatuses[provider] = .valid
+
+        Task {
+            let success = KeychainHelper.saveKey(for: provider, key: key)
+            if !success {
+                await MainActor.run {
+                    providerStatuses[provider] = .notSet
+                }
+            }
         }
     }
 
     private func deleteKey(for provider: TranscriptionProvider) {
-        if KeychainHelper.deleteKey(for: provider) {
-            providerKeys[provider] = ""
-            providerStatuses[provider] = .notSet
+        // Optimistic update
+        let previousKey = providerKeys[provider]
+        providerKeys[provider] = ""
+        providerStatuses[provider] = .notSet
+
+        Task {
+            let success = KeychainHelper.deleteKey(for: provider)
+            if !success {
+                await MainActor.run {
+                    providerKeys[provider] = previousKey ?? ""
+                    providerStatuses[provider] = .valid
+                }
+            }
         }
     }
 
     private func saveAnthropicKey() {
-        if KeychainHelper.saveAnthropicKey(anthropicKey) {
-            anthropicStatus = .valid
+        // Optimistic update
+        anthropicStatus = .valid
+
+        Task {
+            let success = KeychainHelper.saveAnthropicKey(anthropicKey)
+            if !success {
+                await MainActor.run {
+                    anthropicStatus = .notSet
+                }
+            }
         }
     }
 
     private func deleteAnthropicKey() {
-        if KeychainHelper.deleteAnthropicKey() {
-            anthropicKey = ""
-            anthropicStatus = .notSet
+        // Optimistic update
+        let previousKey = anthropicKey
+        anthropicKey = ""
+        anthropicStatus = .notSet
+
+        Task {
+            let success = KeychainHelper.deleteAnthropicKey()
+            if !success {
+                await MainActor.run {
+                    anthropicKey = previousKey
+                    anthropicStatus = .valid
+                }
+            }
         }
     }
 }
 
-// MARK: - Provider Row
+// MARK: - Provider Config Row (Combined Key + Model)
 
-struct ProviderRow: View {
+struct ProviderConfigRow: View {
     let provider: TranscriptionProvider
     let isExpanded: Bool
     @Binding var apiKey: String
     @Binding var showKey: Bool
     let status: KeyStatus
+    @Binding var selectedModelId: String
     let onToggleExpand: () -> Void
     let onSave: () -> Void
     let onDelete: () -> Void
 
+    @State private var isHovered = false
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header row (always visible)
+            // Header row
             Button(action: onToggleExpand) {
                 HStack(spacing: 12) {
                     // Provider icon
                     ZStack {
                         Circle()
-                            .fill(provider.isRecommended ? Color.brandViolet.opacity(0.1) : Color.secondary.opacity(0.1))
+                            .fill(provider.isRecommended ? Color.brandViolet.opacity(0.1) : Color.brandSurface)
                             .frame(width: 32, height: 32)
                         Image(systemName: provider.icon)
                             .font(.system(size: 14))
-                            .foregroundColor(provider.isRecommended ? .accentColor : .secondary)
+                            .foregroundColor(provider.isRecommended ? .brandViolet : .brandTextSecondary)
                     }
 
-                    // Provider name and description
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
                             Text(provider.displayName)
-                                .font(.body.weight(.medium))
-                                .foregroundColor(.primary)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.brandTextPrimary)
                             if provider.isRecommended {
-                                Text("Recommended")
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.brandViolet)
-                                    .cornerRadius(4)
+                                BrandBadge(text: "Recommended", color: .brandViolet, size: .small)
                             }
                         }
                         Text(provider.description)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.brandTextSecondary)
                             .lineLimit(1)
                     }
 
                     Spacer()
 
-                    // Status indicator
-                    KeyStatusIndicator(status: status)
+                    ProviderStatusIndicator(status: status)
 
-                    // Expand/collapse chevron
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.brandTextSecondary)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .onHover { hovering in
+                isHovered = hovering
+            }
+            .background(isHovered && !isExpanded ? Color.brandViolet.opacity(0.03) : Color.clear)
 
             // Expanded content
             if isExpanded {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
                     // API key field
-                    HStack(spacing: 8) {
-                        Group {
-                            if showKey {
-                                TextField("Enter API key...", text: $apiKey)
-                            } else {
-                                SecureField("Enter API key...", text: $apiKey)
-                            }
-                        }
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("API Key")
+                            .font(.caption)
+                            .foregroundColor(.brandTextSecondary)
 
-                        Button(action: { showKey.toggle() }) {
-                            Image(systemName: showKey ? "eye.slash" : "eye")
-                                .foregroundColor(.secondary)
+                        HStack(spacing: 8) {
+                            Group {
+                                if showKey {
+                                    TextField("Enter API key...", text: $apiKey)
+                                } else {
+                                    SecureField("Enter API key...", text: $apiKey)
+                                }
+                            }
+                            .textFieldStyle(.plain)
+                            .font(.brandMono(13))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.brandSurface)
+                            .cornerRadius(BrandRadius.small)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: BrandRadius.small)
+                                    .stroke(Color.brandBorder, lineWidth: 1)
+                            )
+
+                            BrandIconButton(
+                                icon: showKey ? "eye.slash" : "eye",
+                                size: 28,
+                                action: { showKey.toggle() }
+                            )
+                            .help(showKey ? "Hide API key" : "Show API key")
                         }
-                        .buttonStyle(.borderless)
-                        .help(showKey ? "Hide API key" : "Show API key")
                     }
 
-                    // Action buttons
-                    HStack(spacing: 12) {
-                        Button("Save") {
-                            onSave()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(apiKey.isEmpty)
+                    // Actions
+                    HStack(spacing: 10) {
+                        BrandPrimaryButton(title: "Save", size: .small, action: onSave)
+                            .opacity(apiKey.isEmpty ? 0.5 : 1)
+                            .disabled(apiKey.isEmpty)
 
                         if status == .valid {
-                            Button("Remove", role: .destructive) {
-                                onDelete()
-                            }
-                            .buttonStyle(.bordered)
+                            BrandDestructiveButton(title: "Remove", size: .small, action: onDelete)
                         }
 
                         Spacer()
 
-                        // Get API key link
                         if let url = provider.apiKeyURL {
                             Link(destination: url) {
                                 HStack(spacing: 4) {
                                     Text("Get API key")
                                     Image(systemName: "arrow.up.right")
-                                        .font(.caption)
+                                        .font(.caption2)
                                 }
                                 .font(.caption)
+                                .foregroundColor(.brandViolet)
+                            }
+                        }
+                    }
+
+                    // Model selection (only if configured)
+                    if status == .valid {
+                        BrandDivider()
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Select model")
+                                .font(.caption)
+                                .foregroundColor(.brandTextSecondary)
+
+                            ForEach(provider.models) { model in
+                                ModelRadioRow(
+                                    model: model,
+                                    isSelected: selectedModelId == model.fullId,
+                                    isEnabled: true,
+                                    onSelect: { selectedModelId = model.fullId }
+                                )
                             }
                         }
                     }
                 }
                 .padding(.horizontal, 12)
-                .padding(.bottom, 12)
-                .padding(.leading, 44)  // Align with text
+                .padding(.bottom, 16)
+                .padding(.leading, 32)
             }
         }
     }
 }
 
-// MARK: - Anthropic Provider Row
+// MARK: - Anthropic Config Row
 
-struct AnthropicProviderRow: View {
+struct AnthropicConfigRow: View {
     let isExpanded: Bool
     @Binding var apiKey: String
     @Binding var showKey: Bool
@@ -653,9 +1288,10 @@ struct AnthropicProviderRow: View {
     let onSave: () -> Void
     let onDelete: () -> Void
 
+    @State private var isHovered = false
+
     var body: some View {
         VStack(spacing: 0) {
-            // Header row
             Button(action: onToggleExpand) {
                 HStack(spacing: 12) {
                     ZStack {
@@ -669,60 +1305,73 @@ struct AnthropicProviderRow: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Anthropic Claude")
-                            .font(.body.weight(.medium))
-                            .foregroundColor(.primary)
-                        Text("Powers the AI chat feature for meeting Q&A")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.brandTextPrimary)
+                        Text("Powers AI chat for meeting Q&A")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.brandTextSecondary)
                             .lineLimit(1)
                     }
 
                     Spacer()
 
-                    KeyStatusIndicator(status: status)
+                    ProviderStatusIndicator(status: status)
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.brandTextSecondary)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .onHover { hovering in
+                isHovered = hovering
+            }
+            .background(isHovered && !isExpanded ? Color.brandViolet.opacity(0.03) : Color.clear)
 
             if isExpanded {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 8) {
-                        Group {
-                            if showKey {
-                                TextField("sk-ant-...", text: $apiKey)
-                            } else {
-                                SecureField("sk-ant-...", text: $apiKey)
-                            }
-                        }
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("API Key")
+                            .font(.caption)
+                            .foregroundColor(.brandTextSecondary)
 
-                        Button(action: { showKey.toggle() }) {
-                            Image(systemName: showKey ? "eye.slash" : "eye")
-                                .foregroundColor(.secondary)
+                        HStack(spacing: 8) {
+                            Group {
+                                if showKey {
+                                    TextField("sk-ant-...", text: $apiKey)
+                                } else {
+                                    SecureField("sk-ant-...", text: $apiKey)
+                                }
+                            }
+                            .textFieldStyle(.plain)
+                            .font(.brandMono(13))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.brandSurface)
+                            .cornerRadius(BrandRadius.small)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: BrandRadius.small)
+                                    .stroke(Color.brandBorder, lineWidth: 1)
+                            )
+
+                            BrandIconButton(
+                                icon: showKey ? "eye.slash" : "eye",
+                                size: 28,
+                                action: { showKey.toggle() }
+                            )
                         }
-                        .buttonStyle(.borderless)
                     }
 
-                    HStack(spacing: 12) {
-                        Button("Save") {
-                            onSave()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(apiKey.isEmpty)
+                    HStack(spacing: 10) {
+                        BrandPrimaryButton(title: "Save", size: .small, action: onSave)
+                            .opacity(apiKey.isEmpty ? 0.5 : 1)
+                            .disabled(apiKey.isEmpty)
 
                         if status == .valid {
-                            Button("Remove", role: .destructive) {
-                                onDelete()
-                            }
-                            .buttonStyle(.bordered)
+                            BrandDestructiveButton(title: "Remove", size: .small, action: onDelete)
                         }
 
                         Spacer()
@@ -731,490 +1380,755 @@ struct AnthropicProviderRow: View {
                             HStack(spacing: 4) {
                                 Text("Get API key")
                                 Image(systemName: "arrow.up.right")
-                                    .font(.caption)
+                                    .font(.caption2)
                             }
                             .font(.caption)
+                            .foregroundColor(.brandViolet)
                         }
                     }
                 }
                 .padding(.horizontal, 12)
-                .padding(.bottom, 12)
-                .padding(.leading, 44)
+                .padding(.bottom, 16)
+                .padding(.leading, 32)
             }
         }
     }
 }
 
-// MARK: - Key Status Indicator
+// MARK: - Provider Status Indicator
 
-struct KeyStatusIndicator: View {
+enum KeyStatus {
+    case unknown
+    case valid
+    case invalid
+    case notSet
+}
+
+struct ProviderStatusIndicator: View {
     let status: KeyStatus
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             switch status {
             case .valid:
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                BrandStatusDot(status: .success, size: 8)
                 Text("Configured")
                     .font(.caption)
-                    .foregroundColor(.green)
+                    .foregroundColor(.brandMint)
             case .invalid:
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
+                BrandStatusDot(status: .error, size: 8)
                 Text("Invalid")
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(.brandCoral)
             case .notSet:
-                Circle()
-                    .fill(Color.secondary.opacity(0.3))
-                    .frame(width: 10, height: 10)
+                BrandStatusDot(status: .inactive, size: 8)
                 Text("Not set")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.brandTextSecondary)
             case .unknown:
-                Circle()
-                    .fill(Color.secondary.opacity(0.3))
-                    .frame(width: 10, height: 10)
+                BrandStatusDot(status: .inactive, size: 8)
             }
         }
     }
 }
 
-// MARK: - Models Tab
+// MARK: - Model Radio Row
 
-struct ModelsSettingsTab: View {
-    @AppStorage("selectedTranscriptionModel") private var selectedModelId = "openai:gpt-4o-mini-transcribe"
-
-    /// All providers (configured ones shown first)
-    private var allProviders: [TranscriptionProvider] {
-        TranscriptionProvider.allCases
-    }
-
-    /// Check if any provider is configured
-    private var hasConfiguredProviders: Bool {
-        allProviders.contains { $0.isConfigured }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            if hasConfiguredProviders {
-                // Header info
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundColor(.blue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Select the model used for transcription.")
-                            .font(.caption)
-                        Text("Providers without API keys are shown grayed out.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(12)
-                .background(Color.blue.opacity(0.05))
-                .cornerRadius(8)
-
-                // Provider sections
-                ForEach(allProviders) { provider in
-                    ProviderModelSection(
-                        provider: provider,
-                        selectedModelId: $selectedModelId
-                    )
-                }
-            } else {
-                // No providers configured
-                VStack(spacing: 16) {
-                    Image(systemName: "key.slash")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-
-                    Text("No API Keys Configured")
-                        .font(.headline)
-
-                    Text("Configure API keys in the API tab to select a transcription model.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-
-                    Button("Go to API Settings") {
-                        // This would ideally switch tabs, but for now just show a hint
-                        NotificationCenter.default.post(name: .switchToAPITab, object: nil)
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .padding(.vertical, 40)
-            }
-
-            Spacer()
-        }
-    }
-}
-
-/// A section showing models for a single provider
-struct ProviderModelSection: View {
-    let provider: TranscriptionProvider
-    @Binding var selectedModelId: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Provider header
-            HStack {
-                Image(systemName: provider.icon)
-                    .foregroundColor(provider.isConfigured ? .primary : .secondary)
-                Text(provider.displayName)
-                    .font(.headline)
-                    .foregroundColor(provider.isConfigured ? .primary : .secondary)
-
-                if provider.isRecommended && provider.isConfigured {
-                    Text("Recommended")
-                        .font(.caption2)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.brandViolet.opacity(0.2))
-                        .foregroundColor(.brandViolet)
-                        .cornerRadius(4)
-                }
-
-                Spacer()
-
-                // Limits info with tooltip
-                ProviderLimitsView(provider: provider)
-            }
-
-            // Models
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(provider.models) { model in
-                    ModelRadioRow(
-                        model: model,
-                        isSelected: selectedModelId == model.fullId,
-                        isEnabled: provider.isConfigured,
-                        onSelect: {
-                            selectedModelId = model.fullId
-                        }
-                    )
-                }
-            }
-            .padding(.leading, 24)
-            .opacity(provider.isConfigured ? 1.0 : 0.5)
-        }
-        .padding(.vertical, 8)
-    }
-}
-
-/// A single model radio button row
 struct ModelRadioRow: View {
     let model: TranscriptionModelOption
     let isSelected: Bool
     let isEnabled: Bool
     let onSelect: () -> Void
 
+    @State private var isHovered = false
+
     var body: some View {
         Button(action: {
-            if isEnabled {
-                onSelect()
-            }
+            if isEnabled { onSelect() }
         }) {
-            HStack {
+            HStack(spacing: 10) {
                 // Radio button
                 ZStack {
                     Circle()
-                        .stroke(isEnabled ? Color.brandViolet : Color.secondary, lineWidth: 1.5)
+                        .stroke(isSelected ? Color.brandViolet : Color.brandBorder, lineWidth: 1.5)
                         .frame(width: 16, height: 16)
 
                     if isSelected {
                         Circle()
-                            .fill(isEnabled ? Color.brandViolet : Color.secondary)
+                            .fill(Color.brandViolet)
                             .frame(width: 8, height: 8)
                     }
                 }
 
-                // Model name
                 Text(model.displayName)
-                    .foregroundColor(isEnabled ? .primary : .secondary)
+                    .font(.system(size: 13))
+                    .foregroundColor(.brandTextPrimary)
 
                 Spacer()
 
-                // Price
                 Text(model.formattedCost)
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundColor(isEnabled ? .secondary : .secondary.opacity(0.5))
+                    .font(.brandMono(12))
+                    .foregroundColor(.brandTextSecondary)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(isHovered ? Color.brandViolet.opacity(0.05) : Color.clear)
+            .cornerRadius(BrandRadius.small)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-    }
-}
-
-/// Shows provider limits with hover tooltip
-struct ProviderLimitsView: View {
-    let provider: TranscriptionProvider
-    @State private var isHovering = false
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "info.circle")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            Text("Max: \(provider.maxFileSizeFormatted)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(isHovering ? Color.secondary.opacity(0.1) : Color.clear)
-        .cornerRadius(4)
         .onHover { hovering in
-            isHovering = hovering
+            isHovered = hovering
         }
-        .help("Max file size: \(provider.maxFileSizeFormatted)\nMax duration: \(provider.maxDurationFormatted)")
     }
 }
 
-// Notification for switching tabs
-extension Notification.Name {
-    static let switchToAPITab = Notification.Name("switchToAPITab")
-}
+// MARK: - Usage Settings Content (Combined Costs + Logs)
 
-// MARK: - Costs Tab
-
-struct CostsSettingsTab: View {
+struct UsageSettingsContent: View {
     @AppStorage("monthlySpendingAlert") private var monthlySpendingAlert: Double = 10.0
     @AppStorage("spendingAlertEnabled") private var spendingAlertEnabled = true
 
-    // These would normally come from the database
-    @State private var totalSpent: Double = 4.32
-    @State private var totalHours: Double = 14.4
-    @State private var meetingsCount: Int = 28
-    @State private var dictationCount: Int = 143
-    @State private var chatCount: Int = 12
+    @State private var logs: [APICallLog] = []
+    @State private var statistics: APICallStatistics = APICallStatistics()
+    @State private var selectedTimeRange: TimeRange = .month
+    @State private var isLoading = true
+    @State private var selectedLog: APICallLog? = nil
+
+    enum TimeRange: String, CaseIterable {
+        case today = "Today"
+        case week = "Week"
+        case month = "Month"
+        case all = "All"
+
+        var dateRange: (start: Date, end: Date) {
+            let now = Date()
+            let calendar = Calendar.current
+            switch self {
+            case .today:
+                return (calendar.startOfDay(for: now), now)
+            case .week:
+                return (calendar.date(byAdding: .day, value: -7, to: now)!, now)
+            case .month:
+                return (calendar.date(byAdding: .month, value: -1, to: now)!, now)
+            case .all:
+                return (Date.distantPast, now)
+            }
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // This Month section
-            SettingsSection(title: "This Month — January 2025") {
-                VStack(spacing: 16) {
-                    // Big number
-                    Text("$\(String(format: "%.2f", totalSpent))")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
+        VStack(alignment: .leading, spacing: 28) {
+            // Header
+            SettingsSectionHeader(
+                title: "Usage",
+                subtitle: "Spending, API calls, and usage statistics"
+            )
 
-                    Text("Total spent")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    // Progress bar
-                    VStack(alignment: .leading, spacing: 4) {
-                        GeometryReader { geometry in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.secondary.opacity(0.2))
-                                    .frame(height: 8)
-
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.brandViolet)
-                                    .frame(width: geometry.size.width * min(totalHours / 100, 1.0), height: 8)
-                            }
+            // Time range picker
+            HStack(spacing: 4) {
+                ForEach(TimeRange.allCases, id: \.self) { range in
+                    BrandTabButton(
+                        title: range.rawValue,
+                        isSelected: selectedTimeRange == range,
+                        action: {
+                            selectedTimeRange = range
+                            Task { await loadData() }
                         }
-                        .frame(height: 8)
-
-                        Text("\(String(format: "%.1f", totalHours)) hours")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    // Stats grid
-                    HStack(spacing: 32) {
-                        StatItem(label: "Meetings transcribed", value: "\(meetingsCount)")
-                        StatItem(label: "Dictation uses", value: "\(dictationCount)")
-                        StatItem(label: "Chat queries", value: "\(chatCount)")
-                    }
+                    )
                 }
-                .frame(maxWidth: .infinity)
+                Spacer()
             }
 
-            // Budget section
-            SettingsSection(title: "Budget") {
+            // Spending summary
+            if statistics.totalCalls > 0 {
+                SettingsGroup(title: "Summary") {
+                    HStack(spacing: 24) {
+                        UsageStatCard(
+                            title: "Total Spent",
+                            value: statistics.formattedTotalCost,
+                            icon: "dollarsign.circle.fill",
+                            color: .brandMint
+                        )
+                        UsageStatCard(
+                            title: "API Calls",
+                            value: "\(statistics.totalCalls)",
+                            icon: "arrow.up.arrow.down.circle.fill",
+                            color: .brandViolet
+                        )
+                        UsageStatCard(
+                            title: "Success Rate",
+                            value: String(format: "%.0f%%", statistics.successRate),
+                            icon: "checkmark.circle.fill",
+                            color: statistics.successRate >= 95 ? .brandMint : .brandAmber
+                        )
+                    }
+                }
+            }
+
+            // Budget alert
+            SettingsGroup(title: "Budget") {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("Monthly spending alert")
+                            .font(.system(size: 13))
                         Spacer()
                         TextField("", value: $monthlySpendingAlert, format: .currency(code: "USD"))
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 100)
+                            .textFieldStyle(.plain)
+                            .font(.brandMono(13))
+                            .frame(width: 80)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.brandSurface)
+                            .cornerRadius(BrandRadius.small)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: BrandRadius.small)
+                                    .stroke(Color.brandBorder, lineWidth: 1)
+                            )
                     }
 
-                    Toggle("Notify when reached", isOn: $spendingAlertEnabled)
+                    BrandToggleRow(
+                        title: "Notify when reached",
+                        subtitle: nil,
+                        isOn: $spendingAlertEnabled
+                    )
                 }
             }
 
-            // Average costs
-            HStack(spacing: 16) {
-                Text("Avg cost per meeting: ~$0.15")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text("•")
-                    .foregroundColor(.secondary)
-                Text("Avg cost per dictation: ~$0.01")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            // Logs
+            SettingsGroup(title: "API Logs") {
+                if isLoading {
+                    HStack {
+                        Spacer()
+                        BrandLoadingIndicator(size: .medium)
+                        Spacer()
+                    }
+                    .padding(.vertical, 32)
+                } else if logs.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 32))
+                            .foregroundColor(.brandTextSecondary.opacity(0.5))
+                        Text("No API calls yet")
+                            .font(.caption)
+                            .foregroundColor(.brandTextSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                } else {
+                    CompactLogsTable(logs: logs, selectedLog: $selectedLog)
+                }
             }
 
             Spacer()
         }
-    }
-}
-
-struct StatItem: View {
-    let label: String
-    let value: String
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.headline)
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+        .task {
+            await loadData()
+        }
+        .sheet(item: $selectedLog) { log in
+            LogDetailSheet(log: log)
         }
     }
+
+    private func loadData() async {
+        isLoading = true
+        let range = selectedTimeRange.dateRange
+        async let fetchedLogs = APICallLogManager.shared.getLogs(from: range.start, to: range.end)
+        async let fetchedStats = APICallLogManager.shared.getStatistics(from: range.start, to: range.end)
+        logs = await fetchedLogs
+        statistics = await fetchedStats
+        isLoading = false
+    }
 }
 
-// MARK: - About Tab
+struct UsageStatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
 
-struct AboutSettingsTab: View {
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(color)
+            Text(value)
+                .font(.brandDisplay(18, weight: .semibold))
+                .foregroundColor(.brandTextPrimary)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.brandTextSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(Color.brandSurface)
+        .cornerRadius(BrandRadius.small)
+    }
+}
+
+struct CompactLogsTable: View {
+    let logs: [APICallLog]
+    @Binding var selectedLog: APICallLog?
+
+    private var timeFormatter: DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss"
+        return f
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Time").frame(width: 60, alignment: .leading)
+                Text("Type").frame(width: 80, alignment: .leading)
+                Text("Provider").frame(maxWidth: .infinity, alignment: .leading)
+                Text("Cost").frame(width: 50, alignment: .trailing)
+            }
+            .font(.caption)
+            .foregroundColor(.brandTextSecondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.brandSurface)
+
+            BrandDivider()
+
+            // Rows (max 10)
+            ForEach(logs.prefix(10)) { log in
+                Button(action: { selectedLog = log }) {
+                    HStack {
+                        Text(timeFormatter.string(from: log.timestamp))
+                            .font(.brandMono(11))
+                            .frame(width: 60, alignment: .leading)
+
+                        Text(log.callType.displayName)
+                            .font(.caption)
+                            .frame(width: 80, alignment: .leading)
+
+                        Text(log.provider)
+                            .font(.caption)
+                            .foregroundColor(.brandTextSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text(log.formattedCost)
+                            .font(.brandMono(11))
+                            .frame(width: 50, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                if log.id != logs.prefix(10).last?.id {
+                    BrandDivider()
+                }
+            }
+
+            if logs.count > 10 {
+                Text("\(logs.count - 10) more...")
+                    .font(.caption)
+                    .foregroundColor(.brandTextSecondary)
+                    .padding(.vertical, 8)
+            }
+        }
+        .background(Color.brandSurface.opacity(0.3))
+        .cornerRadius(BrandRadius.small)
+        .overlay(
+            RoundedRectangle(cornerRadius: BrandRadius.small)
+                .stroke(Color.brandBorder, lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Log Detail Sheet
+
+struct LogDetailSheet: View {
+    let log: APICallLog
+    @Environment(\.dismiss) private var dismiss
+
+    private var dateFormatter: DateFormatter {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .long
+        return f
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: log.callType.icon)
+                            .foregroundColor(.brandViolet)
+                        Text(log.callType.displayName)
+                            .font(.headline)
+                    }
+                    Text(dateFormatter.string(from: log.timestamp))
+                        .font(.caption)
+                        .foregroundColor(.brandTextSecondary)
+                }
+
+                Spacer()
+
+                BrandSecondaryButton(title: "Done", size: .small) {
+                    dismiss()
+                }
+            }
+
+            BrandDivider()
+
+            // Details
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+                GridRow {
+                    Text("Provider").foregroundColor(.brandTextSecondary)
+                    Text(log.provider).fontWeight(.medium)
+                }
+                GridRow {
+                    Text("Model").foregroundColor(.brandTextSecondary)
+                    Text(log.model).font(.brandMono(13))
+                }
+                GridRow {
+                    Text("Duration").foregroundColor(.brandTextSecondary)
+                    Text(log.formattedDuration)
+                }
+                GridRow {
+                    Text("Cost").foregroundColor(.brandTextSecondary)
+                    Text(log.formattedCost)
+                }
+            }
+            .font(.system(size: 13))
+
+            if let errorMessage = log.errorMessage {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Error")
+                        .font(.caption)
+                        .foregroundColor(.brandCoral)
+                    Text(errorMessage)
+                        .font(.brandMono(11))
+                        .padding(10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.brandCoral.opacity(0.1))
+                        .cornerRadius(BrandRadius.small)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(24)
+        .frame(width: 400, height: 350)
+        .background(Color.brandBackground)
+    }
+}
+
+// MARK: - About Settings Content
+
+struct AboutSettingsContent: View {
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
     let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
     var body: some View {
-        VStack(spacing: 24) {
-            // App icon and name
-            VStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(Color.brandViolet.opacity(0.1))
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "mic.circle.fill")
-                        .font(.system(size: 48))
-                        .foregroundColor(.brandViolet)
-                }
+        VStack(spacing: 32) {
+            // App info
+            VStack(spacing: 12) {
+                BrandLogo(size: 48, showText: false)
 
                 Text("MeetingRecorder")
-                    .font(.title2.weight(.semibold))
+                    .font(.brandDisplay(20, weight: .bold))
+                    .foregroundColor(.brandTextPrimary)
 
                 Text("Version \(appVersion) (\(buildNumber))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.brandTextSecondary)
             }
+            .padding(.top, 20)
 
-            Divider()
+            BrandDivider()
 
             // Links
-            VStack(spacing: 12) {
-                AboutLink(icon: "globe", title: "Website", url: "https://meetingrecorder.app")
-                AboutLink(icon: "doc.text", title: "Documentation", url: "https://meetingrecorder.app/docs")
-                AboutLink(icon: "envelope", title: "Contact Support", url: "mailto:support@meetingrecorder.app")
-                AboutLink(icon: "star", title: "Rate on App Store", url: "macappstore://")
+            VStack(spacing: 8) {
+                AboutLinkRow(icon: "globe", title: "Website", url: "https://meetingrecorder.app")
+                AboutLinkRow(icon: "doc.text", title: "Documentation", url: "https://meetingrecorder.app/docs")
+                AboutLinkRow(icon: "envelope", title: "Contact Support", url: "mailto:support@meetingrecorder.app")
+                AboutLinkRow(icon: "star", title: "Rate on App Store", url: "macappstore://")
             }
 
-            Divider()
+            BrandDivider()
 
             // Credits
             VStack(spacing: 4) {
                 Text("Built with Swift & SwiftUI")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.brandTextSecondary)
                 Text("Transcription powered by OpenAI")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.brandTextSecondary)
             }
 
             Spacer()
 
             Text("© 2025 MeetingRecorder. All rights reserved.")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundColor(.brandTextSecondary)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
-struct AboutLink: View {
+struct AboutLinkRow: View {
     let icon: String
     let title: String
     let url: String
+
+    @State private var isHovered = false
 
     var body: some View {
         Link(destination: URL(string: url)!) {
             HStack {
                 Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(.brandViolet)
                     .frame(width: 24)
                 Text(title)
+                    .font(.system(size: 13))
+                    .foregroundColor(.brandTextPrimary)
                 Spacer()
                 Image(systemName: "arrow.up.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.brandTextSecondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.brandSurface)
-            .cornerRadius(8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(isHovered ? Color.brandViolet.opacity(0.05) : Color.brandSurface)
+            .cornerRadius(BrandRadius.small)
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 
-// MARK: - Settings Section Helper
+// MARK: - Reusable Components
 
-struct SettingsSection<Content: View>: View {
+struct SettingsSectionHeader: View {
+    let title: String
+    let subtitle: String?
+
+    init(title: String, subtitle: String? = nil) {
+        self.title = title
+        self.subtitle = subtitle
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.brandDisplay(20, weight: .bold))
+                .foregroundColor(.brandTextPrimary)
+            if let subtitle = subtitle {
+                Text(subtitle)
+                    .font(.system(size: 13))
+                    .foregroundColor(.brandTextSecondary)
+            }
+        }
+    }
+}
+
+struct SettingsGroup<Content: View>: View {
     let title: String
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.headline)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.brandTextSecondary)
+                .textCase(.uppercase)
 
             content()
         }
     }
 }
 
+struct BrandToggleRow: View {
+    let title: String
+    let subtitle: String?
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13))
+                    .foregroundColor(.brandTextPrimary)
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.brandTextSecondary)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(.brandViolet)
+    }
+}
+
+struct BrandShortcutDisplay: View {
+    let shortcut: String
+
+    var body: some View {
+        Text(shortcut)
+            .font(.brandMono(13))
+            .foregroundColor(.brandTextPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.brandSurface)
+            .cornerRadius(BrandRadius.small)
+            .overlay(
+                RoundedRectangle(cornerRadius: BrandRadius.small)
+                    .stroke(Color.brandBorder, lineWidth: 1)
+            )
+    }
+}
+
+struct BrandThemeButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: isSelected ? .medium : .regular))
+                .foregroundColor(isSelected ? .white : .brandTextPrimary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.brandViolet : (isHovered ? Color.brandViolet.opacity(0.1) : Color.brandSurface))
+                .cornerRadius(BrandRadius.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: BrandRadius.small)
+                        .stroke(isSelected ? Color.clear : Color.brandBorder, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+}
+
+// MARK: - Auto-Record Toggle with Discard Stats
+
+struct AutoRecordToggle: View {
+    let title: String
+    @Binding var isOn: Bool
+    let app: MeetingApp
+
+    @ObservedObject private var statsManager = AutoRuleStatsManager.shared
+
+    private var stat: AutoRuleStat? {
+        statsManager.getStat(for: app)
+    }
+
+    private var wasAutoDisabled: Bool {
+        stat?.isAutoDisabled == true
+    }
+
+    private var discardCount: Int {
+        stat?.consecutiveDiscards ?? 0
+    }
+
+    var body: some View {
+        HStack {
+            Toggle(isOn: Binding(
+                get: { isOn },
+                set: { newValue in
+                    // Optimistic update
+                    isOn = newValue
+                    if newValue && wasAutoDisabled {
+                        statsManager.reEnableRule(for: app)
+                    }
+                }
+            )) {
+                Text(title)
+                    .font(.system(size: 12))
+                    .foregroundColor(.brandTextPrimary)
+            }
+            .toggleStyle(.checkbox)
+
+            Spacer()
+
+            if wasAutoDisabled {
+                Button(action: {
+                    isOn = true
+                    statsManager.reEnableRule(for: app)
+                }) {
+                    HStack(spacing: 3) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                        Text("Auto-off")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.brandAmber)
+                    .cornerRadius(4)
+                }
+                .buttonStyle(.plain)
+                .help("Auto-disabled after 5 discards. Click to re-enable.")
+            } else if discardCount >= 3 {
+                HStack(spacing: 3) {
+                    Image(systemName: "info.circle")
+                        .font(.caption2)
+                    Text("\(5 - discardCount) left")
+                        .font(.caption2)
+                }
+                .foregroundColor(.brandTextSecondary)
+                .help("Discarded \(discardCount) times. \(5 - discardCount) more will auto-disable.")
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.brandSurface.opacity(0.5))
+        .cornerRadius(BrandRadius.small)
+    }
+}
+
+// MARK: - Notification for switching tabs
+
+extension Notification.Name {
+    static let switchToAPITab = Notification.Name("switchToAPITab")
+}
+
 // MARK: - Previews
-
-#Preview("General") {
-    GeneralSettingsTab()
-        .frame(width: 500)
-        .padding()
-}
-
-#Preview("API") {
-    APISettingsTab()
-        .frame(width: 500)
-        .padding()
-}
-
-#Preview("Costs") {
-    CostsSettingsTab()
-        .frame(width: 500)
-        .padding()
-}
-
-#Preview("About") {
-    AboutSettingsTab()
-        .frame(width: 500)
-        .padding()
-}
-
-#Preview("Models") {
-    ModelsSettingsTab()
-        .frame(width: 500)
-        .padding()
-}
 
 #Preview("Full Settings") {
     FullSettingsView()
+        .frame(width: 720, height: 560)
+}
+
+#Preview("General") {
+    GeneralSettingsContent()
+        .frame(width: 500)
+        .padding()
+        .background(Color.brandBackground)
+}
+
+#Preview("Recording") {
+    RecordingSettingsContent()
+        .frame(width: 500)
+        .padding()
+        .background(Color.brandBackground)
+}
+
+#Preview("AI Providers") {
+    AIProvidersSettingsContent()
+        .frame(width: 500)
+        .padding()
+        .background(Color.brandBackground)
 }

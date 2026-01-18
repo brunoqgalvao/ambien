@@ -83,8 +83,8 @@ struct CalendarMeetingRow: View {
                 }
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
             } else {
-                // Cost badge (when not hovering)
-                if let cost = meeting.formattedCost {
+                // Cost badge (when not hovering) - only visible for beta testers
+                if FeatureFlags.shared.showCosts, let cost = meeting.formattedCost {
                     Text(cost)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -220,8 +220,7 @@ struct CalendarStatusBadge: View {
                 }
             case .transcribing:
                 // Simple spinner for transcribing
-                ProgressView()
-                    .scaleEffect(0.7)
+                BrandLoadingIndicator(size: .medium)
                     .frame(width: 32, height: 32)
             case .failed:
                 // Error ribbon/alert - the ONLY colored indicator for completed meetings

@@ -17,14 +17,18 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.0.1</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>MeetingRecorder uses AppleScript to detect Google Meet in browser tabs for auto-recording.</string>
+	<key>NSApplicationSupportsSecureRestorableState</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2025 MeetingRecorder. All rights reserved.</string>
@@ -32,14 +36,10 @@
 	<string>MeetingRecorder needs microphone access to capture your voice during meetings and for system-wide dictation.</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>MeetingRecorder needs screen recording permission to capture system audio from meetings (Zoom, Google Meet, Teams, etc.). This allows recording what others say in your calls.</string>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>MeetingRecorder uses AppleScript to detect Google Meet in browser tabs for auto-recording.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
-	<key>NSApplicationSupportsSecureRestorableState</key>
-	<true/>
 	<key>SUFeedURL</key>
-	<string>https://meetingrecorder.app/appcast.xml</string>
+	<string>https://brunogalvao.github.io/ami-like/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>xp2vvfvsXmL2AO2/U0PTmfS1akW013Pz5iPpcXRmVac=</string>
 </dict>

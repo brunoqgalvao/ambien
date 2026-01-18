@@ -463,8 +463,7 @@ struct PermissionStepLayout: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.orange)
                     case .checking:
-                        ProgressView()
-                            .scaleEffect(0.8)
+                        BrandLoadingIndicator(size: .medium)
                         Text("Checking...")
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
@@ -727,8 +726,7 @@ struct APIKeyStep: View {
                 // Validation status
                 if isValidating {
                     HStack(spacing: 8) {
-                        ProgressView()
-                            .scaleEffect(0.7)
+                        BrandLoadingIndicator(size: .small)
                         Text("Validating...")
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
@@ -782,8 +780,7 @@ struct APIKeyStep: View {
 
                     Button(action: validateAndFinish) {
                         if isValidating {
-                            ProgressView()
-                                .scaleEffect(0.7)
+                            BrandLoadingIndicator(size: .small, color: .white)
                         } else {
                             Text("Finish Setup")
                         }

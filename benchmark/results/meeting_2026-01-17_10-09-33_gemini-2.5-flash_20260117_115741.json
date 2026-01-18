@@ -1,0 +1,577 @@
+{
+  "model": "gemini-2.5-flash",
+  "model_name": "Gemini 2.5 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A, 0:00] E aí, fiquei.\n[Speaker B, 0:05] E aí?\n[Speaker A, 0:06] E aí, mano.\n[Speaker B, 0:08] Zão, fala com o tio Zé ali, tá? Você assiste a família sozinho um pouco.\n[Speaker A, 0:11] É, eu quero.\n[Speaker B, 0:14] Que toca.\n[Speaker A, 0:17] Ai, que.\n[Speaker B, 0:21] Ai. E aí?\n[Speaker A, 0:24] Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?\n[Speaker B, 0:30] Ah, nem vem, quando tá gripado, doente, é umas 10 vezes mais trabalho.\n[Speaker A, 0:36] Pior é que ela tá de boa, só que ela tá com um catarro pra caralho, assim, então é uma merda.\n[Speaker B, 0:42] Mas essa, essa é, essa é a parte que dá 90% mais trabalho.\n[Speaker A, 0:47] Nossa.\n[Speaker B, 0:48] E não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.\n[Speaker A, 0:52] É.\n[Speaker B, 0:52] Isso porque é uma merda.\n[Speaker A, 0:55] É, tá foda.\n[Speaker B, 0:57] A Alice, como tá sem fôlego, não respira direito, tosse, acorda.\n[Speaker A, 1:02] Uhum.\n[Speaker B, 1:04] Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá, blá, blá.\n[Speaker A, 1:12] Ah, mas aí, cara, tem que tirar essa nóia da cabeça.\n[Speaker B, 1:15] É.\n[Speaker A, 1:17] É, mas.\n[Speaker B, 1:19] É que, mano, pra gente é a primeira vez que ela tá ficando doente, né? Então, acho que.\n[Speaker A, 1:23] É, se tiver bronquiolite, você já.\n[Speaker B, 1:26] Vai ter.\n[Speaker A, 1:28] Inclusive, mano.\n[Speaker B, 1:28] Ah, não, que a gente.\n[Speaker A, 1:30] É que tem um, tem um fator que tá foda, que a gente não conseguiu migrar o plano.\n[Speaker B, 1:37] Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora, é um plano superior, então tem que cumprir todas as carências.\n[Speaker A, 1:52] Mas tem carência pra?\n[Speaker B, 1:55] Tem carência pra internação, pra tudo.\n[Speaker A, 1:59] Tudo bem. Isso aí é um problema número dois. Eu não tava preocupado se ele ia ficar doente por causa disso.\n[Speaker B, 2:06] Sim, sim.\n[Speaker A, 2:07] Isso é um problema. Já foi, isso aí já foi, já foi, né?\n[Speaker B, 2:11] É.\n[Speaker A, 2:12] Já foi, você já entrou nesse risco, agora se aconteceu, esse, o menor dos problemas vai ser isso.\n[Speaker B, 2:19] É.\n[Speaker A, 2:20] É.\n[Speaker B, 2:22] É.\n[Speaker A, 2:24] Sei lá.\n[Speaker B, 2:24] Enfim, mas e aí, você leu lá o que eu mandei?\n[Speaker A, 2:27] Cara, eu li um pedaço e a Alice me interrompeu aqui.\n[Speaker B, 2:32] Hum.\n[Speaker A, 2:34] Ela acordou, não tinha acordado ainda. É, mas o post é agora, é muito grande o que você mandou? É grande, né?\n[Speaker B, 2:40] Não, mano, não é grande, é tipo, é uma mensagem do GPT.\n[Speaker A, 2:44] É, vamos ler junto aqui. Mas assim, o hoje, hoje de manhã eu acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda.\n[Speaker B, 2:57] Tá vendo?\n[Speaker A, 3:00] É.\n[Speaker B, 3:01] Vamos lá.\n[Speaker A, 3:03] É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto, é bem clara mesmo. Eu não sei o quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala, assim, tipo, uma das coisas que eu reconheci é, cara,\n[Speaker B, 3:22] Sim, sim.\n[Speaker A, 3:23] trabalhar com escala, trabalhar com analytics e trabalhar em lugares que o analytics é bem forte.\n[Speaker B, 3:31] Aham.\n[Speaker A, 3:32] É uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.\n[Speaker B, 3:41] Sim.\n[Speaker A, 3:42] Não, pra mim, pra mim também, isso a gente tá alinhado.\n[Speaker B, 3:45] E o, tipo, então por isso que eu gosto muito de crédito, tal, que a gente fala, sabe?\n[Speaker A, 3:48] Aham.\n[Speaker B, 3:49] É um que você fazer um analytics bom é muito importante, né?\n[Speaker A, 3:53] Aham.\n[Speaker B, 3:54] É.\n[Speaker A, 3:56] É, isso daí é menos uma crença e é mais um, uma coisa que te motiva, exato.\n[Speaker B, 4:03] É, é, motiva e que vai junto, né?\n[Speaker A, 4:07] Isso, é, como você tá motivado, é uma coisa que você vai melhorar e você é bom nisso e etc.\n[Speaker B, 4:13] É isso aí.\n[Speaker A, 4:14] É.\n[Speaker B, 4:16] Que é inclusive, porque eu, eu, eu fiquei fazendo um brainstorm de, de, de ideias que eu já tinha aqui, né?\n[Speaker A, 4:22] Aham.\n[Speaker B, 4:25] Não sei se a gente fala disso, a gente fala depois, mas enfim.\n[Speaker A, 4:28] Não, lê aí, lê aí antes.\n[Speaker B, 4:31] Vamos ver.\n[Speaker A, 4:33] É.\n[Speaker B, 4:38] Qual delas? A primeira ou a segunda que eu li antes? Ou é uma só?\n[Speaker A, 4:41] Lê as duas, lê na sequência.\n[Speaker B, 4:43] Tá bom.\n[Speaker A, 4:45] Agreement. A gente quer não quer construir no vácuo.\n[Speaker B, 4:51] Você, você, você passou como pro GPT? Você só, só.\n[Speaker A, 4:54] Eu passei bullet points de tudo que eu fui lembrando. Aí eu falei assim, cara, eh, a discussão tava bagunçada, a gente foi rodando em círculos, estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e, e propõe aí como é que a gente segue a discussão, basicamente isso. Aí no segundo eu fiz a continuação disso, a segunda mensagem.\n[Speaker B, 5:24] Tá.\n[Speaker A, 5:26] É.\n[Speaker B, 5:32] Vou repetir.\n[Speaker A, 5:41] Tá bom, tá bem bom, não.\n[Speaker B, 5:42] Mas eu acho que a gente tem uma conclusão no final. Nossa discussão era como mais do que o que, né?\n[Speaker A, 5:47] Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava.\n[Speaker B, 5:54] Tá.\n[Speaker A, 6:02] Ah, puta.\n[Speaker B, 6:04] É, tô vendo, tô vendo que era pra, eu acho que era uma tabela isso, ficou quebrada, né?\n[Speaker A, 6:09] É, tudo bem, dá pra entender mais ou menos.\n[Speaker B, 6:13] É.\n[Speaker A, 6:14] É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né? Eu acho que eles querem que você deixe no link inteiro, talvez.\n[Speaker B, 6:25] Ah, share na conversa inteira?\n[Speaker A, 6:27] É, eu acho que você acessa.\n[Speaker B, 6:29] É, pode ser, se preferir que eu faça isso.",
+  "latency_seconds": 168.32,
+  "duration_seconds": 2792.872925,
+  "estimated_cost_cents": 3.26,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization and timestamps.\n\nRULES:\n1. Label speakers as Speaker A, Speaker B, etc. based on voice.\n2. Group consecutive speech from the same speaker i...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, fiquei.",
+      "start": 0,
+      "end": 5
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí?",
+      "start": 5,
+      "end": 6
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, mano.",
+      "start": 6,
+      "end": 8
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Zão, fala com o tio Zé ali, tá? Você assiste a família sozinho um pouco.",
+      "start": 8,
+      "end": 11
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, eu quero.",
+      "start": 11,
+      "end": 14
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que toca.",
+      "start": 14,
+      "end": 17
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ai, que.",
+      "start": 17,
+      "end": 21
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ai. E aí?",
+      "start": 21,
+      "end": 24
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?",
+      "start": 24,
+      "end": 30
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, nem vem, quando tá gripado, doente, é umas 10 vezes mais trabalho.",
+      "start": 30,
+      "end": 36
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Pior é que ela tá de boa, só que ela tá com um catarro pra caralho, assim, então é uma merda.",
+      "start": 36,
+      "end": 42
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas essa, essa é, essa é a parte que dá 90% mais trabalho.",
+      "start": 42,
+      "end": 47
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa.",
+      "start": 47,
+      "end": 48
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.",
+      "start": 48,
+      "end": 52
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 52,
+      "end": 52
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso porque é uma merda.",
+      "start": 52,
+      "end": 55
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tá foda.",
+      "start": 55,
+      "end": 57
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A Alice, como tá sem fôlego, não respira direito, tosse, acorda.",
+      "start": 57,
+      "end": 62
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 62,
+      "end": 64
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá, blá, blá.",
+      "start": 64,
+      "end": 72
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, mas aí, cara, tem que tirar essa nóia da cabeça.",
+      "start": 72,
+      "end": 75
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 75,
+      "end": 77
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mas.",
+      "start": 77,
+      "end": 79
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É que, mano, pra gente é a primeira vez que ela tá ficando doente, né? Então, acho que.",
+      "start": 79,
+      "end": 83
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, se tiver bronquiolite, você já.",
+      "start": 83,
+      "end": 86
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vai ter.",
+      "start": 86,
+      "end": 88
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Inclusive, mano.",
+      "start": 88,
+      "end": 88
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, não, que a gente.",
+      "start": 88,
+      "end": 90
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É que tem um, tem um fator que tá foda, que a gente não conseguiu migrar o plano.",
+      "start": 90,
+      "end": 97
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora, é um plano superior, então tem que cumprir todas as carências.",
+      "start": 97,
+      "end": 112
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mas tem carência pra?",
+      "start": 112,
+      "end": 115
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tem carência pra internação, pra tudo.",
+      "start": 115,
+      "end": 119
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tudo bem. Isso aí é um problema número dois. Eu não tava preocupado se ele ia ficar doente por causa disso.",
+      "start": 119,
+      "end": 126
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim, sim.",
+      "start": 126,
+      "end": 127
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Isso é um problema. Já foi, isso aí já foi, já foi, né?",
+      "start": 127,
+      "end": 131
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 131,
+      "end": 132
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Já foi, você já entrou nesse risco, agora se aconteceu, esse, o menor dos problemas vai ser isso.",
+      "start": 132,
+      "end": 139
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 139,
+      "end": 140
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 140,
+      "end": 142
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 142,
+      "end": 144
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sei lá.",
+      "start": 144,
+      "end": 144
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Enfim, mas e aí, você leu lá o que eu mandei?",
+      "start": 144,
+      "end": 147
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Cara, eu li um pedaço e a Alice me interrompeu aqui.",
+      "start": 147,
+      "end": 152
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Hum.",
+      "start": 152,
+      "end": 154
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ela acordou, não tinha acordado ainda. É, mas o post é agora, é muito grande o que você mandou? É grande, né?",
+      "start": 154,
+      "end": 160
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não, mano, não é grande, é tipo, é uma mensagem do GPT.",
+      "start": 160,
+      "end": 164
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, vamos ler junto aqui. Mas assim, o hoje, hoje de manhã eu acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda.",
+      "start": 164,
+      "end": 177
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá vendo?",
+      "start": 177,
+      "end": 180
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 180,
+      "end": 181
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vamos lá.",
+      "start": 181,
+      "end": 183
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto, é bem clara mesmo. Eu não sei o quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala, assim, tipo, uma das coisas que eu reconheci é, cara,",
+      "start": 183,
+      "end": 202
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim, sim.",
+      "start": 202,
+      "end": 203
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "trabalhar com escala, trabalhar com analytics e trabalhar em lugares que o analytics é bem forte.",
+      "start": 203,
+      "end": 211
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aham.",
+      "start": 211,
+      "end": 212
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.",
+      "start": 212,
+      "end": 221
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim.",
+      "start": 221,
+      "end": 222
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, pra mim, pra mim também, isso a gente tá alinhado.",
+      "start": 222,
+      "end": 225
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E o, tipo, então por isso que eu gosto muito de crédito, tal, que a gente fala, sabe?",
+      "start": 225,
+      "end": 228
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 228,
+      "end": 229
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É um que você fazer um analytics bom é muito importante, né?",
+      "start": 229,
+      "end": 233
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 233,
+      "end": 234
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 234,
+      "end": 236
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, isso daí é menos uma crença e é mais um, uma coisa que te motiva, exato.",
+      "start": 236,
+      "end": 243
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é, motiva e que vai junto, né?",
+      "start": 243,
+      "end": 247
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Isso, é, como você tá motivado, é uma coisa que você vai melhorar e você é bom nisso e etc.",
+      "start": 247,
+      "end": 253
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É isso aí.",
+      "start": 253,
+      "end": 254
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 254,
+      "end": 256
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que é inclusive, porque eu, eu, eu fiquei fazendo um brainstorm de, de, de ideias que eu já tinha aqui, né?",
+      "start": 256,
+      "end": 262
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 262,
+      "end": 265
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não sei se a gente fala disso, a gente fala depois, mas enfim.",
+      "start": 265,
+      "end": 268
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, lê aí, lê aí antes.",
+      "start": 268,
+      "end": 271
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vamos ver.",
+      "start": 271,
+      "end": 273
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 273,
+      "end": 278
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Qual delas? A primeira ou a segunda que eu li antes? Ou é uma só?",
+      "start": 278,
+      "end": 281
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Lê as duas, lê na sequência.",
+      "start": 281,
+      "end": 283
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom.",
+      "start": 283,
+      "end": 285
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Agreement. A gente quer não quer construir no vácuo.",
+      "start": 285,
+      "end": 291
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você, você, você passou como pro GPT? Você só, só.",
+      "start": 291,
+      "end": 294
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu passei bullet points de tudo que eu fui lembrando. Aí eu falei assim, cara, eh, a discussão tava bagunçada, a gente foi rodando em círculos, estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e, e propõe aí como é que a gente segue a discussão, basicamente isso. Aí no segundo eu fiz a continuação disso, a segunda mensagem.",
+      "start": 294,
+      "end": 324
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá.",
+      "start": 324,
+      "end": 326
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 326,
+      "end": 332
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vou repetir.",
+      "start": 332,
+      "end": 341
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tá bom, tá bem bom, não.",
+      "start": 341,
+      "end": 342
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas eu acho que a gente tem uma conclusão no final. Nossa discussão era como mais do que o que, né?",
+      "start": 342,
+      "end": 347
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava.",
+      "start": 347,
+      "end": 354
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá.",
+      "start": 354,
+      "end": 362
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, puta.",
+      "start": 362,
+      "end": 364
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, tô vendo, tô vendo que era pra, eu acho que era uma tabela isso, ficou quebrada, né?",
+      "start": 364,
+      "end": 369
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tudo bem, dá pra entender mais ou menos.",
+      "start": 369,
+      "end": 373
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 373,
+      "end": 374
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né? Eu acho que eles querem que você deixe no link inteiro, talvez.",
+      "start": 374,
+      "end": 385
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, share na conversa inteira?",
+      "start": 385,
+      "end": 387
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, eu acho que você acessa.",
+      "start": 387,
+      "end": 389
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, pode ser, se preferir que eu faça isso.",
+      "start": 389,
+      "end": null
+    }
+  ]
+}

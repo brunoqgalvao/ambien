@@ -86,6 +86,16 @@ struct AgentIndex: Codable {
     let version: Int
     let lastUpdated: String
     var meetings: [AgentMeetingIndex]
+    var groups: [AgentGroupIndex]?
+}
+
+/// Index entry for a group
+struct AgentGroupIndex: Codable {
+    let id: String
+    let name: String
+    let emoji: String?
+    let meetingCount: Int
+    let path: String
 }
 
 /// Manages JSON export for AI agents (Claude Code, Codex, etc.)
@@ -160,6 +170,93 @@ actor AgentAPIManager {
         print("[AgentAPI] Deleted meeting JSON: \(meetingId)")
     }
 
+    // MARK: - Group Export
+
+    /// Groups directory: ~/.meetingrecorder/meetings/groups/
+    private var groupsDirectory: URL {
+        baseDirectory.appendingPathComponent("groups", isDirectory: true)
+    }
+
+    /// Export a group with all its meetings to JSON
+    func exportGroup(_ group: MeetingGroup, meetings: [Meeting]) async throws {
+        try await withLock {
+            try await self.writeOneGroup(group, meetings: meetings)
+            try await self.updateIndex()
+        }
+
+        print("[AgentAPI] Exported group: \(group.name) with \(meetings.count) meetings")
+    }
+
+    /// Delete a group's JSON file
+    func deleteGroup(_ groupId: UUID) async {
+        do {
+            try await withLock {
+                let path = self.groupFilePath(for: groupId)
+                try? self.fileManager.removeItem(at: path)
+                try await self.updateIndex()
+            }
+            print("[AgentAPI] Deleted group JSON: \(groupId)")
+        } catch {
+            print("[AgentAPI] Error deleting group: \(error)")
+        }
+    }
+
+    /// Write a single group to its JSON file
+    private func writeOneGroup(_ group: MeetingGroup, meetings: [Meeting]) async throws {
+        let filePath = groupFilePath(for: group.id)
+        let directoryPath = filePath.deletingLastPathComponent()
+
+        // Create groups directory if needed
+        try fileManager.createDirectory(at: directoryPath, withIntermediateDirectories: true)
+
+        // Create agent group format with combined transcript
+        let agentGroup = AgentGroup(from: group, meetings: meetings)
+
+        // Encode to JSON
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+        let data: Data
+        do {
+            data = try encoder.encode(agentGroup)
+        } catch {
+            throw AgentAPIError.encodingFailed(error)
+        }
+
+        // Atomic write
+        let tmpPath = filePath.appendingPathExtension("tmp")
+        try? fileManager.removeItem(at: tmpPath)
+
+        do {
+            try data.write(to: tmpPath)
+            try? fileManager.removeItem(at: filePath)
+            try fileManager.moveItem(at: tmpPath, to: filePath)
+        } catch {
+            try? fileManager.removeItem(at: tmpPath)
+            throw AgentAPIError.writeFailed(error)
+        }
+    }
+
+    /// Get the file path for a group
+    private func groupFilePath(for groupId: UUID) -> URL {
+        groupsDirectory.appendingPathComponent("\(groupId.uuidString.lowercased()).json")
+    }
+
+    /// Build index entries for all groups
+    private func buildGroupIndexEntries() async throws -> [AgentGroupIndex] {
+        let groups = try await GroupManager.shared.getAllGroups()
+
+        return groups.map { group in
+            AgentGroupIndex(
+                id: group.id.uuidString.lowercased(),
+                name: group.name,
+                emoji: group.emoji,
+                meetingCount: group.meetingCount,
+                path: "groups/\(group.id.uuidString.lowercased()).json"
+            )
+        }
+    }
+
     // MARK: - Private Methods
 
     /// Write a single meeting to its JSON file
@@ -207,11 +304,11 @@ actor AgentAPIManager {
         let meetings = try await DatabaseManager.shared.getAllMeetings()
         let readyMeetings = meetings.filter { $0.status == .ready }
 
-        // Build index
+        // Build meeting index entries
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime]
 
-        let indexEntries = readyMeetings.map { meeting -> AgentMeetingIndex in
+        let meetingEntries = readyMeetings.map { meeting -> AgentMeetingIndex in
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             let dateStr = dateFormatter.string(from: meeting.startTime)
@@ -225,10 +322,14 @@ actor AgentAPIManager {
             )
         }
 
+        // Build group index entries
+        let groupEntries = try await buildGroupIndexEntries()
+
         let index = AgentIndex(
             version: 1,
             lastUpdated: isoFormatter.string(from: Date()),
-            meetings: indexEntries
+            meetings: meetingEntries,
+            groups: groupEntries.isEmpty ? nil : groupEntries
         )
 
         // Encode

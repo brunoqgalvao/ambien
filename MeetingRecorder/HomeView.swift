@@ -55,7 +55,7 @@ struct HomeView: View {
                     // Dictation style suggestion (show when API key is set but AI cleanup not configured)
                     if isApiKeySet() && !isDictationStyleConfigured() {
                         NudgeCard(
-                            icon: "sparkles.text.rectangle",
+                            icon: "wand.and.stars",
                             iconColor: .brandViolet,
                             title: "Customize your dictation style",
                             subtitle: "Add punctuation, paragraphs, and writing style",
@@ -293,8 +293,9 @@ struct HomeMeetingRow: View {
                 }
                 
                 Spacer()
-                
-                if let cost = meeting.apiCostCents {
+
+                // Cost badge - only visible for beta testers
+                if FeatureFlags.shared.showCosts, let cost = meeting.apiCostCents {
                     Text("$\(Double(cost)/100, specifier: "%.2f")")
                         .font(.brandMono(12))
                         .foregroundColor(.brandTextSecondary)
@@ -315,7 +316,7 @@ struct HomeMeetingRow: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     /// Minimal status indicator - only shows for errors or in-progress
     @ViewBuilder
     private var statusIndicator: some View {
@@ -332,8 +333,7 @@ struct HomeMeetingRow: View {
             }
         case .transcribing, .pendingTranscription:
             // Spinner for in-progress
-            ProgressView()
-                .scaleEffect(0.8)
+            BrandLoadingIndicator(size: .large)
                 .frame(width: 40, height: 40)
         case .failed:
             // Error indicator

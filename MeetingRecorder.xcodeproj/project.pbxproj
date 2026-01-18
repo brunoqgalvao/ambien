@@ -53,6 +53,18 @@
 		1A000000000000000000010A /* BrandComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000010B /* BrandComponents.swift */; };
 		1A000000000000000000010C /* TestAPIServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000010D /* TestAPIServer.swift */; };
 		1A000000000000000000010E /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000010F /* AppLogger.swift */; };
+		1A0000000000000000000110 /* MeetingGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000111 /* MeetingGroup.swift */; };
+		1A0000000000000000000112 /* GroupManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000113 /* GroupManager.swift */; };
+		1A0000000000000000000114 /* MeetingGroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A0000000000000000000115 /* MeetingGroupsView.swift */; };
+		F4WHATSAPP00002 /* WhatsAppCallDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4WHATSAPP00001 /* WhatsAppCallDetector.swift */; };
+		1AAUTORULE00002 /* AutoRuleStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAUTORULE00001 /* AutoRuleStats.swift */; };
+		1ATRANSPROC00002 /* TranscriptionProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ATRANSPROC00001 /* TranscriptionProcess.swift */; };
+		1ASUMMAPROC00002 /* SummarizationProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ASUMMAPROC00001 /* SummarizationProcess.swift */; };
+		1AAPICALLLOG00002 /* APICallLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAPICALLLOG00001 /* APICallLog.swift */; };
+		1BPROJECT00002 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJECT00001 /* Project.swift */; };
+		1BPROJMGR00002 /* ProjectManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJMGR00001 /* ProjectManager.swift */; };
+		1BPROJVIEW00002 /* ProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BPROJVIEW00001 /* ProjectsView.swift */; };
+		1BDEEPGRAM00002 /* DeepgramTranscriptionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -103,6 +115,18 @@
 		1A000000000000000000010B /* BrandComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandComponents.swift; sourceTree = "<group>"; };
 		1A000000000000000000010D /* TestAPIServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAPIServer.swift; sourceTree = "<group>"; };
 		1A000000000000000000010F /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		1A0000000000000000000111 /* MeetingGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingGroup.swift; sourceTree = "<group>"; };
+		1A0000000000000000000113 /* GroupManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupManager.swift; sourceTree = "<group>"; };
+		1A0000000000000000000115 /* MeetingGroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingGroupsView.swift; sourceTree = "<group>"; };
+		F4WHATSAPP00001 /* WhatsAppCallDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsAppCallDetector.swift; sourceTree = "<group>"; };
+		1AAUTORULE00001 /* AutoRuleStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoRuleStats.swift; sourceTree = "<group>"; };
+		1ATRANSPROC00001 /* TranscriptionProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionProcess.swift; sourceTree = "<group>"; };
+		1ASUMMAPROC00001 /* SummarizationProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizationProcess.swift; sourceTree = "<group>"; };
+		1AAPICALLLOG00001 /* APICallLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APICallLog.swift; sourceTree = "<group>"; };
+		1BPROJECT00001 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		1BPROJMGR00001 /* ProjectManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectManager.swift; sourceTree = "<group>"; };
+		1BPROJVIEW00001 /* ProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsView.swift; sourceTree = "<group>"; };
+		1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepgramTranscriptionProvider.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +159,8 @@
 				1A0000000000000000000014 /* KeychainHelper.swift */,
 				1A0000000000000000000017 /* AudioCaptureManager.swift */,
 				1A0000000000000000000018 /* TranscriptionService.swift */,
+				1ATRANSPROC00001 /* TranscriptionProcess.swift */,
+				1ASUMMAPROC00001 /* SummarizationProcess.swift */,
 				1A0000000000000000000019 /* Meeting.swift */,
 				1A000000000000000000001A /* DatabaseManager.swift */,
 				1A000000000000000000001B /* MeetingListView.swift */,
@@ -156,6 +182,8 @@
 				1A00000000000000000000D3 /* QuickDictationPill.swift */,
 				1A00000000000000000000D4 /* QuickRecording.swift */,
 				1A00000000000000000000D5 /* MeetingDetector.swift */,
+				F4WHATSAPP00001 /* WhatsAppCallDetector.swift */,
+				1AAUTORULE00001 /* AutoRuleStats.swift */,
 				1A00000000000000000000D6 /* ErrorToast.swift */,
 				1A00000000000000000000F1 /* SummaryTemplate.swift */,
 				1A00000000000000000000F3 /* PostProcessingService.swift */,
@@ -173,6 +201,14 @@
 				1A0000000000000000000107 /* AudioCompressor.swift */,
 				1A0000000000000000000109 /* SilenceProcessor.swift */,
 				1A000000000000000000010F /* AppLogger.swift */,
+				1A0000000000000000000111 /* MeetingGroup.swift */,
+				1A0000000000000000000113 /* GroupManager.swift */,
+				1A0000000000000000000115 /* MeetingGroupsView.swift */,
+				1AAPICALLLOG00001 /* APICallLog.swift */,
+				1BPROJECT00001 /* Project.swift */,
+				1BPROJMGR00001 /* ProjectManager.swift */,
+				1BPROJVIEW00001 /* ProjectsView.swift */,
+				1BDEEPGRAM00001 /* DeepgramTranscriptionProvider.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -289,6 +325,8 @@
 				1A00000000000000000000E3 /* QuickDictationPill.swift in Sources */,
 				1A00000000000000000000E4 /* QuickRecording.swift in Sources */,
 				1A00000000000000000000E5 /* MeetingDetector.swift in Sources */,
+				F4WHATSAPP00002 /* WhatsAppCallDetector.swift in Sources */,
+				1AAUTORULE00002 /* AutoRuleStats.swift in Sources */,
 				1A00000000000000000000E6 /* ErrorToast.swift in Sources */,
 				1A00000000000000000000F0 /* SummaryTemplate.swift in Sources */,
 				1A00000000000000000000F2 /* PostProcessingService.swift in Sources */,
@@ -306,6 +344,15 @@
 				1A0000000000000000000106 /* AudioCompressor.swift in Sources */,
 				1A0000000000000000000108 /* SilenceProcessor.swift in Sources */,
 				1A000000000000000000010E /* AppLogger.swift in Sources */,
+				1A0000000000000000000110 /* MeetingGroup.swift in Sources */,
+				1A0000000000000000000112 /* GroupManager.swift in Sources */,
+				1A0000000000000000000114 /* MeetingGroupsView.swift in Sources */,
+				1ATRANSPROC00002 /* TranscriptionProcess.swift in Sources */,
+				1ASUMMAPROC00002 /* SummarizationProcess.swift in Sources */,
+				1AAPICALLLOG00002 /* APICallLog.swift in Sources */,
+				1BPROJECT00002 /* Project.swift in Sources */,
+				1BPROJMGR00002 /* ProjectManager.swift in Sources */,
+				1BPROJVIEW00002 /* ProjectsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

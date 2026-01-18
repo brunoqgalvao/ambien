@@ -10,6 +10,8 @@ import Foundation
 import AppKit
 import Combine
 import SwiftUI
+import CoreGraphics
+import CoreAudio
 import os.log
 
 private let logger = Logger(subsystem: "com.meetingrecorder.app", category: "MeetingDetector")
@@ -34,6 +36,7 @@ enum MeetingApp: String, CaseIterable {
     case teams = "Microsoft Teams"
     case slack = "Slack"
     case faceTime = "FaceTime"
+    case whatsApp = "WhatsApp"
 
     var icon: String {
         switch self {
@@ -42,6 +45,7 @@ enum MeetingApp: String, CaseIterable {
         case .teams: return "person.3.fill"
         case .slack: return "bubble.left.and.bubble.right.fill"
         case .faceTime: return "video.fill"
+        case .whatsApp: return "phone.fill"
         }
     }
 
@@ -58,6 +62,8 @@ enum MeetingApp: String, CaseIterable {
             return ["com.tinyspeck.slackmacgap"]
         case .faceTime:
             return ["com.apple.FaceTime"]
+        case .whatsApp:
+            return ["net.whatsapp.WhatsApp", "WhatsApp"]
         }
     }
 
@@ -74,6 +80,14 @@ enum MeetingApp: String, CaseIterable {
             return ["Huddle"]
         case .faceTime:
             return ["FaceTime"]
+        case .whatsApp:
+            // WhatsApp call window patterns (detected from actual app)
+            // Format: "Whatsapp voice call" or "Whatsapp video call"
+            return [
+                "Whatsapp voice call", "Whatsapp video call", "Whatsapp group call",
+                "Voice call", "Video call", "Group call", "Calling", "Ringing",
+                "Chamada de voz", "Chamada de vídeo", "Chamada em grupo", "Chamando", "Tocando"
+            ]
         }
     }
 }
@@ -98,6 +112,7 @@ class MeetingDetector: ObservableObject {
     @AppStorage("autoRecordTeams") private var autoRecordTeams = false
     @AppStorage("autoRecordSlack") private var autoRecordSlack = false
     @AppStorage("autoRecordFaceTime") private var autoRecordFaceTime = false
+    @AppStorage("autoRecordWhatsApp") private var autoRecordWhatsApp = false
 
     // MARK: - Private Properties
 
@@ -108,6 +123,13 @@ class MeetingDetector: ObservableObject {
 
     private weak var audioManager: AudioCaptureManager?
     private var autoStartedRecording: Bool = false
+
+    // WhatsApp call detection
+    private var whatsAppCallObserver: NSObjectProtocol?
+    private var whatsAppEndObserver: NSObjectProtocol?
+
+    // Track which app triggered the current auto-recording
+    private var autoRecordingApp: MeetingApp?
 
     // Polling interval (seconds)
     private let pollingInterval: TimeInterval = 3.0
@@ -149,6 +171,11 @@ class MeetingDetector: ObservableObject {
         // Also watch for app launches/terminations
         setupWorkspaceObservers()
 
+        // Start WhatsApp call detection if enabled
+        if autoRecordWhatsApp {
+            setupWhatsAppDetection()
+        }
+
         logger.info("Started monitoring for meetings")
     }
 
@@ -165,6 +192,9 @@ class MeetingDetector: ObservableObject {
             workspaceObserver = nil
         }
 
+        // Stop WhatsApp detection
+        stopWhatsAppDetection()
+
         print("[MeetingDetector] Stopped monitoring")
     }
 
@@ -176,6 +206,7 @@ class MeetingDetector: ObservableObject {
         case .teams: return autoRecordTeams
         case .slack: return autoRecordSlack
         case .faceTime: return autoRecordFaceTime
+        case .whatsApp: return autoRecordWhatsApp
         }
     }
 
@@ -229,18 +260,24 @@ class MeetingDetector: ObservableObject {
 
         // Check browser-based meetings (Google Meet)
         if autoRecordMeet {
-            logger.debug("Checking for Google Meet...")
             if let meeting = await detectGoogleMeetInBrowser() {
-                logger.info("Found Google Meet: \(meeting.title)")
+                logger.debug("Active Google Meet found: \(meeting.title)")
                 await handleMeetingDetected(meeting)
                 return
+            } else if currentMeeting?.app == .googleMeet {
+                // Google Meet was active but no longer detected
+                // This means either: tab closed, URL changed, or meeting ended screen shown
+                logger.info("Google Meet no longer detected - meeting likely ended")
             }
-        } else {
-            logger.debug("autoRecordMeet is disabled, skipping Google Meet check")
         }
 
+        // Note: WhatsApp detection is handled by WhatsAppCallDetector via notifications
+        // (WhatsApp doesn't expose window titles, so we use dedicated audio-based detection)
+
         // No meeting detected - stop recording if we auto-started
-        if currentMeeting != nil && autoStartedRecording {
+        // Skip auto-stop for WhatsApp since it's handled by WhatsAppCallDetector notifications
+        if currentMeeting != nil && autoStartedRecording && currentMeeting?.app != .whatsApp {
+            logger.info("No active meeting detected, triggering auto-stop")
             await handleMeetingEnded()
         }
     }
@@ -272,10 +309,14 @@ class MeetingDetector: ObservableObject {
     }
 
     private func getActiveWindowTitle(for runningApp: NSRunningApplication, app: MeetingApp) async -> String? {
-        // Use Accessibility API to check window titles
-        // Fall back to basic detection if accessibility is not available
-
         let pid = runningApp.processIdentifier
+
+        // First try CGWindowList (more reliable for apps like WhatsApp)
+        if let title = getWindowTitleViaCGWindowList(pid: pid, app: app) {
+            return title
+        }
+
+        // Fallback to Accessibility API
         let appElement = AXUIElementCreateApplication(pid)
 
         var windowsRef: CFTypeRef?
@@ -299,6 +340,31 @@ class MeetingDetector: ObservableObject {
                     if title.localizedCaseInsensitiveContains(pattern) {
                         return cleanWindowTitle(title, for: app)
                     }
+                }
+            }
+        }
+
+        return nil
+    }
+
+    /// Use CGWindowList to get window titles (works for apps like WhatsApp that don't expose windows via Accessibility API)
+    private func getWindowTitleViaCGWindowList(pid: pid_t, app: MeetingApp) -> String? {
+        guard let windowList = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return nil
+        }
+
+        for window in windowList {
+            guard let windowPID = window[kCGWindowOwnerPID as String] as? pid_t,
+                  windowPID == pid else { continue }
+
+            guard let windowName = window[kCGWindowName as String] as? String,
+                  !windowName.isEmpty else { continue }
+
+            // Check if window name matches any of the app's patterns
+            for pattern in app.activeWindowPatterns {
+                if windowName.localizedCaseInsensitiveContains(pattern) {
+                    logger.info("CGWindowList found match: '\(windowName)' matches '\(pattern)'")
+                    return cleanWindowTitle(windowName, for: app)
                 }
             }
         }
@@ -390,11 +456,25 @@ class MeetingDetector: ObservableObject {
             // Google Meet window titles contain "Meet" and often the meeting code or name
             // Examples: "Meet - abc-defg-hij", "Meeting Name - Google Meet", "meet.google.com/xxx-xxxx-xxx"
             let lowercased = title.lowercased()
+
+            // Skip if this is a post-meeting page (meeting has ended)
+            // Google Meet shows these titles when the meeting is over:
+            // - "You left the meeting"
+            // - "Meeting ended"
+            // - "The meeting has ended"
+            // - "Call ended"
+            // - "Your meeting has ended"
+            // - "Return to home screen" (sometimes shown after leaving)
+            if isGoogleMeetEndedTitle(lowercased) {
+                logger.debug("Detected Google Meet ended state in \(browserName): '\(title)'")
+                continue
+            }
+
             if lowercased.contains("meet.google.com") ||
                (lowercased.contains("google meet") && !lowercased.contains("calendar")) ||
                (lowercased.contains(" - meet") && !lowercased.contains("calendar")) {
 
-                logger.info("Found Google Meet in \(browserName): '\(title)'")
+                logger.info("Found active Google Meet in \(browserName): '\(title)'")
 
                 let cleanTitle = cleanGoogleMeetTitle(title)
 
@@ -409,6 +489,34 @@ class MeetingDetector: ObservableObject {
         }
 
         return nil
+    }
+
+    /// Check if a window title indicates the Google Meet has ended
+    private func isGoogleMeetEndedTitle(_ lowercasedTitle: String) -> Bool {
+        // Patterns that indicate the meeting is over
+        let endedPatterns = [
+            "you left the meeting",
+            "left the meeting",
+            "meeting ended",
+            "meeting has ended",
+            "call ended",
+            "the call has ended",
+            "your meeting has ended",
+            "return to home screen",
+            "rejoin the meeting",      // Shows after leaving with rejoin option
+            "you've left the meeting",
+            "meeting code not valid",  // Invalid/expired meeting
+            "meeting hasn't started",  // Pre-meeting lobby (not active yet)
+            "check your meeting code"  // Error state
+        ]
+
+        for pattern in endedPatterns {
+            if lowercasedTitle.contains(pattern) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private func cleanGoogleMeetTitle(_ title: String) -> String {
@@ -457,11 +565,18 @@ class MeetingDetector: ObservableObject {
                     sourceApp: meeting.app.rawValue
                 )
                 autoStartedRecording = true
+                autoRecordingApp = meeting.app
                 isRecording = true
                 print("[MeetingDetector] Auto-started recording")
 
+                // Track the trigger
+                AutoRuleStatsManager.shared.recordTrigger(for: meeting.app)
+
                 // Show recording island
                 RecordingIslandController.shared.show(audioManager: audioManager)
+
+                // Show toast with Stop/Discard option
+                showAutoRecordingToast(for: meeting, audioManager: audioManager)
 
             } catch {
                 print("[MeetingDetector] Failed to auto-start recording: \(error)")
@@ -469,10 +584,93 @@ class MeetingDetector: ObservableObject {
         }
     }
 
+    /// Show a toast notification when auto-recording starts with option to stop/discard
+    private func showAutoRecordingToast(for meeting: DetectedMeeting, audioManager: AudioCaptureManager) {
+        let app = meeting.app
+
+        ToastController.shared.show(ToastData(
+            type: .info,
+            title: "Recording \(meeting.app.rawValue)",
+            message: meeting.title,
+            duration: 6.0,  // Longer duration for user to react
+            action: ToastAction(title: "Stop") { [weak self] in
+                Task { @MainActor in
+                    await self?.handleAutoRecordingDiscard(app: app, audioManager: audioManager)
+                }
+            },
+            onTap: nil
+        ))
+    }
+
+    /// Handle when user discards an auto-started recording
+    private func handleAutoRecordingDiscard(app: MeetingApp, audioManager: AudioCaptureManager) async {
+        // Discard the recording
+        await audioManager.discardRecording()
+
+        // Record the discard and check if we should auto-disable
+        let shouldDisable = AutoRuleStatsManager.shared.recordDiscard(for: app)
+
+        if shouldDisable {
+            // Auto-disable the rule
+            AutoRuleStatsManager.shared.markAutoDisabled(for: app)
+
+            // Show notification about auto-disable
+            ToastController.shared.showWarning(
+                "Auto-record disabled",
+                message: "\(app.rawValue) auto-record was disabled after 5 discards. Re-enable in Settings.",
+                duration: 5.0,
+                action: ToastAction(title: "Settings") {
+                    SettingsWindowController.shared.showWindow()
+                }
+            )
+
+            logger.info("Auto-disabled \(app.rawValue) recording due to repeated discards")
+        } else {
+            let stat = AutoRuleStatsManager.shared.getStat(for: app)
+            let remaining = 5 - (stat?.consecutiveDiscards ?? 0)
+            if remaining <= 3 && remaining > 0 {
+                // Warn user they're close to auto-disable threshold
+                ToastController.shared.showWarning(
+                    "Recording discarded",
+                    message: "\(remaining) more discard\(remaining == 1 ? "" : "s") will disable \(app.rawValue) auto-record"
+                )
+            }
+        }
+
+        // Clean up meeting detector state
+        currentMeeting = nil
+        autoStartedRecording = false
+        autoRecordingApp = nil
+        isRecording = false
+        detectionStatus = "Monitoring..."
+        lastStopTime = Date()
+
+        // Hide recording island
+        RecordingIslandController.shared.hide()
+    }
+
+    /// Record that a recording was kept (not discarded)
+    func recordKept() {
+        guard let app = autoRecordingApp else { return }
+        AutoRuleStatsManager.shared.recordKept(for: app)
+        autoRecordingApp = nil
+    }
+
+    private var isHandlingMeetingEnd = false
+
     private func handleMeetingEnded() async {
+        // Prevent double-triggering (race condition between polling and notifications)
+        guard !isHandlingMeetingEnd else {
+            logger.debug("Already handling meeting end, skipping duplicate call")
+            return
+        }
+
         guard let meeting = currentMeeting else { return }
 
-        print("[MeetingDetector] Meeting ended: \(meeting.title)")
+        isHandlingMeetingEnd = true
+        defer { isHandlingMeetingEnd = false }
+
+        logger.info("Meeting ended: \(meeting.title) (\(meeting.app.rawValue))")
 
         currentMeeting = nil
         detectionStatus = "Monitoring..."
@@ -481,18 +679,27 @@ class MeetingDetector: ObservableObject {
         // Auto-stop recording if we auto-started it
         if autoStartedRecording, let audioManager = audioManager, audioManager.isRecording {
             do {
+                logger.info("Auto-stopping recording for ended meeting...")
                 _ = try await audioManager.stopRecording()
-                print("[MeetingDetector] Auto-stopped recording")
+                logger.info("Auto-stopped recording successfully")
 
-                // Hide recording island
-                RecordingIslandController.shared.hide()
+                // Recording completed successfully - record as kept
+                recordKept()
+
+                // Hide recording island (dispatch to avoid threading issues)
+                await MainActor.run {
+                    RecordingIslandController.shared.hide()
+                }
 
             } catch {
-                print("[MeetingDetector] Failed to auto-stop recording: \(error)")
+                logger.error("Failed to auto-stop recording: \(error.localizedDescription)")
             }
+        } else {
+            logger.debug("No auto-stop needed: autoStartedRecording=\(self.autoStartedRecording), isRecording=\(self.audioManager?.isRecording ?? false)")
         }
 
         autoStartedRecording = false
+        autoRecordingApp = nil
         isRecording = false
     }
 
@@ -507,6 +714,67 @@ class MeetingDetector: ObservableObject {
             Task {
                 await handleMeetingEnded()
             }
+        }
+    }
+
+    // MARK: - WhatsApp Detection (Audio-based)
+
+    /// Set up WhatsApp call detection using audio activity monitoring
+    private func setupWhatsAppDetection() {
+        logger.info("Setting up WhatsApp audio-based call detection")
+
+        // Start the WhatsApp call detector
+        WhatsAppCallDetector.shared.startMonitoring()
+
+        // Listen for call start notifications
+        whatsAppCallObserver = NotificationCenter.default.addObserver(
+            forName: .whatsAppCallStarted,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self else { return }
+            let startTime = notification.userInfo?["startTime"] as? Date ?? Date()
+
+            Task { @MainActor in
+                let meeting = DetectedMeeting(
+                    app: .whatsApp,
+                    title: "WhatsApp Call",
+                    startedAt: startTime,
+                    bundleIdentifier: "net.whatsapp.WhatsApp",
+                    browserURL: nil
+                )
+                await self.handleMeetingDetected(meeting)
+            }
+        }
+
+        // Listen for call end notifications
+        whatsAppEndObserver = NotificationCenter.default.addObserver(
+            forName: .whatsAppCallEnded,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+
+            Task { @MainActor in
+                // Only end if current meeting is WhatsApp
+                if self.currentMeeting?.app == .whatsApp {
+                    await self.handleMeetingEnded()
+                }
+            }
+        }
+    }
+
+    /// Stop WhatsApp call detection
+    private func stopWhatsAppDetection() {
+        WhatsAppCallDetector.shared.stopMonitoring()
+
+        if let observer = whatsAppCallObserver {
+            NotificationCenter.default.removeObserver(observer)
+            whatsAppCallObserver = nil
+        }
+        if let observer = whatsAppEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+            whatsAppEndObserver = nil
         }
     }
 }

@@ -102,9 +102,7 @@ struct DictationIndicatorView: View {
                 )
 
         case .transcribing:
-            ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                .scaleEffect(0.8)
+            BrandLoadingIndicator(size: .medium, color: .white, style: .spinner)
 
         case .done:
             Image(systemName: "checkmark.circle.fill")

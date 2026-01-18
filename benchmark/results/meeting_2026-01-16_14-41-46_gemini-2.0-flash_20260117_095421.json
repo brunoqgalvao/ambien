@@ -1,0 +1,925 @@
+{
+  "model": "gemini-2.0-flash",
+  "model_name": "Gemini 2.0 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A, 0:04] Mas basicamente a gente também consome uma view que eles criam, eh, para cada fluxo.\n[Speaker A, 0:10] A gente baixa documentos, eh, chama um doc canvas, tem um docx templater que a gente preenche e a gente retorna na via CPJ um evento cadastrado para aquele documento.\n[Speaker A, 0:25] Então, isso aqui, isso aqui tá bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, eh, o overview assim do do dos fluxos, né?\n[Speaker A, 0:38] E quais são os principais problemas?\n[Speaker A, 0:41] Eh, controle de execução.\n[Speaker A, 0:45] Então, hoje a gente não, todos esses fluxos ou são manuais ou eles são schedule.\n[Speaker A, 0:51] A gente não tem isso ainda no no tela.\n[Speaker A, 0:54] Eh, controle de persistência de execuções.\n[Speaker A, 0:58] Então, a gente precisa saber o que que já foi executado para evitar duplo processamento.\n[Speaker A, 1:04] E a gente também precisa saber, eh, algumas informações específicas do fluxo.\n[Speaker A, 1:08] Então, eh, quantos créditos foram gastos, o o evento que foi criado, o arquivo que foi gerado.\n[Speaker A, 1:15] São são métricas que não são as métricas de execução do tela somente.\n[Speaker A, 1:21] Então, pode ter características do fluxo.\n[Speaker A, 1:24] Tipo o quê?\n[Speaker A, 1:25] É.\n[Speaker A, 1:26] E por esse evento do CPJ que foi gerado, eh, alguns fluxos o cliente também quer saber se tem possibilidade de acordo ou não.\n[Speaker A, 1:38] São são mais informações específicas de fluxo.\n[Speaker A, 1:41] A gente tem que tá.\n[Speaker A, 1:43] Sim.\n[Speaker A, 1:46] E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra.\n[Speaker A, 1:54] Então, toda vez que chega um cara na Nelson Williams falando, eu quero uma automação para fazer isso, isso, isso, a gente duplica um worker, eh, sobe, marca um schedule e tudo mais.\n[Speaker A, 2:03] Então, tem muita duplicação.\n[Speaker A, 2:06] E um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um handover ali para o o time técnico.\n[Speaker A, 2:15] Então, seria legal eles terem autonomia de criar mais automações com tela e e algo do tipo, conseguir gerenciar isso.\n[Speaker B, 2:21] É.\n[Speaker B, 2:21] A a além do mais automações, assim, vocês já fossem só capazes de consumir essa integração sem depender do Renan ou do Igão para executar manualmente, já é tipo, acho que é meio que assim, table stakes, assim, deveria ter isso.\n[Speaker A, 2:43] Com certeza.\n[Speaker C, 2:47] Justo.\n[Speaker C, 2:48] O, as entre esses vários workers que vocês têm aí, as views do CPJ a serem consumidas são todas diferentes?\n[Speaker A, 3:03] São.\n[Speaker C, 3:06] Só uma curiosidade, isso aí um pouco do do do, mas.\n[Speaker C, 3:15] Desde daqui eu sei que tão no chão, eh, Breno.\n[Speaker A, 3:19] Então, eles são views.\n[Speaker A, 3:21] Eles criam lá, alguns desses fluxos a gente consome até mais de um.\n[Speaker A, 3:25] Chega até três views, alguma coisa assim.\n[Speaker A, 3:27] São todos.\n[Speaker D, 3:28] Uma coisa, uma coisa que Pode falar.\n[Speaker C, 3:35] Isso, isso.\n[Speaker C, 3:37] Para cada uma hora eu vou lá, vejo quais são os eventos novos para ser processados do dia, vejo quais eu já processei e processo eles.\n[Speaker C, 3:47] Basicamente.\n[Speaker C, 3:51] É assim, o que sabe primeiro lá, o servidor tem que ver se ele funciona.\n[Speaker C, 3:56] Ele chama a gente.\n[Speaker B, 3:57] Eu acho que às vezes não tem como eles chamarem a gente por uma ausência de equipe técnica lá e esse tipo de coisa, né?\n[Speaker B, 4:05] Daí a gente meio que tem que resolver esse lado.\n[Speaker B, 4:08] Por exemplo, lá, não sei.\n[Speaker B, 4:10] Quem chamaria a gente lá?\n[Speaker C, 4:15] A maioria desses é quase tudo batch, né?\n[Speaker C, 4:18] Sim.\n[Speaker C, 4:19] Vocês têm algum tipo de controle dos batches, com esses batches que vocês fazem?\n[Speaker C, 4:24] Eles têm um É, fazem negócios para eles, tipo, esse batch.\n[Speaker C, 4:28] Ele é um batch literalmente um diff do que foi para ele lá, você tem que pegar.\n[Speaker A, 4:33] Nesse caso, o diff, o diff no dia, entre dois, três dias, o que eu já processei e o que falta processar.\n[Speaker C, 4:40] Então, vocês estariam, eles teriam um monte de coisas que tem que ser processadas em lote, tipo isso.\n[Speaker B, 4:44] É, eu sei que isso aqui é verdade nesse fluxo aqui.\n[Speaker B, 4:47] Geralmente são lotes que que tem esse sentido.\n[Speaker C, 4:50] Ah, vocês não conseguem, pelo menos, vocês não conseguem fazer eles pelo menos visualizarem o que que tá rolando?\n[Speaker B, 4:56] Uma coisa que eu ia falar é que uma grande dificuldade de fazer uma base comum para integrações é que tem um certo nível ali, linear ali de implementação bespoke que sempre vai acontecer.\n[Speaker B, 5:11] Então, por exemplo, essas views, elas têm que ser consumidas através de um batch que tem um IP fixo, eh, que o time do CPJ vai ter que construir as views lá especificamente que a gente vai consumir e permitir o acesso desse banco de dados para esse IP fixo.\n[Speaker B, 5:31] Faz sentido a gente fazer algo multi-tenant, eh, com essa abstração no tela?\n[Speaker B, 5:41] Pô, acho que no tela não.\n[Speaker B, 5:43] Faz sentido talvez a gente ter isso na plataforma tecnológica do tela, facilitar essa operação, eh, e ter toda a parte de monitoramento e tudo mais.\n[Speaker B, 5:53] Essa, esse nível mais bespoke, eu acho que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de for deployment, de ser mais fácil e monitorável e conseguir fazer isso.\n[Speaker B, 6:07] E a segunda coisa é, para mim, tudo, todo o resto aí, claramente, obviamente, a gente deveria suportar no workflow.\n[Speaker B, 6:15] Eh, então, tem um, tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer isso dar certo.\n[Speaker B, 6:22] Boa.\n[Speaker D, 6:23] Eu não sei, eu não sei se vai atropelar o que você esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco de, nessa reunião, tá com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa, engenharia de soluções, eh, para tentar contornar isso de alguma forma ou de gerar feature requests para para o tela.\n[Speaker D, 6:59] Eh, durante essa reunião aqui, ou mais só para mostrar, tipo, isso aqui tá acontecendo.\n[Speaker B, 7:04] Acho que tem mais coisa, né?\n[Speaker B, 7:06] Para além do disparo, eh, na thread lá tinha algumas coisas de log, de visibilidade também que acho que tem que vale a pena entender para ver se é tooling para for deployment ou se é coisa para o tela.\n[Speaker D, 7:21] Tipo, acho que de uma forma geral, só para dar todo mundo contexto aqui para o Henrique e o Bruno, né?\n[Speaker D, 7:28] A gente teve aquela cola da tooling e do mapeamento de soluções.\n[Speaker D, 7:33] O que eu tô vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral, né?\n[Speaker D, 7:46] Mas tem aí, tipo, esse fluxo de allow, tem o fluxo em cima do NW, que lá na direita tem os fluxos de cadastro e tem fluxo de publicações.\n[Speaker D, 7:54] E agora a gente tá fazendo um trabalho de conseguir visualizar o que tá tendo nesses casos de uso, né?\n[Speaker D, 8:00] Cadastro, publicações, o da NW, eh, e a gente tá vendo o que que tá sendo construído não somente no macro, né, mas agora também no micro, tipo, dentro de cada uma dessas coisas, o que que tá sendo criado, né?\n[Speaker D, 8:15] E o que que tá sendo repetido em diversas UIs, em diversos outros casos de uso.\n[Speaker D, 8:22] Então, por exemplo, eh, pra gente conseguir definir como tipo estratégico a gente fazer alguma parada super robusta para NW, por exemplo, acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado aqui de soluções, para, tipo, querer fazer uma parada muito boa nesse sentido.\n[Speaker D, 8:50] Mas, por exemplo, uma coisa que eu tava vendo com o Igão, era que, por exemplo, para cadastro de processos e publicações, são duas implementações que a gente tem feito muito, mas que elas, a gente não tem criado soluções para acompanhar a necessidade delas.\n[Speaker D, 9:09] Tipo, a gente já criou muitas soluções para, por exemplo, cadastro, eh, para extração de PDFs, tem a solução de cálculos, tem a solução de defesa.\n[Speaker D, 9:20] Publicações a gente não tem nada, nenhum daqueles níveis de de de soluções que a gente viu, os níveis que a gente pensou, tipo, template de canvas, módulo de de de workflow, eh, apps próprio, API própria, cadastro de processo de publicações a gente não tem quase nada.\n[Speaker D, 9:43] Tem só a, por enquanto, a integração com o Legal One que a Maria fez.\n[Speaker D, 9:48] Então, é, por exemplo, duas áreas que a gente pode definir como estratégico de a gente criar coisas para melhorar elas.\n[Speaker D, 9:57] Cara, mas eu acho que um ponto super importante para a gente pensar é a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa e precisou criar alguma coisa por fora, a gente imediatamente criar feature request para aquilo e a gente conseguir ir mapeando o o quanto aquela coisa tá pedindo, tá sendo muito solicitada para a gente conseguir gerar backlog melhor para produto.\n[Speaker D, 10:26] Por exemplo, será que tá na hora de pegar aquele hub de integrações que a gente fez, colocar lá no no tela para a gente pode começar a enxergar essas coisinhas e ir priorizando.\n[Speaker E, 10:35] Bruno, vou furar a fila aqui, só porque aí saiu quando a pessoa aqui que não é técnica vai falar, geralmente mesmo vai falar merda, né?\n[Speaker E, 10:43] Mas, eh, vou só furar a fila rapidinho porque que que é o o meu sonho como SE aqui.\n[Speaker E, 10:54] E aí eu vou falar, cara, isso também não precisa de acontecer, mas tudo bem.\n[Speaker E, 10:58] Eh, cara, a integração talvez cada um tem que ser feita uma, cada SE vai ter que fazer, fazer porque cada sistema assim de um jeito, mesmo no, ah, o seu usa, vai integrar com o seu Salesforce, Salesforce em um cliente de um jeito, em outro de outro, cara, eu já não sei.\n[Speaker E, 11:15] Mas consumir essa integração usando o tela deveria ser fácil.\n[Speaker E, 11:22] Deveria ter uma maneira fácil de ele pegar e sei lá, cara, sem ter que expor API aqui, sem criar um código no code execution, replicar esse código cada vez.\n[Speaker E, 11:32] Eh, isso aí que é meio que minha minha provocação, minha hipótese aqui de de o que é a solução ideal.\n[Speaker E, 11:40] É possível?\n[Speaker E, 11:41] Não sei.\n[Speaker E, 11:43] Tô simplificando?\n[Speaker E, 11:44] Provavelmente.\n[Speaker E, 11:46] Mas assim, seria essa a minha provocação, seria legal pensar como a saída final.\n[Speaker C, 11:53] Eh, vocês que já tem mais tempo na frente, o que que vocês acham disso?\n[Speaker C, 12:00] Cara, seria o ideal, mas a gente tem que ter também a flexibilidade.\n[Speaker C, 12:04] Que a gente já tem, que a gente já tem hoje.\n[Speaker C, 12:06] E também ali, na frente, que a gente tem que ter.\n[Speaker C, 12:09] O que que a gente definir lá para criar aí dentro dessas E muito bem, qual é que a gente salva e o que que a gente tem que fazer, né?\n[Speaker C, 12:18] E, enfim, que a gente tá definindo assim.\n[Speaker C, 12:21] Então, tenta procurar utilizar esse poder que você tem para poder utilizar esse mundo para andar.\n[Speaker C, 12:27] O que que a gente tem que fazer?\n[Speaker C, 12:29] E a gente tá perto de conseguir fazer isso no mundo.\n[Speaker C, 12:33] O que que a gente tem que saber?\n[Speaker C, 12:35] Eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de for deployment, de ser mais fácil e monitorável e conseguir fazer isso.\n[Speaker B, 6:07] E a segunda coisa é, para mim, tudo, todo o resto aí, claramente, obviamente, a gente deveria suportar no workflow.\n[Speaker B, 6:15] Eh, então, tem um, tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer isso dar certo.\n[Speaker B, 6:22] Boa.\n[Speaker D, 6:23] Eu não sei, eu não sei se vai atropelar o que você esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco de, nessa reunião, tá com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa, engenharia de soluções, eh, para tentar contornar isso de alguma forma ou de gerar feature requests para para o tela.\n[Speaker D, 6:59] Eh, durante essa reunião aqui, ou mais só para mostrar, tipo, isso aqui tá acontecendo.\n[Speaker B, 7:04] Acho que tem mais coisa, né?\n[Speaker B, 7:06] Para além do disparo, eh, na thread lá tinha algumas coisas de log, de visibilidade também que acho que tem que vale a pena entender para ver se é tooling para for deployment ou se é coisa para o tela.\n[Speaker D, 7:21] Tipo, acho que de uma forma geral, só para dar todo mundo contexto aqui para o Henrique e o Bruno, né?\n[Speaker D, 7:28] A gente teve aquela cola da tooling e do mapeamento de soluções.\n[Speaker D, 7:33] O que eu tô vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral, né?\n[Speaker D, 7:46] Mas tem aí, tipo, esse fluxo de allow, tem o fluxo em cima do NW, que lá na direita tem os fluxos de cadastro e tem fluxo de publicações.\n[Speaker D, 7:54] E agora a gente tá fazendo um trabalho de conseguir visualizar o que tá tendo nesses casos de uso, né?\n[Speaker D, 8:00] Cadastro, publicações, o da NW, eh, e a gente tá vendo o que que tá sendo construído não somente no macro, né, mas agora também no micro, tipo, dentro de cada uma dessas coisas, o que que tá sendo criado, né?\n[Speaker D, 8:15] E o que que tá sendo repetido em diversas UIs, em diversos outros casos de uso.\n[Speaker D, 8:22] Então, por exemplo, eh, pra gente conseguir definir como tipo estratégico a gente fazer alguma parada super robusta para NW, por exemplo, acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado aqui de soluções, para, tipo, querer fazer uma parada muito boa nesse sentido.\n[Speaker D, 8:50] Mas, por exemplo, uma coisa que eu tava vendo com o Igão, era que, por exemplo, para cadastro de processos e publicações, são duas implementações que a gente tem feito muito, mas que elas, a gente não tem criado soluções para acompanhar a necessidade delas.\n[Speaker D, 9:09] Tipo, a gente já criou muitas soluções para, por exemplo, cadastro, eh, para extração de PDFs, tem a solução de cálculos, tem a solução de defesa.\n[Speaker D, 9:20] Publicações a gente não tem nada, nenhum daqueles níveis de de de soluções que a gente viu, os níveis que a gente pensou, tipo, template de canvas, módulo de de de workflow, eh, apps próprio, API própria, cadastro de processo de publicações a gente não tem quase nada.\n[Speaker D, 9:43] Tem só a, por enquanto, a integração com o Legal One que a Maria fez.\n[Speaker D, 9:48] Então, é, por exemplo, duas áreas que a gente pode definir como estratégico de a gente criar coisas para melhorar elas.\n[Speaker D, 9:57] Cara, mas eu acho que um ponto super importante para a gente pensar é a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa e precisou criar alguma coisa por fora, a gente imediatamente criar feature request para aquilo e a gente conseguir ir mapeando o o quanto aquela coisa tá pedindo, tá sendo muito solicitada para a gente conseguir gerar backlog melhor para produto.\n[Speaker D, 10:26] Por exemplo, será que tá na hora de pegar aquele hub de integrações que a gente fez, colocar lá no no tela para a gente pode começar a enxergar essas coisinhas e ir priorizando.\n[Speaker E, 10:35] Bruno, vou furar a fila aqui, só porque aí saiu quando a pessoa aqui que não é técnica vai falar, geralmente mesmo vai falar merda, né?\n[Speaker E, 10:43] Mas, eh, vou só furar a fila rapidinho porque que que é o o meu sonho como SE aqui.\n[Speaker E, 10:54] E aí eu vou falar, cara, isso também não precisa de acontecer, mas tudo bem.\n[Speaker E, 10:58] Eh, cara, a integração talvez cada um tem que ser feita uma, cada SE vai ter que fazer, fazer porque cada sistema assim de um jeito, mesmo no, ah, o seu usa, vai integrar com o seu Salesforce, Salesforce em um cliente de um jeito, em outro de outro, cara, eu já não sei.\n[Speaker E, 11:15] Mas consumir essa integração usando o tela deveria ser fácil.\n[Speaker E, 11:22] Deveria ter uma maneira fácil de ele pegar e sei lá, cara, sem ter que expor API aqui, sem criar um código no code execution, replicar esse código cada vez.\n[Speaker E, 11:32] Eh, isso aí que é meio que minha minha provocação, minha hipótese aqui de de o que é a solução ideal.\n[Speaker E, 11:40] É possível?\n[Speaker E, 11:41] Não sei.\n[Speaker E, 11:43] Tô simplificando?\n[Speaker E, 11:44] Provavelmente.\n[Speaker E, 11:46] Mas assim, seria essa a minha provocação, seria legal pensar como a saída final.\n[Speaker C, 11:53] Eh, vocês que já tem mais tempo na frente, o que que vocês acham disso?\n[Speaker C, 12:00] Cara, seria o ideal, mas a gente tem que ter também a flexibilidade.\n[Speaker C, 12:04] Que a gente já tem, que a gente já tem hoje.\n[Speaker C, 12:06] E também ali, na frente, que a gente tem que ter.\n[Speaker C, 12:09] O que que a gente definir lá para criar aí dentro dessas E muito bem, qual é que a gente salva e o que que a gente tem que fazer, né?\n[Speaker C, 12:18] E, enfim, que a gente tá definindo assim.\n[Speaker C, 12:21] Então, tenta procurar utilizar esse poder que você tem para poder utilizar esse mundo para andar.\n[Speaker C, 12:27] O que que a gente tem que fazer?\n[Speaker C, 12:29] E a gente tá perto de conseguir fazer isso no mundo.\n[Speaker C, 12:33] O que que a gente tem que saber?\n[Speaker C, 12:35] Eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh,",
+  "latency_seconds": 50.9,
+  "duration_seconds": 3554.304,
+  "estimated_cost_cents": 4.15,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization.\n\nInstructions:\n1. Identify different speakers and label them as Speaker A, Speaker B, Speaker C, etc.\n2. Format the output as:\n   [Speaker...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "Mas basicamente a gente também consome uma view que eles criam, eh, para cada fluxo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "A gente baixa documentos, eh, chama um doc canvas, tem um docx templater que a gente preenche e a gente retorna na via CPJ um evento cadastrado para aquele documento.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, isso aqui, isso aqui tá bem simplificado, tem alguns fluxos que são mais complexos, mas só para dar uma ideia, eh, o overview assim do do dos fluxos, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E quais são os principais problemas?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eh, controle de execução.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, hoje a gente não, todos esses fluxos ou são manuais ou eles são schedule.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "A gente não tem isso ainda no no tela.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eh, controle de persistência de execuções.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, a gente precisa saber o que que já foi executado para evitar duplo processamento.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E a gente também precisa saber, eh, algumas informações específicas do fluxo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, eh, quantos créditos foram gastos, o o evento que foi criado, o arquivo que foi gerado.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "São são métricas que não são as métricas de execução do tela somente.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, pode ter características do fluxo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tipo o quê?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E por esse evento do CPJ que foi gerado, eh, alguns fluxos o cliente também quer saber se tem possibilidade de acordo ou não.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "São são mais informações específicas de fluxo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "A gente tem que tá.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, como esses fluxos foram crescendo, a gente teve uma duplicação de fluxos e também de infra.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, toda vez que chega um cara na Nelson Williams falando, eu quero uma automação para fazer isso, isso, isso, a gente duplica um worker, eh, sobe, marca um schedule e tudo mais.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, tem muita duplicação.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E um ponto que seria, que é o que o Carlos trouxe, que no futuro seria legal ter um handover ali para o o time técnico.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, seria legal eles terem autonomia de criar mais automações com tela e e algo do tipo, conseguir gerenciar isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A a além do mais automações, assim, vocês já fossem só capazes de consumir essa integração sem depender do Renan ou do Igão para executar manualmente, já é tipo, acho que é meio que assim, table stakes, assim, deveria ter isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Com certeza.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Justo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O, as entre esses vários workers que vocês têm aí, as views do CPJ a serem consumidas são todas diferentes?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "São.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Só uma curiosidade, isso aí um pouco do do do, mas.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Desde daqui eu sei que tão no chão, eh, Breno.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, eles são views.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eles criam lá, alguns desses fluxos a gente consome até mais de um.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Chega até três views, alguma coisa assim.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "São todos.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Uma coisa, uma coisa que Pode falar.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Isso, isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Para cada uma hora eu vou lá, vejo quais são os eventos novos para ser processados do dia, vejo quais eu já processei e processo eles.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Basicamente.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "É assim, o que sabe primeiro lá, o servidor tem que ver se ele funciona.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Ele chama a gente.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu acho que às vezes não tem como eles chamarem a gente por uma ausência de equipe técnica lá e esse tipo de coisa, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Daí a gente meio que tem que resolver esse lado.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Por exemplo, lá, não sei.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Quem chamaria a gente lá?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "A maioria desses é quase tudo batch, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Sim.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Vocês têm algum tipo de controle dos batches, com esses batches que vocês fazem?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Eles têm um É, fazem negócios para eles, tipo, esse batch.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Ele é um batch literalmente um diff do que foi para ele lá, você tem que pegar.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nesse caso, o diff, o diff no dia, entre dois, três dias, o que eu já processei e o que falta processar.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Então, vocês estariam, eles teriam um monte de coisas que tem que ser processadas em lote, tipo isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, eu sei que isso aqui é verdade nesse fluxo aqui.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Geralmente são lotes que que tem esse sentido.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Ah, vocês não conseguem, pelo menos, vocês não conseguem fazer eles pelo menos visualizarem o que que tá rolando?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Uma coisa que eu ia falar é que uma grande dificuldade de fazer uma base comum para integrações é que tem um certo nível ali, linear ali de implementação bespoke que sempre vai acontecer.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então, por exemplo, essas views, elas têm que ser consumidas através de um batch que tem um IP fixo, eh, que o time do CPJ vai ter que construir as views lá especificamente que a gente vai consumir e permitir o acesso desse banco de dados para esse IP fixo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Faz sentido a gente fazer algo multi-tenant, eh, com essa abstração no tela?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Pô, acho que no tela não.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Faz sentido talvez a gente ter isso na plataforma tecnológica do tela, facilitar essa operação, eh, e ter toda a parte de monitoramento e tudo mais.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Essa, esse nível mais bespoke, eu acho que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de for deployment, de ser mais fácil e monitorável e conseguir fazer isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E a segunda coisa é, para mim, tudo, todo o resto aí, claramente, obviamente, a gente deveria suportar no workflow.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eh, então, tem um, tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer isso dar certo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Boa.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Eu não sei, eu não sei se vai atropelar o que você esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco de, nessa reunião, tá com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa, engenharia de soluções, eh, para tentar contornar isso de alguma forma ou de gerar feature requests para para o tela.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Eh, durante essa reunião aqui, ou mais só para mostrar, tipo, isso aqui tá acontecendo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Acho que tem mais coisa, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Para além do disparo, eh, na thread lá tinha algumas coisas de log, de visibilidade também que acho que tem que vale a pena entender para ver se é tooling para for deployment ou se é coisa para o tela.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tipo, acho que de uma forma geral, só para dar todo mundo contexto aqui para o Henrique e o Bruno, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "A gente teve aquela cola da tooling e do mapeamento de soluções.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "O que eu tô vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Mas tem aí, tipo, esse fluxo de allow, tem o fluxo em cima do NW, que lá na direita tem os fluxos de cadastro e tem fluxo de publicações.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "E agora a gente tá fazendo um trabalho de conseguir visualizar o que tá tendo nesses casos de uso, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Cadastro, publicações, o da NW, eh, e a gente tá vendo o que que tá sendo construído não somente no macro, né, mas agora também no micro, tipo, dentro de cada uma dessas coisas, o que que tá sendo criado, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "E o que que tá sendo repetido em diversas UIs, em diversos outros casos de uso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Então, por exemplo, eh, pra gente conseguir definir como tipo estratégico a gente fazer alguma parada super robusta para NW, por exemplo, acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado aqui de soluções, para, tipo, querer fazer uma parada muito boa nesse sentido.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Mas, por exemplo, uma coisa que eu tava vendo com o Igão, era que, por exemplo, para cadastro de processos e publicações, são duas implementações que a gente tem feito muito, mas que elas, a gente não tem criado soluções para acompanhar a necessidade delas.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tipo, a gente já criou muitas soluções para, por exemplo, cadastro, eh, para extração de PDFs, tem a solução de cálculos, tem a solução de defesa.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Publicações a gente não tem nada, nenhum daqueles níveis de de de soluções que a gente viu, os níveis que a gente pensou, tipo, template de canvas, módulo de de de workflow, eh, apps próprio, API própria, cadastro de processo de publicações a gente não tem quase nada.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tem só a, por enquanto, a integração com o Legal One que a Maria fez.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Então, é, por exemplo, duas áreas que a gente pode definir como estratégico de a gente criar coisas para melhorar elas.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Cara, mas eu acho que um ponto super importante para a gente pensar é a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa e precisou criar alguma coisa por fora, a gente imediatamente criar feature request para aquilo e a gente conseguir ir mapeando o o quanto aquela coisa tá pedindo, tá sendo muito solicitada para a gente conseguir gerar backlog melhor para produto.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Por exemplo, será que tá na hora de pegar aquele hub de integrações que a gente fez, colocar lá no no tela para a gente pode começar a enxergar essas coisinhas e ir priorizando.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Bruno, vou furar a fila aqui, só porque aí saiu quando a pessoa aqui que não é técnica vai falar, geralmente mesmo vai falar merda, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas, eh, vou só furar a fila rapidinho porque que que é o o meu sonho como SE aqui.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "E aí eu vou falar, cara, isso também não precisa de acontecer, mas tudo bem.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Eh, cara, a integração talvez cada um tem que ser feita uma, cada SE vai ter que fazer, fazer porque cada sistema assim de um jeito, mesmo no, ah, o seu usa, vai integrar com o seu Salesforce, Salesforce em um cliente de um jeito, em outro de outro, cara, eu já não sei.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas consumir essa integração usando o tela deveria ser fácil.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Deveria ter uma maneira fácil de ele pegar e sei lá, cara, sem ter que expor API aqui, sem criar um código no code execution, replicar esse código cada vez.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Eh, isso aí que é meio que minha minha provocação, minha hipótese aqui de de o que é a solução ideal.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "É possível?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Não sei.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Tô simplificando?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Provavelmente.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas assim, seria essa a minha provocação, seria legal pensar como a saída final.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Eh, vocês que já tem mais tempo na frente, o que que vocês acham disso?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Cara, seria o ideal, mas a gente tem que ter também a flexibilidade.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Que a gente já tem, que a gente já tem hoje.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E também ali, na frente, que a gente tem que ter.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente definir lá para criar aí dentro dessas E muito bem, qual é que a gente salva e o que que a gente tem que fazer, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E, enfim, que a gente tá definindo assim.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Então, tenta procurar utilizar esse poder que você tem para poder utilizar esse mundo para andar.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente tem que fazer?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E a gente tá perto de conseguir fazer isso no mundo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente tem que saber?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, que a gente não deveria trazer para o tela, mas a gente deveria suportar dentro de for deployment, de ser mais fácil e monitorável e conseguir fazer isso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E a segunda coisa é, para mim, tudo, todo o resto aí, claramente, obviamente, a gente deveria suportar no workflow.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eh, então, tem um, tem uma lista de gaps aí de coisas que a gente tem que fazer no workflow para fazer isso dar certo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Boa.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Eu não sei, eu não sei se vai atropelar o que você esteja pensando em falar aí, Renan, mas eu acho que eu queria entender um pouco de, nessa reunião, tá com o objetivo de mais apresentar esses problemas para a gente pensar em alguma solução interna nossa, engenharia de soluções, eh, para tentar contornar isso de alguma forma ou de gerar feature requests para para o tela.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Eh, durante essa reunião aqui, ou mais só para mostrar, tipo, isso aqui tá acontecendo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Acho que tem mais coisa, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Para além do disparo, eh, na thread lá tinha algumas coisas de log, de visibilidade também que acho que tem que vale a pena entender para ver se é tooling para for deployment ou se é coisa para o tela.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tipo, acho que de uma forma geral, só para dar todo mundo contexto aqui para o Henrique e o Bruno, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "A gente teve aquela cola da tooling e do mapeamento de soluções.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "O que eu tô vendo aí, talvez para a gente gerar, essa conversa aqui vai gerar coisas talvez encadeadas para conseguir fazer a solução final geral, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Mas tem aí, tipo, esse fluxo de allow, tem o fluxo em cima do NW, que lá na direita tem os fluxos de cadastro e tem fluxo de publicações.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "E agora a gente tá fazendo um trabalho de conseguir visualizar o que tá tendo nesses casos de uso, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Cadastro, publicações, o da NW, eh, e a gente tá vendo o que que tá sendo construído não somente no macro, né, mas agora também no micro, tipo, dentro de cada uma dessas coisas, o que que tá sendo criado, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "E o que que tá sendo repetido em diversas UIs, em diversos outros casos de uso.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Então, por exemplo, eh, pra gente conseguir definir como tipo estratégico a gente fazer alguma parada super robusta para NW, por exemplo, acho que isso vai vindo de decisões estratégicas da empresa, do nosso lado aqui de soluções, para, tipo, querer fazer uma parada muito boa nesse sentido.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Mas, por exemplo, uma coisa que eu tava vendo com o Igão, era que, por exemplo, para cadastro de processos e publicações, são duas implementações que a gente tem feito muito, mas que elas, a gente não tem criado soluções para acompanhar a necessidade delas.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tipo, a gente já criou muitas soluções para, por exemplo, cadastro, eh, para extração de PDFs, tem a solução de cálculos, tem a solução de defesa.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Publicações a gente não tem nada, nenhum daqueles níveis de de de soluções que a gente viu, os níveis que a gente pensou, tipo, template de canvas, módulo de de de workflow, eh, apps próprio, API própria, cadastro de processo de publicações a gente não tem quase nada.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Tem só a, por enquanto, a integração com o Legal One que a Maria fez.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Então, é, por exemplo, duas áreas que a gente pode definir como estratégico de a gente criar coisas para melhorar elas.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Cara, mas eu acho que um ponto super importante para a gente pensar é a gente vê uma necessidade que tem, tipo, a gente não conseguiu fazer no workflow alguma coisa e precisou criar alguma coisa por fora, a gente imediatamente criar feature request para aquilo e a gente conseguir ir mapeando o o quanto aquela coisa tá pedindo, tá sendo muito solicitada para a gente conseguir gerar backlog melhor para produto.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker D",
+      "text": "Por exemplo, será que tá na hora de pegar aquele hub de integrações que a gente fez, colocar lá no no tela para a gente pode começar a enxergar essas coisinhas e ir priorizando.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Bruno, vou furar a fila aqui, só porque aí saiu quando a pessoa aqui que não é técnica vai falar, geralmente mesmo vai falar merda, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas, eh, vou só furar a fila rapidinho porque que que é o o meu sonho como SE aqui.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "E aí eu vou falar, cara, isso também não precisa de acontecer, mas tudo bem.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Eh, cara, a integração talvez cada um tem que ser feita uma, cada SE vai ter que fazer, fazer porque cada sistema assim de um jeito, mesmo no, ah, o seu usa, vai integrar com o seu Salesforce, Salesforce em um cliente de um jeito, em outro de outro, cara, eu já não sei.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas consumir essa integração usando o tela deveria ser fácil.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Deveria ter uma maneira fácil de ele pegar e sei lá, cara, sem ter que expor API aqui, sem criar um código no code execution, replicar esse código cada vez.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Eh, isso aí que é meio que minha minha provocação, minha hipótese aqui de de o que é a solução ideal.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "É possível?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Não sei.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Tô simplificando?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Provavelmente.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker E",
+      "text": "Mas assim, seria essa a minha provocação, seria legal pensar como a saída final.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Eh, vocês que já tem mais tempo na frente, o que que vocês acham disso?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Cara, seria o ideal, mas a gente tem que ter também a flexibilidade.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Que a gente já tem, que a gente já tem hoje.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E também ali, na frente, que a gente tem que ter.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente definir lá para criar aí dentro dessas E muito bem, qual é que a gente salva e o que que a gente tem que fazer, né?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E, enfim, que a gente tá definindo assim.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Então, tenta procurar utilizar esse poder que você tem para poder utilizar esse mundo para andar.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente tem que fazer?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "E a gente tá perto de conseguir fazer isso no mundo.",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "O que que a gente tem que saber?",
+      "start": null,
+      "end": null
+    },
+    {
+      "speaker": "Speaker C",
+      "text": "Eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh, eh,",
+      "start": null,
+      "end": null
+    }
+  ]
+}

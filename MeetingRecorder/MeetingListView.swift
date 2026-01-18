@@ -39,7 +39,7 @@ struct MeetingListView: View {
             if viewModel.isLoading {
                 // Loading state
                 VStack(spacing: 12) {
-                    ProgressView()
+                    BrandLoadingIndicator(size: .large)
                     Text("Loading meetings...")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -65,6 +65,11 @@ struct MeetingListView: View {
                                         onRename: { newTitle in
                                             Task {
                                                 await viewModel.renameMeeting(meeting, to: newTitle)
+                                            }
+                                        },
+                                        onDelete: {
+                                            Task {
+                                                await viewModel.deleteMeeting(meeting)
                                             }
                                         }
                                     )
@@ -94,6 +99,17 @@ struct MeetingListView: View {
         .onChange(of: searchText) { _, newValue in
             Task {
                 await viewModel.search(query: newValue)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .meetingsDidChange)) { _ in
+            Task {
+                await viewModel.search(query: searchText)
+            }
+        }
+        .onChange(of: viewModel.meetings) { _, newMeetings in
+            if let selectedId = selectedMeeting?.id,
+               let updatedMeeting = newMeetings.first(where: { $0.id == selectedId }) {
+                selectedMeeting = updatedMeeting
             }
         }
     }
@@ -142,6 +158,8 @@ class MeetingListViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
+            // Wait for database to be initialized before querying
+            try await DatabaseManager.shared.waitForInitialization()
             meetings = try await DatabaseManager.shared.getAllMeetings()
         } catch {
             errorMessage = error.localizedDescription
@@ -163,8 +181,17 @@ class MeetingListViewModel: ObservableObject {
 
     func deleteMeeting(_ meeting: Meeting) async {
         do {
+            // Delete audio file
+            try? FileManager.default.removeItem(atPath: meeting.audioPath)
+
+            // Delete from database
             try await DatabaseManager.shared.delete(meeting.id)
             meetings.removeAll { $0.id == meeting.id }
+
+            // Remove from Agent API exports
+            try? await AgentAPIManager.shared.deleteMeeting(meeting.id)
+
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -177,6 +204,7 @@ class MeetingListViewModel: ObservableObject {
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
             updateMeetingInList(updatedMeeting)
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             // Update agent API export if meeting is ready
             if meeting.status == .ready {
@@ -198,6 +226,7 @@ class MeetingListViewModel: ObservableObject {
         do {
             try await DatabaseManager.shared.update(updatedMeeting)
             updateMeetingInList(updatedMeeting)
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
 
             // Perform actual transcription
             let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
@@ -209,8 +238,8 @@ class MeetingListViewModel: ObservableObject {
             updatedMeeting.status = .ready
             updatedMeeting.errorMessage = nil
 
-            // Generate smart title from transcript
-            if let smartTitle = await TranscriptionService.shared.generateMeetingTitle(from: result.text) {
+            // Use title from transcription process
+            if let smartTitle = result.title {
                 updatedMeeting.title = smartTitle
             }
 
@@ -230,6 +259,7 @@ class MeetingListViewModel: ObservableObject {
             updatedMeeting.errorMessage = error.localizedDescription
             try? await DatabaseManager.shared.update(updatedMeeting)
             updateMeetingInList(updatedMeeting)
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
             errorMessage = error.localizedDescription
             print("[MeetingListViewModel] Retry failed: \(error)")
         }
@@ -309,9 +339,7 @@ struct FailedTranscriptionsBanner: View {
             Button(action: onRetryAll) {
                 HStack(spacing: 4) {
                     if isRetrying {
-                        ProgressView()
-                            .scaleEffect(0.6)
-                            .frame(width: 12, height: 12)
+                        BrandLoadingIndicator(size: .tiny, color: .white)
                     } else {
                         Image(systemName: "arrow.clockwise")
                             .font(.caption)
@@ -358,11 +386,13 @@ struct MeetingRowView: View {
     let meeting: Meeting
     var onRetry: (() -> Void)? = nil
     var onRename: ((String) -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
 
     @State private var isEditing = false
     @State private var editedTitle = ""
     @State private var isHovered = false
     @State private var showErrorPopover = false
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -395,8 +425,7 @@ struct MeetingRowView: View {
                 .help("Transcription failed - click for details")
             } else if meeting.status == .transcribing {
                 // Transcribing: show spinner
-                ProgressView()
-                    .scaleEffect(0.6)
+                BrandLoadingIndicator(size: .small)
                     .frame(width: 20, height: 20)
             } else if meeting.status == .recording {
                 // Recording: show pulsing red dot
@@ -453,8 +482,8 @@ struct MeetingRowView: View {
 
             Spacer()
 
-            // Cost badge (if transcribed)
-            if let cost = meeting.formattedCost {
+            // Cost badge (if transcribed) - only visible for beta testers
+            if FeatureFlags.shared.showCosts, let cost = meeting.formattedCost {
                 Text(cost)
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -464,29 +493,47 @@ struct MeetingRowView: View {
                     .cornerRadius(4)
             }
 
-            // Retry button for failed transcriptions - shows on hover or always if failed
-            if meeting.status == .failed && isHovered {
-                Button(action: { onRetry?() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption)
-                        Text("Retry")
-                            .font(.caption.weight(.medium))
+            // Hover actions
+            if isHovered {
+                HStack(spacing: 6) {
+                    // Retry button for failed transcriptions
+                    if meeting.status == .failed {
+                        Button(action: { onRetry?() }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.caption)
+                                Text("Retry")
+                                    .font(.caption.weight(.medium))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.brandViolet)
+                            .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.brandViolet)
-                    .cornerRadius(4)
+
+                    // Delete button (always show on hover)
+                    Button(action: { showDeleteConfirmation = true }) {
+                        Image(systemName: "trash")
+                            .font(.caption)
+                            .foregroundColor(.red.opacity(0.8))
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete meeting")
                 }
-                .buttonStyle(.plain)
                 .transition(.opacity)
             }
 
-            // Chevron
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            // Chevron (hide when hovered to make room for actions)
+            if !isHovered {
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -500,6 +547,14 @@ struct MeetingRowView: View {
             // Double-click to edit
             editedTitle = meeting.title
             isEditing = true
+        }
+        .alert("Delete Meeting?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                onDelete?()
+            }
+        } message: {
+            Text("This will permanently delete \"\(meeting.title)\" and its audio file.")
         }
     }
 }

@@ -1,0 +1,541 @@
+{
+  "model": "gemini-2.0-flash",
+  "model_name": "Gemini 2.0 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A, 0:01] E aí, chiqueiro.\n\n[Speaker B, 0:03] E aí?\n\n[Speaker A, 0:04] E aí, mano.\n\n[Speaker B, 0:05] Fala com o tio Zé ali, tá?\n\n[Speaker A, 0:18] Ai, que Nossa, tô cansado, cara, os últimos três dias foram difíceis assim com a Fernanda, viu?\n\n[Speaker B, 0:28] Ah, neném quando tá gripado doente é um 10 vezes mais trabalho.\n\n[Speaker A, 0:33] Pior é que ela tá de boa, só que ela tá com um catarro pra caralho assim, então é merda.\n\n[Speaker B, 0:39] Mas essa, essa é essa é a parte que dá 90% mais trabalho.\n\n[Speaker A, 0:43] Nossa.\n\n[Speaker B, 0:44] Não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.\n\n[Speaker A, 0:48] É.\n\n[Speaker B, 0:49] Isso porque é merda.\n\n[Speaker A, 0:51] É, tá foda.\n\n[Speaker B, 0:52] A Alice, como tá assim, foda, não respira direito, tosse, acorda.\n\n[Speaker A, 1:00] Uhum.\n\n[Speaker A, 1:02] Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá blá blá.\n\n[Speaker B, 1:09] Ah, mas aí, cara, tem que tirar essa nóia da cabeça.\n\n[Speaker A, 1:12] É.\n\n[Speaker B, 1:13] Você tirar essa nóia da cabeça.\n\n[Speaker A, 1:14] É, mas é que, mano, pra gente é a primeira vez que ela tá ficando doente, né?\n\n[Speaker B, 1:17] Então acho que é normal.\n\n[Speaker B, 1:18] E se tiver bronquiolite, que seja leve.\n\n[Speaker B, 1:21] Vai ter.\n\n[Speaker B, 1:22] Inclusive, mano.\n\n[Speaker A, 1:23] Ah, não, que a gente.\n\n[Speaker A, 1:25] É que tem um, tem um fator que tá foda aqui, a gente não conseguiu migrar o plano.\n\n[Speaker A, 1:32] Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora, é um plano superior, então tem que cumprir todas as carências.\n\n[Speaker B, 1:45] Mas tem carência pra tem carência pra internação, pra tudo.\n\n[Speaker B, 1:50] tudo bem.\n\n[Speaker B, 1:51] Isso aí é um problema número dois.\n\n[Speaker B, 1:53] Eu não tô preocupado se o neném vai ficar doente por causa disso.\n\n[Speaker A, 1:55] Sim.\n\n[Speaker A, 1:56] Sim, sim.\n\n[Speaker B, 1:57] Isso é um problema.\n\n[Speaker B, 1:59] Já foi, você já foi, já foi, né?\n\n[Speaker A, 2:01] É.\n\n[Speaker B, 2:02] Já foi, você já entrou nesse risco, agora se aconteceu, esse o menor dos problemas vai ser isso.\n\n[Speaker A, 2:10] É.\n\n[Speaker B, 2:11] É.\n\n[Speaker B, 2:13] Sei lá.\n\n[Speaker A, 2:14] Enfim, mas e aí, você leu lá o que eu mandei?\n\n[Speaker B, 2:17] Cara, eu li um pedaço e a Alice me interrompeu aqui.\n\n[Speaker B, 2:25] Ela acordou, acordado.\n\n[Speaker B, 2:29] É, mas eu posso ler agora, é muito grande que você mandou?\n\n[Speaker B, 2:31] É grande?\n\n[Speaker A, 2:32] Não, mano, não é grande, é tipo, é uma mensagem do GPT.\n\n[Speaker B, 2:35] É, vamos ler junto aqui.\n\n[Speaker B, 2:36] Mas assim, o hoje, hoje de manhã eu acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda.\n\n[Speaker B, 2:48] Vamos lá.\n\n[Speaker B, 2:50] É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto, é bem clara mesmo, não sei quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala assim, tipo, uma das coisas que eu reconheci é, cara, Sim, sim. trabalhar com escala, Sim. trabalhar com analytics e trabalhar em lugares que o analytics é bem forte, Aham. é uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.\n\n[Speaker A, 3:21] Sim.\n\n[Speaker A, 3:21] Não, pra mim, pra mim também isso, a gente tá alinhado.\n\n[Speaker B, 3:24] E o, tipo, então por isso que eu gosto muito de crédito, tal, que a gente fala, assim, que vocês fazer um analytics bom é muito importante, né?\n\n[Speaker A, 3:29] Aham.\n\n[Speaker A, 3:30] Aham.\n\n[Speaker B, 3:31] É.\n\n[Speaker A, 3:32] É, isso daí é menos uma crença e é mais um uma coisa que te motiva, exato.\n\n[Speaker B, 3:39] É, é, motiva e que vai junto, né?\n\n[Speaker A, 3:42] Isso, é, como você tá motivado, é uma coisa que você vai melhor e você é bom nisso e etc.\n\n[Speaker B, 3:47] É isso aí.\n\n[Speaker A, 3:48] É.\n\n[Speaker B, 3:49] Que aí, inclusive, porque eu fiquei fazendo brainstorm de, de, de, de ideias que eu já aqui, né?\n\n[Speaker A, 3:55] Aham.\n\n[Speaker B, 3:58] Não sei se a gente fala disso junto depois, mas enfim.\n\n[Speaker A, 4:00] Não, lê aí, lê aí antes.\n\n[Speaker B, 4:02] Vamos ver.\n\n[Speaker B, 4:05] É.\n\n[Speaker B, 4:07] Tá bom.\n\n[Speaker B, 4:09] Qual delas?\n\n[Speaker B, 4:10] A primeira ou a segunda que eu li antes?\n\n[Speaker B, 4:12] Ou é uma só?\n\n[Speaker A, 4:12] Lê as duas, lê numa sequência.\n\n[Speaker B, 4:14] Tá bom.\n\n[Speaker B, 4:16] Agreements.\n\n[Speaker B, 4:18] A gente quer não quer construir no vácuo.\n\n[Speaker B, 4:22] Você, você, você passou como isso pro GPT?\n\n[Speaker B, 4:24] Você só, só.\n\n[Speaker A, 4:25] Eu passei bullet points de tudo que eu fui lembrando.\n\n[Speaker A, 4:28] Aí eu falei assim, cara, é, a discussão tava bagunçada, a gente foi rodando em círculos.\n\n[Speaker A, 4:35] Estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e e propõe aí como é que a gente segue a discussão, basicamente isso.\n\n[Speaker A, 4:46] Aí no segundo eu fiz a continuação disso, a segunda mensagem.\n\n[Speaker B, 4:52] Tá.\n\n[Speaker B, 4:54] Oi, que.\n\n[Speaker B, 5:00] Tá bom, tá bem bom, né?\n\n[Speaker A, 5:02] É, tá bem bom.\n\n[Speaker B, 5:03] Mas eu acho que a conclusão no final.\n\n[Speaker B, 5:05] Nossa discussão era como mais do que o quê, né?\n\n[Speaker A, 5:07] Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava.\n\n[Speaker B, 5:17] Ah, puta.\n\n[Speaker A, 5:19] É, tô vendo, tô vendo que era pra, eu acho que era uma tabela, isso ficou quebrada, né?\n\n[Speaker B, 5:23] É, tudo bem, dá pra entender mais ou menos.\n\n[Speaker A, 5:26] É.\n\n[Speaker A, 5:27] É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né?\n\n[Speaker A, 5:34] Eu acho que eles querem que você deixar no link inteiro, talvez.\n\n[Speaker A, 5:38] Ah, share na conversa inteira?\n\n[Speaker B, 5:40] É, eu acho que aí você acerta.\n\n[Speaker A, 5:41] É, pode ser, você prefere que eu faça isso?\n\n[Speaker B, 5:43] Eles fizeram os multiplayer, inclusive, você tá ligado, né?\n\n[Speaker A, 5:46] Que, então, mas não, não funciona o multiplayer, né?\n\n[Speaker A, 5:49] Tipo, se você continua a conversa, ele continua.\n\n[Speaker A, 5:51] Eu vi que ele mudou agora.\n\n[Speaker B, 5:52] Não, ele fez um, um chat.\n\n[Speaker A, 5:55] Ah, é, acabou de funcionar.\n\n[Speaker B, 5:57] Eu não testei, mas eles fizeram.\n\n[Speaker A, 5:59] Eu, eu compartilhei um com a Paulinha ontem, mas acho que ela não mandou nada, então eu não vi como é que tá indo.\n\n[Speaker B, 6:05] Puta, a tabela ficou meio ruim também, dá um print.\n\n[Speaker A, 6:07] Espera aí.\n\n[Speaker A, 6:18] Aqui, ó.\n\n[Speaker A, 6:20] Espera aí que eu acho que tem mais de uma tabela, deixa eu ver qual que ele.\n\n[Speaker A, 6:25] Ah, é do primeiro texto, né?\n\n[Speaker B, 6:28] Aham.\n\n[Speaker B, 6:32] Essas types são essa parte que eu tô interessado aqui.\n\n[Speaker B, 6:34] Lightweight Vision.\n\n[Speaker A, 6:39] Vou te mandar aqui.\n\n[Speaker A, 6:41] Pronto.\n\n[Speaker A, 6:42] Ih, caralho.\n\n[Speaker A, 6:44] Eu te mandei, mas a tabela ia pro lado.\n\n[Speaker B, 6:48] Pronto, tá muito bom isso aí, é isso, né?\n\n[Speaker B, 6:50] É isso.\n\n[Speaker B, 6:51] Eu acho que sim.\n\n[Speaker A, 6:51] Sim.\n\n[Speaker B, 6:52] E, e, e o mais importante é que o Lightweight Vision tem que ser low, assim, na verdade, o core aqui que não tá endereçado, é que o Lightweight Vision, ele tem que ser light commitment também, e que pra você é ruim ter um light commitment, só que pra gente fazer um high commitment, a gente precisa de um coisa, né?\n\n[Speaker B, 7:10] A gente precisa de mais informação pra mim isso, né?\n\n[Speaker A, 7:11] Não, não é que é um low commitment, é assim, tipo, eu vou articular uma coisa que tem um propósito que eu consigo vender e me convencer de uma visão grande.\n\n[Speaker A, 7:21] E aí a gente escolhe dentro disso onde que a gente vai atuar.\n\n[Speaker A, 7:24] Que nem a gente falou, ah, vamos atuar dentro do de serviços financeiros.\n\n[Speaker A, 7:29] Né?\n\n[Speaker A, 7:30] Então é basicamente tentar dar uma funilada extra e aí dentro desse, dessa visão lightweight, aí a gente olha todos os bitheads aí, enfim, só pra gente dar uma funilada extra.\n\n[Speaker B, 7:40] Tá.\n\n[Speaker A, 7:44] Mas, por exemplo, eu já escrevi ontem, é, quatro light rate visions que, sei lá, na verdade um é o que eu acho mais legal.\n\n[Speaker A, 7:57] Tem dois, na verdade, mas um é serviços financeiros, outro é medicina, então eu tô achando que o serviços financeiros.\n\n[Speaker B, 8:06] Você tá lendo o segundo aí?\n\n[Speaker A, 8:07] Tô.\n\n[Speaker A, 8:13] É, aí o segundo, basicamente o que eu falei pra ele foi, tá, tenta funilar, né?\n\n[Speaker A, 8:20] O que que você recomenda desse processo aí do bithead, long term vision, blá blá blá.\n\n[Speaker A, 8:26] E aí depois como você recomenda conduzir essas entrevistas, tipo, onde que a gente acha, com quem que a gente fala e etc.\n\n[Speaker B, 8:35] Que eu achei que ficou bom também.\n\n[Speaker B, 8:38] Deixa eu ver aqui.\n\n[Speaker B, 8:39] Espera aí, tá bem bom mesmo.\n\n[Speaker A, 8:41] Uhum.\n\n[Speaker B, 8:48] É, o não sei se esse root to interview pra mim é, eu acho que ficou narrow, porque eu acho que o sinal não vem só de interview.\n\n[Speaker A, 8:55] Sim, sim, sim.\n\n[Speaker B, 8:56] É, eu acho que.\n\n[Speaker A, 8:57] Não, é que eu falei de eu falei de interview porque eu acho que é o o o mais chato, né, o mais difícil.\n\n[Speaker B, 9:06] Então, não sei se é o mais difícil, mas mas sim.\n\n[Speaker B, 9:10] É, mas sim, eu consideraria que eu acho que o interview é, é, é uma forma, mas não é a única.\n\n[Speaker A, 9:15] Sim, outra forma, outra forma pode ser.\n\n[Speaker A, 9:18] É que eu acho que ali é mais exploratório quando você faz entrevista, mais exploratório.\n\n[Speaker A, 9:23] Eu acho que o outro é quando você já explorou um pouco, aí você já tem uma hipótese um pouco mais informada, aí você pode fazer uma landing page e começar a distribuir e ver o que acontece.\n\n[Speaker B, 9:36] É, isso, mas é você entendeu assim que eu acho que você fazer uma landing page para uma coisa pode te levar a ter um insight de outra coisa e isso é muito comum, na verdade, na verdade, assim, o mais comum de todas as empresas que eu vejo, que eu falo e tal, o mais comum, cara, sempre é o cara não começa acertando e pivota bastante.\n\n[Speaker A, 10:01] Sim, sim, sim, 99%.\n\n[Speaker B, 10:02] Não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não",
+  "latency_seconds": 126.47,
+  "duration_seconds": 2792.872925,
+  "estimated_cost_cents": 3.26,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization and timestamps.\n\nCRITICAL RULES:\n1. Identify speakers by their voice characteristics. Label them as Speaker A, Speaker B, Speaker C, etc.\n2...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, chiqueiro.",
+      "start": 1,
+      "end": 3
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí?",
+      "start": 3,
+      "end": 4
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, mano.",
+      "start": 4,
+      "end": 5
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Fala com o tio Zé ali, tá?",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ai, que Nossa, tô cansado, cara, os últimos três dias foram difíceis assim com a Fernanda, viu?",
+      "start": 18,
+      "end": 28
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, neném quando tá gripado doente é um 10 vezes mais trabalho.",
+      "start": 28,
+      "end": 33
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Pior é que ela tá de boa, só que ela tá com um catarro pra caralho assim, então é merda.",
+      "start": 33,
+      "end": 39
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas essa, essa é essa é a parte que dá 90% mais trabalho.",
+      "start": 39,
+      "end": 43
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa.",
+      "start": 43,
+      "end": 44
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.",
+      "start": 44,
+      "end": 48
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 48,
+      "end": 49
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso porque é merda.",
+      "start": 49,
+      "end": 51
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tá foda.",
+      "start": 51,
+      "end": 52
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A Alice, como tá assim, foda, não respira direito, tosse, acorda.",
+      "start": 52,
+      "end": 60
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum. Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá blá blá.",
+      "start": 60,
+      "end": 69
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, mas aí, cara, tem que tirar essa nóia da cabeça.",
+      "start": 69,
+      "end": 72
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 72,
+      "end": 73
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você tirar essa nóia da cabeça.",
+      "start": 73,
+      "end": 74
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mas é que, mano, pra gente é a primeira vez que ela tá ficando doente, né?",
+      "start": 74,
+      "end": 77
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então acho que é normal. E se tiver bronquiolite, que seja leve. Vai ter. Inclusive, mano.",
+      "start": 77,
+      "end": 83
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, não, que a gente. É que tem um, tem um fator que tá foda aqui, a gente não conseguiu migrar o plano. Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora, é um plano superior, então tem que cumprir todas as carências.",
+      "start": 83,
+      "end": 105
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas tem carência pra tem carência pra internação, pra tudo. tudo bem. Isso aí é um problema número dois. Eu não tô preocupado se o neném vai ficar doente por causa disso.",
+      "start": 105,
+      "end": 115
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim. Sim, sim.",
+      "start": 115,
+      "end": 117
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso é um problema. Já foi, você já foi, já foi, né?",
+      "start": 117,
+      "end": 121
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 121,
+      "end": 122
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Já foi, você já entrou nesse risco, agora se aconteceu, esse o menor dos problemas vai ser isso.",
+      "start": 122,
+      "end": 130
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 130,
+      "end": 131
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. Sei lá.",
+      "start": 131,
+      "end": 134
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Enfim, mas e aí, você leu lá o que eu mandei?",
+      "start": 134,
+      "end": 137
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Cara, eu li um pedaço e a Alice me interrompeu aqui. Ela acordou, acordado. É, mas eu posso ler agora, é muito grande que você mandou? É grande?",
+      "start": 137,
+      "end": 152
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, mano, não é grande, é tipo, é uma mensagem do GPT.",
+      "start": 152,
+      "end": 155
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, vamos ler junto aqui. Mas assim, o hoje, hoje de manhã eu acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda. Vamos lá. É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto, é bem clara mesmo, não sei quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala assim, tipo, uma das coisas que eu reconheci é, cara, Sim, sim. trabalhar com escala, Sim. trabalhar com analytics e trabalhar em lugares que o analytics é bem forte, Aham. é uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.",
+      "start": 155,
+      "end": 201
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim. Não, pra mim, pra mim também isso, a gente tá alinhado.",
+      "start": 201,
+      "end": 204
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E o, tipo, então por isso que eu gosto muito de crédito, tal, que a gente fala, assim, que vocês fazer um analytics bom é muito importante, né?",
+      "start": 204,
+      "end": 209
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham. Aham.",
+      "start": 209,
+      "end": 211
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 211,
+      "end": 212
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, isso daí é menos uma crença e é mais um uma coisa que te motiva, exato.",
+      "start": 212,
+      "end": 219
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é, motiva e que vai junto, né?",
+      "start": 219,
+      "end": 222
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Isso, é, como você tá motivado, é uma coisa que você vai melhor e você é bom nisso e etc.",
+      "start": 222,
+      "end": 227
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É isso aí.",
+      "start": 227,
+      "end": 228
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 228,
+      "end": 229
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que aí, inclusive, porque eu fiquei fazendo brainstorm de, de, de, de ideias que eu já aqui, né?",
+      "start": 229,
+      "end": 235
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 235,
+      "end": 238
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não sei se a gente fala disso junto depois, mas enfim.",
+      "start": 238,
+      "end": 240
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, lê aí, lê aí antes.",
+      "start": 240,
+      "end": 242
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vamos ver. É. Tá bom. Qual delas? A primeira ou a segunda que eu li antes? Ou é uma só?",
+      "start": 242,
+      "end": 252
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Lê as duas, lê numa sequência.",
+      "start": 252,
+      "end": 254
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom. Agreements. A gente quer não quer construir no vácuo. Você, você, você passou como isso pro GPT? Você só, só.",
+      "start": 254,
+      "end": 265
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu passei bullet points de tudo que eu fui lembrando. Aí eu falei assim, cara, é, a discussão tava bagunçada, a gente foi rodando em círculos. Estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e e propõe aí como é que a gente segue a discussão, basicamente isso. Aí no segundo eu fiz a continuação disso, a segunda mensagem.",
+      "start": 265,
+      "end": 292
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá. Oi, que. Tá bom, tá bem bom, né?",
+      "start": 292,
+      "end": 302
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tá bem bom.",
+      "start": 302,
+      "end": 303
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas eu acho que a conclusão no final. Nossa discussão era como mais do que o quê, né?",
+      "start": 303,
+      "end": 307
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava.",
+      "start": 307,
+      "end": 317
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, puta.",
+      "start": 317,
+      "end": 319
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tô vendo, tô vendo que era pra, eu acho que era uma tabela, isso ficou quebrada, né?",
+      "start": 319,
+      "end": 323
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, tudo bem, dá pra entender mais ou menos.",
+      "start": 323,
+      "end": 326
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É. É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né? Eu acho que eles querem que você deixar no link inteiro, talvez. Ah, share na conversa inteira?",
+      "start": 326,
+      "end": 340
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, eu acho que aí você acerta.",
+      "start": 340,
+      "end": 341
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, pode ser, você prefere que eu faça isso?",
+      "start": 341,
+      "end": 343
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eles fizeram os multiplayer, inclusive, você tá ligado, né?",
+      "start": 343,
+      "end": 346
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Que, então, mas não, não funciona o multiplayer, né? Tipo, se você continua a conversa, ele continua. Eu vi que ele mudou agora.",
+      "start": 346,
+      "end": 352
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não, ele fez um, um chat.",
+      "start": 352,
+      "end": 355
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, é, acabou de funcionar.",
+      "start": 355,
+      "end": 357
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu não testei, mas eles fizeram.",
+      "start": 357,
+      "end": 359
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu, eu compartilhei um com a Paulinha ontem, mas acho que ela não mandou nada, então eu não vi como é que tá indo.",
+      "start": 359,
+      "end": 365
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Puta, a tabela ficou meio ruim também, dá um print.",
+      "start": 365,
+      "end": 367
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Espera aí. Aqui, ó. Espera aí que eu acho que tem mais de uma tabela, deixa eu ver qual que ele. Ah, é do primeiro texto, né?",
+      "start": 367,
+      "end": 388
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aham. Essas types são essa parte que eu tô interessado aqui. Lightweight Vision.",
+      "start": 388,
+      "end": 399
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Vou te mandar aqui. Pronto. Ih, caralho. Eu te mandei, mas a tabela ia pro lado.",
+      "start": 399,
+      "end": 408
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Pronto, tá muito bom isso aí, é isso, né? É isso. Eu acho que sim.",
+      "start": 408,
+      "end": 411
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim.",
+      "start": 411,
+      "end": 412
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E, e, e o mais importante é que o Lightweight Vision tem que ser low, assim, na verdade, o core aqui que não tá endereçado, é que o Lightweight Vision, ele tem que ser light commitment também, e que pra você é ruim ter um light commitment, só que pra gente fazer um high commitment, a gente precisa de um coisa, né? A gente precisa de mais informação pra mim isso, né?",
+      "start": 412,
+      "end": 431
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, não é que é um low commitment, é assim, tipo, eu vou articular uma coisa que tem um propósito que eu consigo vender e me convencer de uma visão grande. E aí a gente escolhe dentro disso onde que a gente vai atuar. Que nem a gente falou, ah, vamos atuar dentro do de serviços financeiros. Né? Então é basicamente tentar dar uma funilada extra e aí dentro desse, dessa visão lightweight, aí a gente olha todos os bitheads aí, enfim, só pra gente dar uma funilada extra.",
+      "start": 431,
+      "end": 460
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá.",
+      "start": 460,
+      "end": 464
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mas, por exemplo, eu já escrevi ontem, é, quatro light rate visions que, sei lá, na verdade um é o que eu acho mais legal. Tem dois, na verdade, mas um é serviços financeiros, outro é medicina, então eu tô achando que o serviços financeiros.",
+      "start": 464,
+      "end": 486
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você tá lendo o segundo aí?",
+      "start": 486,
+      "end": 487
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tô. É, aí o segundo, basicamente o que eu falei pra ele foi, tá, tenta funilar, né? O que que você recomenda desse processo aí do bithead, long term vision, blá blá blá. E aí depois como você recomenda conduzir essas entrevistas, tipo, onde que a gente acha, com quem que a gente fala e etc.",
+      "start": 487,
+      "end": 515
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que eu achei que ficou bom também. Deixa eu ver aqui. Espera aí, tá bem bom mesmo.",
+      "start": 515,
+      "end": 521
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 521,
+      "end": 528
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, o não sei se esse root to interview pra mim é, eu acho que ficou narrow, porque eu acho que o sinal não vem só de interview.",
+      "start": 528,
+      "end": 535
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim, sim.",
+      "start": 535,
+      "end": 536
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, eu acho que.",
+      "start": 536,
+      "end": 537
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, é que eu falei de eu falei de interview porque eu acho que é o o o mais chato, né, o mais difícil.",
+      "start": 537,
+      "end": 546
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então, não sei se é o mais difícil, mas mas sim. É, mas sim, eu consideraria que eu acho que o interview é, é, é uma forma, mas não é a única.",
+      "start": 546,
+      "end": 555
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, outra forma, outra forma pode ser. É que eu acho que ali é mais exploratório quando você faz entrevista, mais exploratório. Eu acho que o outro é quando você já explorou um pouco, aí você já tem uma hipótese um pouco mais informada, aí você pode fazer uma landing page e começar a distribuir e ver o que acontece.",
+      "start": 555,
+      "end": 576
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, isso, mas é você entendeu assim que eu acho que você fazer uma landing page para uma coisa pode te levar a ter um insight de outra coisa e isso é muito comum, na verdade, na verdade, assim, o mais comum de todas as empresas que eu vejo, que eu falo e tal, o mais comum, cara, sempre é o cara não começa acertando e pivota bastante.",
+      "start": 576,
+      "end": 601
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim, sim, 99%.",
+      "start": 601,
+      "end": 602
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não, não",
+      "start": 602,
+      "end": null
+    }
+  ]
+}

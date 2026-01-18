@@ -1,0 +1,67 @@
+{
+  "model": "gemini-3-flash",
+  "model_name": "Gemini 3 Flash",
+  "provider": "gemini",
+  "text": "Transcrições da reunião de trabalho em português brasileiro:\n\n[Speaker A, 0:00] E aí, Chiquinho?\n[Speaker B, 0:04] E aí.\n[Speaker A, 0:05] E aí, mano. Visão, fala com o tio Zé ali, tá? Você já foi lá sozinho um pouco? Pode ser? É, beijão. E aí?\n[Speaker B, 0:15] E aí, tudo certo?\n[Speaker A, 0:17] Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?\n[Speaker B, 0:23] Ah, neném quando tá gripado, doente, é um... dez vezes mais trabalho.\n[Speaker A, 0:28] Pior é que ela tá de boa, só que ela tá com catarro pra caralho, assim, então é uma merda.\n[Speaker B, 0:33] Mas essa, essa é... essa é a parte que dá 90% mais trabalho. Não é a parte dela tá mal, é a parte dela não conseguir dormir, não sei o quê, que merda. A Alice quando tá assim é foda, não respira direito, tosse, acorda.\n[Speaker A, 0:53] Uhum. Aí a gente fica na noia ainda de, sei lá, né, de piorar, de virar bronquiolite",
+  "latency_seconds": 92.22,
+  "duration_seconds": 2792.872925,
+  "estimated_cost_cents": 4.65,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization and timestamps.\n\nRULES:\n1. Label speakers as Speaker A, Speaker B, etc. based on voice.\n2. Group consecutive speech from the same speaker i...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, Chiquinho?",
+      "start": 0,
+      "end": 4
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí.",
+      "start": 4,
+      "end": 5
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, mano. Visão, fala com o tio Zé ali, tá? Você já foi lá sozinho um pouco? Pode ser? É, beijão. E aí?",
+      "start": 5,
+      "end": 15
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí, tudo certo?",
+      "start": 15,
+      "end": 17
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?",
+      "start": 17,
+      "end": 23
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, neném quando tá gripado, doente, é um... dez vezes mais trabalho.",
+      "start": 23,
+      "end": 28
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Pior é que ela tá de boa, só que ela tá com catarro pra caralho, assim, então é uma merda.",
+      "start": 28,
+      "end": 33
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas essa, essa é... essa é a parte que dá 90% mais trabalho. Não é a parte dela tá mal, é a parte dela não conseguir dormir, não sei o quê, que merda. A Alice quando tá assim é foda, não respira direito, tosse, acorda.",
+      "start": 33,
+      "end": 53
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum. Aí a gente fica na noia ainda de, sei lá, né, de piorar, de virar bronquiolite",
+      "start": 53,
+      "end": null
+    }
+  ]
+}

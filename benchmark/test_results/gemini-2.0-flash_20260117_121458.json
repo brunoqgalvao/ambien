@@ -1,0 +1,17 @@
+{
+  "model": "gemini-2.0-flash",
+  "timestamp": "20260117_121458",
+  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
+  "error": null,
+  "result": {
+    "text": "[Speaker A, 00:00] E aí, chiqueiro?\n[Speaker B, 00:02] E aí?\n[Speaker A, 00:03] E aí, mano.\n[Speaker B, 00:04] Fala com o tio Zé ali, tá?\n[Speaker B, 00:06] Se a família sozinha um pouco.\n[Speaker A, 00:14] Ai, que Nossa, tô cansado, cara, os últimos três dias foram difíceis assim com a Fernanda, viu?\n[Speaker B, 00:23] Ah, neném quando tá gripado doente é uns 10 vezes mais trabalho.\n[Speaker A, 00:28] Pior é que ela tá de boa, só que ela tá com um catarro pra caralho assim, então é merda.\n[Spea...",
+    "full_text_length": 33954,
+    "latency_seconds": 133.31,
+    "api_model": "gemini-2.0-flash",
+    "speakers_found": [
+      "A",
+      "B"
+    ],
+    "has_speaker_labels": true
+  }
+}

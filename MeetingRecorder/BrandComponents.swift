@@ -237,6 +237,7 @@ struct BrandIconButton: View {
                     Circle()
                         .fill(isHovered ? hoverColor.opacity(0.1) : Color.clear)
                 )
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -604,10 +605,8 @@ struct BrandStatusBadge: View {
                         .frame(width: size * 0.25, height: size * 0.25)
                 }
             case .transcribing:
-                // Simple spinner
-                ProgressView()
-                    .scaleEffect(size / 40)
-                    .frame(width: size, height: size)
+                // Simple spinner using brand loading
+                BrandLoadingIndicator(size: .custom(size), style: .spinner)
             case .failed:
                 // Error alert - the ONLY indicator for completed meetings with issues
                 ZStack {
@@ -870,11 +869,36 @@ struct BrandSearchField: View {
 // MARK: - Brand Loading Indicator
 
 /// Animated loading spinner with brand colors
+/// Usage:
+///   - BrandLoadingIndicator(size: .small)  // 16pt - inline with text
+///   - BrandLoadingIndicator(size: .medium) // 24pt - buttons, cards
+///   - BrandLoadingIndicator(size: .large)  // 40pt - full screen loading
+///   - BrandLoadingIndicator(size: .custom(32)) // exact size
 struct BrandLoadingIndicator: View {
-    var size: CGFloat = 32
+    var size: LoadingSize = .medium
     var color: Color = .brandViolet
     var lineWidth: CGFloat? = nil
     var style: LoadingStyle = .spinner
+
+    enum LoadingSize {
+        case tiny       // 12pt - very small inline
+        case small      // 16pt - inline with text
+        case medium     // 24pt - default, buttons, cards
+        case large      // 40pt - page loading
+        case xlarge     // 56pt - hero loading
+        case custom(CGFloat)
+
+        var points: CGFloat {
+            switch self {
+            case .tiny: return 12
+            case .small: return 16
+            case .medium: return 24
+            case .large: return 40
+            case .xlarge: return 56
+            case .custom(let value): return value
+            }
+        }
+    }
 
     enum LoadingStyle {
         case spinner      // Classic rotating spinner
@@ -886,8 +910,10 @@ struct BrandLoadingIndicator: View {
     @State private var isAnimating = false
     @State private var dotPhases: [Bool] = [false, false, false]
 
+    private var sizePoints: CGFloat { size.points }
+
     private var computedLineWidth: CGFloat {
-        lineWidth ?? (size * 0.1)
+        lineWidth ?? (sizePoints * 0.1)
     }
 
     var body: some View {
@@ -917,7 +943,7 @@ struct BrandLoadingIndicator: View {
                 ),
                 style: StrokeStyle(lineWidth: computedLineWidth, lineCap: .round)
             )
-            .frame(width: size, height: size)
+            .frame(width: sizePoints, height: sizePoints)
             .rotationEffect(.degrees(isAnimating ? 360 : 0))
             .onAppear {
                 withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) {
@@ -929,15 +955,15 @@ struct BrandLoadingIndicator: View {
     // MARK: - Dots Style
 
     private var dotsView: some View {
-        HStack(spacing: size * 0.2) {
+        HStack(spacing: sizePoints * 0.2) {
             ForEach(0..<3, id: \.self) { index in
                 Circle()
                     .fill(color)
-                    .frame(width: size * 0.25, height: size * 0.25)
-                    .offset(y: dotPhases[index] ? -size * 0.2 : 0)
+                    .frame(width: sizePoints * 0.25, height: sizePoints * 0.25)
+                    .offset(y: dotPhases[index] ? -sizePoints * 0.2 : 0)
             }
         }
-        .frame(height: size)
+        .frame(height: sizePoints)
         .onAppear {
             for i in 0..<3 {
                 withAnimation(
@@ -957,13 +983,13 @@ struct BrandLoadingIndicator: View {
         ZStack {
             Circle()
                 .fill(color.opacity(0.2))
-                .frame(width: size, height: size)
+                .frame(width: sizePoints, height: sizePoints)
                 .scaleEffect(isAnimating ? 1.3 : 0.8)
                 .opacity(isAnimating ? 0 : 0.8)
 
             Circle()
                 .fill(color)
-                .frame(width: size * 0.5, height: size * 0.5)
+                .frame(width: sizePoints * 0.5, height: sizePoints * 0.5)
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: false)) {
@@ -977,14 +1003,14 @@ struct BrandLoadingIndicator: View {
     @State private var barHeights: [CGFloat] = [0.3, 0.5, 0.7, 0.5, 0.3]
 
     private var barsView: some View {
-        HStack(spacing: size * 0.08) {
+        HStack(spacing: sizePoints * 0.08) {
             ForEach(0..<5, id: \.self) { index in
-                RoundedRectangle(cornerRadius: size * 0.05)
+                RoundedRectangle(cornerRadius: sizePoints * 0.05)
                     .fill(color)
-                    .frame(width: size * 0.12, height: size * barHeights[index])
+                    .frame(width: sizePoints * 0.12, height: sizePoints * barHeights[index])
             }
         }
-        .frame(height: size)
+        .frame(height: sizePoints)
         .onAppear {
             animateBars()
         }
@@ -1246,19 +1272,19 @@ struct BrandLogo: View {
 #Preview("Loading Indicators") {
     HStack(spacing: 40) {
         VStack {
-            BrandLoadingIndicator(size: 32, style: .spinner)
+            BrandLoadingIndicator(size: .medium, style: .spinner)
             Text("Spinner").font(.caption)
         }
         VStack {
-            BrandLoadingIndicator(size: 32, style: .dots)
+            BrandLoadingIndicator(size: .medium, style: .dots)
             Text("Dots").font(.caption)
         }
         VStack {
-            BrandLoadingIndicator(size: 32, style: .pulse)
+            BrandLoadingIndicator(size: .medium, style: .pulse)
             Text("Pulse").font(.caption)
         }
         VStack {
-            BrandLoadingIndicator(size: 32, style: .bars)
+            BrandLoadingIndicator(size: .medium, style: .bars)
             Text("Bars").font(.caption)
         }
     }
@@ -1268,10 +1294,26 @@ struct BrandLogo: View {
 
 #Preview("Loading Sizes") {
     HStack(spacing: 30) {
-        BrandLoadingIndicator(size: 20, style: .spinner)
-        BrandLoadingIndicator(size: 32, style: .spinner)
-        BrandLoadingIndicator(size: 48, style: .spinner)
-        BrandLoadingIndicator(size: 64, color: .brandCoral, style: .spinner)
+        VStack {
+            BrandLoadingIndicator(size: .tiny)
+            Text("Tiny (12)").font(.caption2)
+        }
+        VStack {
+            BrandLoadingIndicator(size: .small)
+            Text("Small (16)").font(.caption2)
+        }
+        VStack {
+            BrandLoadingIndicator(size: .medium)
+            Text("Medium (24)").font(.caption2)
+        }
+        VStack {
+            BrandLoadingIndicator(size: .large)
+            Text("Large (40)").font(.caption2)
+        }
+        VStack {
+            BrandLoadingIndicator(size: .xlarge, color: .brandCoral)
+            Text("XLarge (56)").font(.caption2)
+        }
     }
     .padding(40)
     .background(Color.brandBackground)

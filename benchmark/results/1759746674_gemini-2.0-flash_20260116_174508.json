@@ -1,0 +1,9 @@
+{
+  "model": "gemini-2.0-flash",
+  "model_name": "Gemini 2.0 Flash",
+  "provider": "gemini",
+  "text": "Desculpe, não consigo entender o que está acontecendo na imagem.",
+  "latency_seconds": 2.81,
+  "prompt_used": "Reunião de trabalho em português brasileiro.",
+  "language_hint": null
+}

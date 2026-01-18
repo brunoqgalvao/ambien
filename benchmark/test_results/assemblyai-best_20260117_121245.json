@@ -1,0 +1,36 @@
+{
+  "model": "assemblyai-best",
+  "timestamp": "20260117_121245",
+  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
+  "error": null,
+  "result": {
+    "text": "E aí, Chiquinha? E aí? E aí, mano? Fala com o tio Zé ali, tá? Você tá sentindo fome aí sozinho um pouco? Um beijo. E toca. E toca na linha. E aí? Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu? Ah, o neném quando tá gripado, doente, é um dez vezes mais trabalho. Pior é que ela tá de boa, só que ela tá com catarro pra caralho, assim, então é uma merda. Mas essa, essa é... Essa é a parte que dá 90% mais trabalho. Nossa... E não é a parte dela tá mal, é a par...",
+    "full_text_length": 30295,
+    "latency_seconds": 130.83,
+    "has_segments": true,
+    "segment_count": 211,
+    "has_speaker_labels": true,
+    "confidence": 0.7263295,
+    "audio_duration": 2793,
+    "first_3_segments": [
+      {
+        "start": 2.118,
+        "end": 3.198,
+        "text": "E aí, Chiquinha?",
+        "speaker": "Speaker A"
+      },
+      {
+        "start": 5.018,
+        "end": 5.518,
+        "text": "E aí?",
+        "speaker": "Speaker B"
+      },
+      {
+        "start": 6.298,
+        "end": 7.478,
+        "text": "E aí, mano?",
+        "speaker": "Speaker A"
+      }
+    ]
+  }
+}

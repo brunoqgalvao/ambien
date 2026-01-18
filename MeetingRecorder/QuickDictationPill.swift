@@ -698,9 +698,7 @@ struct QuickRecordingPillView: View {
 
     private var transcribingContent: some View {
         HStack(spacing: 4) {
-            ProgressView()
-                .scaleEffect(0.5)
-                .tint(.white.opacity(0.8))
+            BrandLoadingIndicator(size: .tiny, color: .white.opacity(0.8), style: .spinner)
 
             Text("...")
                 .font(.system(size: 10, weight: .medium))
@@ -901,9 +899,7 @@ class RightClickView: NSView {
 
         // Transcribing
         HStack(spacing: 4) {
-            ProgressView()
-                .scaleEffect(0.5)
-                .tint(.white.opacity(0.8))
+            BrandLoadingIndicator(size: .tiny, color: .white.opacity(0.8), style: .spinner)
             Text("...")
                 .font(.system(size: 10, weight: .medium))
                 .foregroundColor(.white.opacity(0.6))

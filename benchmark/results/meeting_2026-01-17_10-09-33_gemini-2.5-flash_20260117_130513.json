@@ -1,0 +1,1789 @@
+{
+  "model": "gemini-2.5-flash",
+  "model_name": "Gemini 2.5 Flash",
+  "provider": "gemini",
+  "text": "[Speaker A, 0:01] E aí, fiquei.\n[Speaker B, 0:04] E aí?\n[Speaker A, 0:06] E aí, mano.\n[Speaker B, 0:07] Zão, fala com o tio Zé ali, tá? Você assiste a família sozinha um pouco.\n[Speaker A, 0:11] É, eu quero.\n[Speaker B, 0:12] Beijo.\n[Speaker A, 0:13] E aí.\n[Speaker B, 0:14] Que toca.\n[Speaker A, 0:16] Toca na lista.\n[Speaker B, 0:17] Ai, que nojo.\n[Speaker A, 0:20] Ai.\n[Speaker B, 0:21] E aí? A Fernanda voltou a te desafiar no FIFA, camarada?\n[Speaker A, 0:24] Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?\n[Speaker B, 0:30] Ah, nem nem quando tá gripado, doente, é um 10 vezes mais trabalho.\n[Speaker A, 0:36] Pior é que ela tá de boa, só que ela tá com um catarro pra caralho assim, então é uma merda.\n[Speaker B, 0:41] Mas essa, essa é essa é a parte que dá 90% mais trabalho.\n[Speaker A, 0:47] Nossa. Não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.\n[Speaker B, 0:52] É. Isso porque é uma merda.\n[Speaker A, 0:55] É, tá foda. A Alice, como tá sem fôlego, não respira direito, tosse, acorda.\n[Speaker B, 1:02] Uhum.\n[Speaker A, 1:04] Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá blá blá.\n[Speaker B, 1:12] Ah, mas aí, cara, tem que tirar essa nóia da cabeça.\n[Speaker A, 1:15] É.\n[Speaker B, 1:17] Se tirar da cabeça.\n[Speaker A, 1:18] É que, mano, pra gente é a primeira vez que ela tá ficando doente, né? Então acho que ela não.\n[Speaker B, 1:22] É, se tiver bronquiolite, você já deu. Vai ter. Inclusive, mano.\n[Speaker A, 1:28] Ah, não, que a gente.\n[Speaker A, 1:30] É que tem um, tem um fator que tá foda, que a gente não conseguiu migrar o plano. Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora é um plano superior, então tem que cumprir todas as carências.\n[Speaker B, 1:52] Mas tem carência pra\n[Speaker A, 1:55] Tem carência pra internação, pra tudo.\n[Speaker B, 1:59] Pô, tudo bem. Isso aí é um problema número dois. Eu não tô preocupado se ela vai ficar doente por causa disso.\n[Speaker A, 2:05] Sim, sim.\n[Speaker B, 2:07] Isso é um problema. Já foi, você já foi, já foi, né?\n[Speaker A, 2:10] É.\n[Speaker B, 2:11] Já foi, você já entrou nesse risco, agora se aconteceu, esse, o menor dos problemas vai ser isso.\n[Speaker A, 2:19] É.\n[Speaker B, 2:20] É. É. Sei lá.\n[Speaker A, 2:24] Enfim, mas e aí, você leu lá o que eu mandei?\n[Speaker B, 2:27] Cara, eu li um pedaço e a Alice me interrompeu aqui.\n[Speaker A, 2:32] Hum.\n[Speaker B, 2:34] Ela acordou, não tinha acordado ainda. É, mas o post agora é muito grande que você mandou? É grande, né?\n[Speaker A, 2:40] Não, mano, não é grande, é tipo, é uma mensagem do GPT.\n[Speaker B, 2:44] É, vamos ler junto aqui. Mas assim, o hoje, hoje de manhã acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda. Tá vendo.\n[Speaker A, 3:00] É.\n[Speaker B, 3:01] Vamos lá. É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto é bem clara mesmo, não sei o quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala, assim. Tipo, uma das coisas que eu reconheci é, cara,\n[Speaker A, 3:22] Sim, sim.\n[Speaker B, 3:23] trabalhar com escala, trabalhar com analytics e trabalhar em lugares que o analytics é bem forte.\n[Speaker A, 3:31] Aham.\n[Speaker B, 3:32] É uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.\n[Speaker A, 3:41] Sim. Não, pra mim, pra mim também, isso a gente tá alinhado.\n[Speaker B, 3:45] E o, tipo, então por isso que eu gosto muito de crédito e tal, que a gente fala, sabe?\n[Speaker A, 3:48] Aham.\n[Speaker B, 3:49] A gente que você fazer um analytics bom é muito importante, né?\n[Speaker A, 3:53] Aham.\n[Speaker B, 3:54] É.\n[Speaker A, 3:56] É, isso daí é menos uma crença e é mais um, uma coisa que te motiva, exato.\n[Speaker B, 4:03] É, é, motiva e que vai junto, né?\n[Speaker A, 4:07] Isso, é, como você tá motivado, é uma coisa que você vai melhorar e você é bom nisso e etc.\n[Speaker B, 4:13] Pois é.\n[Speaker A, 4:14] É. Que aí, inclusive, porque eu, eu, eu fiquei fazendo brainstorm de, de, de ideias que eu já tinha aqui, né?\n[Speaker B, 4:22] Aham.\n[Speaker A, 4:23] E não sei se a gente fala disso, então depois, mas enfim. Não, lê aí, lê aí antes.\n[Speaker B, 4:30] Vamos ver. É. Tá bom. Qual delas? A primeira ou a segunda que eu li antes?\n[Speaker A, 4:40] Lê as duas, lê na sequência.\n[Speaker B, 4:43] Tá bom. Agreement. A gente quer não quer construir no vácuo. Você, você, você passou como isso pro GPT? Você só, só.\n[Speaker A, 4:54] Eu passei bullet points de tudo que eu fui lembrando. Aí eu falei assim, cara, eh, a discussão tava bagunçada, a gente foi rodando em círculos, estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e e propõe aí como é que a gente segue a discussão, basicamente isso. Aí no segundo eu fiz a continuação disso, a segunda mensagem.\n[Speaker B, 5:24] Tá. É.\n[Speaker B, 5:32] Vou repetir.\n[Speaker B, 5:40] Tá bom, tá bem bom, né? Mas eu acho que a gente tem uma conclusão no final. Nossa discussão era como mais do que o quê, né?\n[Speaker A, 5:47] Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava.\n[Speaker A, 6:02] Ah, puta. É, tô vendo, tô vendo que era pra, eu acho que era uma tabela isso que ficou quebrada, né?\n[Speaker B, 6:09] É, tudo bem, dá pra entender mais ou menos.\n[Speaker A, 6:13] É.\n[Speaker B, 6:14] É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né? Eu acho que eles querem que você deixe no link inteiro, talvez.\n[Speaker A, 6:25] Ah, share na conversa inteira?\n[Speaker B, 6:27] É, eu acho que você acessa.\n[Speaker A, 6:29] É, pode ser, se preferir que eu faça isso.\n[Speaker B, 6:31] Eles fizeram os multiplayer, inclusive, você tá ligado, né?\n[Speaker A, 6:35] Que, então, mas não, não funciona multiplayer, né? Tipo, se você continua a conversa, ele continua. Eu vi que ele mudou agora.\n[Speaker B, 6:43] Ele fez um, um chat.\n[Speaker A, 6:45] Ah, é, acabou de funcionar.\n[Speaker B, 6:48] Eu não testei, mas eles fizeram.\n[Speaker A, 6:51] Eu, eu compartilhei um com a Paulinha ontem, mas acho que ela não mandou nada, então eu não vi como é que tá indo.\n[Speaker B, 6:59] Puta, a tabela tá meio ruim que você me usou. Dá-me um print.\n[Speaker A, 7:02] Peraí. Aqui, ó. Peraí que eu acho que tem mais de uma tabela. Deixa eu ver qual que ele. Ah, é do primeiro texto, né?\n[Speaker B, 7:30] Aham.\n[Speaker A, 7:33] Ta ta ta ta ta ta.\n[Speaker B, 7:40] Os types, essa é a parte que eu tô interessado aqui. Lightweight Vision.\n[Speaker A, 7:51] Vou te mandar aqui. Pronto. E, caralho. Eu te mandei, mas a tabela ia pro lado.\n[Speaker B, 8:08] Pronto, não, tá muito bom, ou seja, é isso, né? É, é isso, eu acho que sim.\n[Speaker A, 8:12] Sim.\n[Speaker B, 8:13] E, e, e o mais importante é que o Lightweight Vision tem que ser low, assim, na verdade, o core aqui que não tá endereçado é que o Lightweight Vision ele tem que ser light commitment também. E que pra você é ruim ter um high commitment. Só que pra gente fazer um high commitment, a gente precisa de um coisa, né? A gente precisa de mais informação pra mim, é isso, né?\n[Speaker A, 8:38] Não, não é. Não, não é que é um low commitment, é assim, tipo, eu vou articular uma coisa que tem um propósito que eu consigo vender e e me convencer de uma visão grande. E aí a gente escolhe dentro disso onde que a gente vai atuar, que nem a gente falou, ah, vamos atuar dentro do, de serviço financeiros. Né? Então é basicamente tentar dar uma funilada extra e aí dentro desse, dessa visão lightweight, aí a gente olha todos os bitheads aí, enfim, só pra gente dar uma funilada extra.\n[Speaker B, 9:14] Tá, eh, hum, hum, hum, hum, hum.\n[Speaker A, 9:21] Mas, por exemplo, eu já escrevi ontem, eh, quatro lightweight visions que, sei lá, na verdade, um é o que eu acho mais legal. Tem dois, na verdade, mas um é serviço financeiro, o outro é medicina, então eu tô achando que o serviço financeiros.\n[Speaker A, 9:53] Você tá lendo o segundo aí?\n[Speaker B, 9:55] Tô.\n[Speaker A, 10:03] É, aí o segundo, basicamente o que eu falei pra ele foi, Tá, tenta funilar, né, o que que você recomenda desse processo aí do bithead, long term vision, blá blá, e aí depois como você recomenda conduzir essas entrevistas, tipo, onde que a gente acha, com quem que a gente fala e etc.\n[Speaker A, 10:34] Que eu acho que, ó, ficou bom também.\n[Speaker B, 10:39] Deixa eu ver aqui. Vida, peraí, tá, tá, tá bem bom mesmo.\n[Speaker A, 10:43] Uhum.\n[Speaker B, 11:13] É, o, o, não sei se esse how to interview pra mim é, eu achei que ficou narrow, porque eu acho que o sinal não vem só de interview.\n[Speaker A, 11:22] Sim, sim, sim. Não, é que eu falei de, eu falei de interview porque eu acho que é o, o, o mais chato, não, o mais difícil.\n[Speaker B, 11:36] Então, não sei se é o mais difícil, mas mas sim. É, mas sim, eu acho que eu consideraria que eu acho que interview é, é, é uma forma, mas não é a, a única.\n[Speaker A, 11:47] Sim, outra forma, outra forma pode ser, é que eu acho que ali é mais exploratório. Quando você faz entrevista, mais exploratório. Eu acho que o outro é quando você já explorou um pouco, aí você já tem uma hipótese um pouco mais informada, aí você pode fazer uma landing page e começar a distribuir e ver o que acontece.\n[Speaker B, 12:12] É, é isso, mas é, você entendeu assim que, eu acho que você fazer uma landing page pra uma coisa pode te levar a ter um insight de outra coisa. E isso é muito comum, na verdade, na verdade, assim, o mais comum de todas as empresas que eu vejo, que eu falo e tal, o mais comum, cara, sempre é o cara não começa acertando e pivota bastante.\n[Speaker A, 12:40] Sim, sim, sim, 99% pivota, mas bastante. Mas os caras fazem isso iterando com o cliente, né?\n[Speaker B, 12:50] Sim. O que eu quero dizer é assim, o processo padrão é, você vai lá, você tem uma hipótese, que é só da sua cabeça e das suas pesquisas. Aí você entrevista pessoas. Aí das pessoas você tenta concretizar o que que são as dores, aí você fala, puta, tô no caminho certo, tô no caminho errado, então é um primeiro nível de iteração. Aí beleza, você definiu, pô, então eu tenho uma hipótese já mais embasada agora, vamos fazer isso aqui. Aí você faz uma landing page ou então faz um MVP, já que o MVP demora um, dois dias pra fazer agora, e começa a distribuir. Aí você distribui, você vê tanto analytics do que você tá distribuindo, tipo, tá convertendo, não tá convertendo, onde estão clicando, quanto, mas principalmente você chama as pessoas pra conversar. Né? Pra saber.\n[Speaker B, 13:44] Principalmente pras coisas de consumer.\n[Speaker A, 13:48] Isso, isso.\n[Speaker B, 13:50] Né? Isso, as coisas de consumer elas são, eh, assim, as coisas de consumer elas são bem você tem que fazer as coisas mais em escala mesmo e testar.\n[Speaker A, 14:13] Uhum. Se a gente fala de coisas de enterprise, aí é conversar, puro.\n[Speaker B, 14:17] Sim. Aí você tem que ir atrás e conversar com cada pessoa.\n[Speaker A, 14:21] Sim, mas eu acho que no começo o consumer é aquilo que você falou, é tipo, cara, tem que conversar muito com as pessoas, é muito mais valioso no comecinho, comecinho você falar, você ter essa noção qualitativa do que quantitativo, cliques, conversão e etc.\n[Speaker B, 14:41] Uhum. Tá. É. Tá bom, tô vendo aqui, peraí.\n[Speaker A, 14:56] Mas sim, aí eu, eu só pedi pra ele realmente sobre as entrevistas porque acho que esse é o, o pior pra gente, né? O mais difícil.\n[Speaker B, 15:11] Olha, é isso aí. Pergunta que eu faço esses dias. Tá, cara, tá bom, tá bom. Então, deixa eu, eu, eu agora falar coisas que eu pensei hoje de manhã, de visão, que já tava na minha cabeça aqui. Eu tive, eu tive uma.\n[Speaker A, 15:42] Eu, eu só pra alinhar, só não vou ter muito tempo porque a Fernanda acordando a gente já vai sair aqui, tá?\n[Speaker B, 15:47] Tá bom. Ela vai acordar daqui a 2 minutos ou daqui a 15 minutos?\n[Speaker A, 15:53] Imagino que daqui a 10 minutos.\n[Speaker B, 15:55] Tá. Não, beleza, assim, uma coisa que eu, eu tava trocando ideia com um cara ontem, é isso, é das ideias que vieram. De uma empresa que chama Buni, Buni, o CEO lá. Presta atenção nessa empresa. Os caras fazem, eles começaram, então assim, é isso, é narrow e abrange, né? E é resolvendo o problema do cliente. Eles começaram, acho que bem na pandemia, talvez, um pouco depois, pra construir um gerenciador de swags. Então, tipo, imagina as empresas tem que vender um monte de swag, tem que fazer logística disso e tal, com os remote workers principalmente. As empresas. E aí eles, era assim, gera o swag, ele compra, ele faz, ele faz o armazenamento e faz a logística de enviar pra onde o cara quer enviar.\n[Speaker A, 16:41] Aham.\n[Speaker B, 16:42] E aí tem muito pra interno da empresa, mas também muito pra cliente, tipo, ah, recebi o swag da XP e tal.\n[Speaker A, 16:46] Sim, sim.\n[Speaker B, 16:47] E aí ele falou assim que, beleza, funciona, inclusive, e aí ele vai entrando no fluxo, né? Aí ele, ah, fez o rastreamento, aí ele começou a fazer um rastreamento dele, ele pode, ele pode entregar pro cliente dele mesmo, esse rastreamento.\n[Speaker A, 17:14] Uhum.\n[Speaker B, 17:15] Aí ele falou de ter um, aí ele fez recente uma experiência de redeem agora, que é tipo, às vezes tem o trabalho de gerenciar o endereço do cara, ele fez assim, não, agora tem um de redeem, você só manda, tipo, imagina o cara da XP manda pra mim, ó, tá esse link aí pra você pedir, pegar seu, seu brinde.\n[Speaker A, 17:29] Uhum.\n[Speaker B, 17:30] Você clica, aparece seu endereço, escolhe se é GM, tanto faz.\n[Speaker A, 17:33] Uhum.\n[Speaker B, 17:34] Então assim, um negócio legal, ele começou a entrar no fluxo e foi abrangindo, né, o negócio.\n[Speaker A, 17:36] Foi aumentando as etapas.\n[Speaker B, 17:40] E aí outra coisa que ele me falou que me surtiu assim, guardou na cabeça, assim, ele falou que em algumas empresas eles estão absolutamente transparentes, transparentes e eles estão integrados via API no CRM do cara. E o CRM do cara dispara via API todo, todo esse processo puro. Tipo, nesse caso aqui, desse cliente, manda isso, sabe?\n[Speaker A, 18:08] Entendi, um processo físico que ele dá start via API.\n[Speaker B, 18:13] Exato, né? E eu tava, e eu tô com isso na cabeça faz um tempo, e isso vem consolidando na minha cabeça que eu tô pensando que é muito essa coisa de, tá bom, como é que você dá APIs do mundo pro robô fazer coisa no mundo físico, pros agents, né? Isso é claro, assim, o maior gap dos agents é a capacidade de interagir.\n[Speaker A, 18:32] Sim, sim.\n[Speaker B, 18:33] De interações e, e tem muitas coisas do mundo físico que não tem API, inclusive os caras tão lá, tem os caras trabalhando nisso pra ciência, pra pesquisa, né, e tal. A gente já, já refletiu. E esse é, então, assim, uma das coisas que eu refleti é assim, cara, tá bom, isso é uma coisa que vai ter que ser resolvida num another level agora, já foi feito, né, nos últimos anos. É, principalmente pra coisas de muita escala, eu não pensei tão bem sobre exatamente o que, por que que a coisa valia a pena fazer antes e não valia depois. Mas, acho que a reflexão simples da maneira global é, agora você consegue automatizar um monte de processo que não dava pra automatizar antes. Porque antes você já tinha que ser, tinha que ser um humano orquestrando, nem valia muito a pena você botar um API. E agora você consegue, então, vai ter os agents orquestrando e eles vão precisar de dessas integrações, então essas integrações por API, por software, elas vão ser 100 vezes o que elas são hoje. Vai crescer muito as que existem e as que não existem e vão passar a existir.\n[Speaker A, 19:47] Sim, porque deve ter um monte de, digamos, non-consumer desses serviços porque é custoso ou tem gargalo de mão de obra pra você fazer acontecer coisas dessas.\n[Speaker B, 20:00] Exato. Tudo, tudo vai acontecer muito mais assim, em geral.\n[Speaker A, 20:04] Aham. Alguns, alguns serviços, acho que alguns você vai chegar à conclusão que não.\n[Speaker B, 20:08] Porque aumenta, por exemplo, as pessoas não vão comer mais porque é isso.\n[Speaker A, 20:13] É.\n[Speaker B, 20:14] É, então o consumo não aumenta, apesar de que provavelmente vai migrar um consumo não, não API pra API. Mas tem muitas coisas que além de migrar o consumo não API pra API, o consumo API vai ficar muito maior.\n[Speaker A, 20:30] Uhum.\n[Speaker B, 20:31] Coisas que já estão via API que vai ficar muito maior. Então, um exemplo.\n[Speaker A, 20:34] Bom, um, um que é migrar é payments, né?\n[Speaker B, 20:37] Não, não, assim, exemplo caro é tudo em software, né? É, é desenvolvimento de software, tipo, Superbase, esses caras crescendo infinito, é porque o software ficou muito mais fácil, então o consumo de software, ele não é bounded, aumenta. E ele tá sendo guiado por agents agora, e o cara que deu uma boa base de dados pra ser consumido por agent, estourou, que é a melhor forma de você consumir isso por agent. Então, esse é o, é o que tá acontecendo já, né? Só que isso vai acontecer em tudo. E aí eu dei uma explorada com ele aqui, tipo assim, tá bom, quais são essas coisas, né? Quais são as coisas que não tem uma boa API pra ser consumida ainda?\n[Speaker A, 21:21] Uhum.\n[Speaker B, 21:22] E quais são as coisas que vão ter muito, muitos estouro de consumo? É uma matrizinha isso, provavelmente. Onde já tem API e vai ter estouro, é explosivas oportunidades até pra investir, sei lá, pra pensar.\n[Speaker A, 21:39] Uhum.\n[Speaker B, 21:40] Aonde não tem, não tem API e vai ter estouro, é uma boa de construir, é a melhor de construir de todas, assim. E onde não tem API e o estouro também não vai existir, às vezes é bom também, depende do tamanho do mercado.\n[Speaker A, 21:53] Sim, sim, sim. É, que aí é só a migração do mercado, né? Tipo, quanto a gente acredita que agents que vão fazer isso mais do que pessoas.\n[Speaker B, 22:03] Exato, exatamente. Então, e aí eu comecei a entender assim, e isso, de fato, já vem acontecendo na economia, né? Só que eu acho que vai acelerar muito isso. Então, você já, eh, insurance. O negócio do Vitigal é esse, praticamente, né? Ele meio que integra as várias coisas de crédito agrícola lá pra botar uma API só, sei lá. É, e aí, enfim, pegou as coisas, aí, aí o, eu acho que tem várias teses que surgem a partir disso, assim, precisa investigar mais, mas tem muitas teses que surgem a partir desse, dessa reflexão. Né? Então, sei lá, uma tese, eh, é KYC, né? É, é um KYC, assim. Em teoria, você vai ter muitos serviços de coisas que eram manuais, que uma pessoa ia lá e via quem era e tal, não sei o quê.\n[Speaker A, 23:08] Uhum.\n[Speaker B, 23:09] Agora você vai precisar fazer um KYC disso, porque é um agent fazendo, e ter isso por API é muito importante. Eu sei que já tem coisa lá, mas KYC provavelmente vai estourar de necessidade de consumo de API.\n[Speaker A, 23:25] É, KYC de pessoa meio que já tá assim, já, já.\n[Speaker B, 23:31] É, não tô falando, a único, a único já transformou em uma API isso, basicamente, assim. Isso, a maioria, assim, vários casos já vão ter, esse é um dos casos que meio que já tem, mas provavelmente vai estourar e vai ter muito mais. É, e o fato de já ter e vai ter muito mais, eu acho que também é uma oportunidade de construir, porque você pode entrar mais direcionado a isso, né, e tal, fazer, eu falo mais de desenvolvimento, tipo assim, porque como vai crescer muito o mercado. Você, se você entrar com um ângulo bom, você vai embora, né?\n[Speaker A, 24:05] Uhum.\n[Speaker B, 24:05] É. Enfim, foi uma reflexão. E aí eu pedi pra ele pensar, né? E aí, cara, são problemas difíceis e tal. Mas ele falou muito aqui, ó, assim, a primeira passada ele foi assim, cara, a parte de.\n[Speaker A, 24:25] Ele, quem é ele? É o GPT?\n[Speaker B, 24:27] É, o robô.\n[Speaker A, 24:28] Ah, tá.\n[Speaker B, 24:29] Então, ele falou de casa, mas eu não, eu não tinha dado esse frame pra ele ainda não, a gente pode, posso dar depois. Mas tipo, cara, insurance aparente, aparentemente ainda, ainda é meio cru aqui, mas eu não sei se insurance é o tipo de coisa que vai explodir o consumo. Eu acho só que vão ser mais agents operando. Então, essa é mais uma migração.\n[Speaker A, 24:51] Mas agents operando como o corretor, no lugar do corretor. É, é mais.\n[Speaker B, 24:56] É, é mais, é agents, agents operando, né, na, na, na execução das várias, operando claim, em tudo, é, claim, é, tudo. Operando análise, vai cair em análise de fraude e tal. Aí você tem, ele falou aqui, healthcare legal e tal. Legal, por exemplo, cara, é uma, é um, é uma merda. E, e, assim, tem uma certa razão, assim, cara, imagina o futuro de legal.\n[Speaker A, 25:27] Uhum.\n[Speaker B, 25:28] Mano, você vai ter API tudo, você vai pedir pra um agent, cara, resolver o seu claim, e do outro lado vai ter um outro agent resolvendo o claim dele. E atendendo, né? E todas as conversas vão ter que acontecer de uma forma integrada por API, processar por API, tudo. Isso não é bem resolvido hoje. Não é bem resolvido. É, certamente a Inter tá meio que construindo isso pro, pras enterprises. Tem gente meio tentando construir isso, eu sei, pra claim de pessoa física, mas tem bastante coisa aí, assim. A parte de real estate, real estate, mano, é zero API, né?\n[Speaker A, 26:16] Nossa, zero. Zero.\n[Speaker B, 26:18] Zero API. Tipo, você poderia por API chamar o cara pra fotografar sua casa, né, listar nas corretoras.\n[Speaker A, 26:28] Uhum.\n[Speaker B, 26:32] Executar, né, comprar seguro. Resolver uma.\n[Speaker A, 26:36] Nossa, exato, você pode ter tudo isso por API.\n[Speaker B, 26:40] É, pra fazer, fazer a, fazer a transação e tal, tem isso, assim. Aí a parte de cartório, óbvio, né, assim, mas essa é muito óbvio, muito.\n[Speaker A, 26:48] É, mas, é.\n[Speaker B, 26:50] Mas mais ou menos, cara, porque se você, esse caso da Buni, ele faz um API pro mundo físico.\n[Speaker A, 26:56] Uhum.\n[Speaker B, 26:57] Uhum. Tipo, o cartório, cara, não tem um, tem uns serviços, mas não são muito robustos, assim. Tipo, poderia ter um API de due diligence.\n[Speaker A, 27:06] Não, e, e mesmo assim, você pode ter uma API que é um carinha que vai lá e leva um documento no cartório e faz.\n[Speaker B, 27:13] Exatamente.\n[Speaker A, 27:14] É isso, é que nem logística.\n[Speaker B, 27:15] Isso, exatamente, exatamente. Eu, eu acho que esse é o jogo, tá? Assim, onde tem as grandes oportunidades é isso. Aí depois você vai, é, é, é, deixando a operação mais eficiente por dentro. Eu acho que o jogo é você montar um API por fora de um serviço que a gente acredita que vai ter muita demanda por agents.\n[Speaker A, 27:41] Uhum.\n[Speaker B, 27:41] E aí depois como você quebra as partes internas também em coisas programáticas e mais eficientes, é o segundo passo. Sabe? Então, tipo, o caso lá, eu acho que isso, esse frame entra muito no caso da igual lá, que é essa de claims de pessoa física. Ele, cara, põe um agent pra atender o cara e pra você disparar um claim de de processo.\n[Speaker A, 28:08] Uhum.\n[Speaker B, 28:09] Aí, lá dentro, ele, cara, faz o que quiser, ele pode fazer o processo, fazer não sei o quê. Com o tempo o que que ele tá fazendo lá? Ele tá fazendo uma uberização ali de, não sei se é exatamente o que ele tá, mas é isso que eu vi que era a oportunidade, uma uberização de advogado. Ou ele põe um agent pra operar, mas ele manda pra um advogado, pra o advogado garantir que tá tudo certo, se ele precisar mandar um negócio pro tribunal, ele já conecta um cara que vá. Então ele vai, ele vai construindo o que ele tem ali dentro.\n[Speaker A, 28:36] Uhum.\n[Speaker B, 28:39] É. Outras coisas, a parte de tributação. Eu não explorei muito com ele a tributação especificamente.\n[Speaker A, 28:48] Ô, mano, a gente tem que ter mais essas conversas no, no Hangouts e gravando, né? Puta.\n[Speaker B, 28:53] Eu tô gravando aqui.\n[Speaker A, 28:54] Ah, boa, boa.\n[Speaker B, 28:55] Eu tô gravando, não sei se tá, tá gravando certo, que eu vaibcodei o app de gravar. Eu tô aprendendo a testar. É, eu acho que tem coisa de, de, de, de accounting, talvez tenha APIs importantes disso, cara, aí tem que, eu acho que talvez valha a gente aprofundar, porque tem essa questão da da mudança da reforma tributária e tal, tem essas coisas. Então acho que vale, vale refletir aí.\n[Speaker A, 29:22] É, mesmo sem mudança de reforma tributária, tipo, a gente sabe que, que o arcabouço tributário do Brasil é um dos maiores bloqueios pra negócios no Brasil, pra empreendedorismo e tal.\n[Speaker B, 29:37] É, tem coisa que, que tem coisa que, na verdade, nem é 100% nessa tese, mas que tem a tese independente, tipo, resolver a questão tributária, com certeza é importante nessa, é um ponto. Ah, tá bom. Ah, tá bom, mozão, tô falando com o tio Zé. Talvez, talvez a oportunidade ali seja a questão de agent, de, de, de deixar, fazer um software mais do que essa questão de dar uma interface pro agent.\n[Speaker A, 29:58] Cara, mas é isso, né? É basicamente, dá pra você reconstruir tudo, tipo, Ifood, Rappi, Uber, nessa camada de APIs pra agents, né?\n[Speaker B, 30:09] É, mas o Ifood ele é essa tese já, né? O Ifood ele é um API pra você pedir, fazer pedidos.\n[Speaker A, 30:15] Não, eu sei, mas, mas ele resolve, mas ele resolve operacionalizada pra fora já.\n[Speaker A, 30:20] Sim, sim, sim. Mas o que eu tô dizendo é isso, daria pra você, né, tudo isso tem pra você transformar agora no agent first.\n[Speaker B, 30:31] É. As, as coisas primeiro disso, provavelmente são que vão rolar, são as coisas que não tem interface com o mundo físico, que são muito fáceis, né? Sei lá, a gente tem, tem que, tem que aprofundar.\n[Speaker A, 30:43] É, mas aí justamente o que é bom você ter as do mundo físico, porque.\n[Speaker B, 30:49] E, e a outra, e a, mas assim, a outra, a outra meta, essa oportunidade é, tá bom, mas o que que dá pra fazer pra, pra fazer os business que existem hoje acoplarem um API em volta deles?\n[Speaker A, 31:06] Uhum, uhum.\n[Speaker B, 31:08] Né? Essa é a outra, é a outra reflexão, né? Tipo, você não, não vou resolver um específico, eu vou resolver os business que já existem.\n[Speaker A, 31:19] Ou na real, cara, uma coisa que dá, bom, não sei. Mas uma coisa que dá pra fazer é, não é que você faz a API do cara, mas você faz um serviço que navega ali no frontend mesmo e faz uma requisição do serviço do cara, só que você transforma isso numa API pra quem quiser.\n[Speaker B, 31:40] É. Mas tem que ser mais robusto ainda, porque é tipo, eu acho que você, é, enfim, sim, tem várias formas de pensar sobre isso. Mas no final das contas é isso, a reflexão é essa e eu gostei do frame pra tentar achar onde estão as oportunidades.\n[Speaker A, 31:55] Uhum.\n[Speaker B, 31:57] É, e uma outra coisa que eu pensei assim, tem outro capability que eu achei bem curioso, essa é mais, essa é mais viagem. É uma parte de, cara, hoje a gente é capaz de ter um, um judgment em teoria neutro. Um agent, por exemplo. Então, assim, dá pra imaginar que no futuro seria melhor, não tô falando que vai acontecer, eu não acho que vai acontecer.\n[Speaker A, 32:30] O juiz ser um agent.\n[Speaker B, 32:32] O juiz ser um agent, são, são.\n[Speaker A, 32:33] Sim, com certeza absoluta.\n[Speaker B, 32:34] Né? Tipo, uhum. Provavelmente ele seria capaz de fazer um trabalho melhor do que um juiz normal.\n[Speaker A, 32:42] Acho que sim.\n[Speaker B, 32:43] É, mas eu acho muito, muito difícil isso acontecer pros juízes.\n[Speaker A, 32:50] É.\n[Speaker B, 32:52] E por várias razões. Mas quais são as outras coisas que valeria a pena ter um agent neutro operando?\n[Speaker A, 33:07] Então, mano.\n[Speaker B, 33:09] Que não, não existe hoje, né? Então, a coisa mais idiota é assim, cara, você podia fazer um, idiota, um concurso de arte que ele é, entre aspas, objetivo porque é um agent que resolve isso.\n[Speaker A, 33:28] Uhum.\n[Speaker B, 33:30] É uma brincadeira assim, mas dava pra ter. Mas você pode ter claims de escrow, claims de não sei o quê.\n[Speaker A, 33:38] Eu acho que um, um bom é isso, são, são árbitros, né, no geral.\n[Speaker B, 33:44] Exatamente.\n[Speaker A, 33:45] Um, um que é muito bom é de, de intermediação de negócios.\n[Speaker A, 33:52] É, não, não é intermediação de negócio, qual que é o nome? Bom, pode ser, intermediação de negócios, intermediação de conflitos.\n[Speaker B, 34:02] Isso, uma arbitragem, uma arbitragem, uma arbitragem não judicial, por exemplo.\n[Speaker A, 34:08] Sim.\n[Speaker B, 34:09] O, outras coisas, bom dia, não sei o quê.\n[Speaker A, 34:11] Sim, mas até numa negociação, tipo, tem uma empresa negociando com outra. Cara, puto esforço, tal, não sei o quê, podia botar um, sei lá, um conversa com a gente, outro conversa com a gente, ou a gente falou, ó, tá aqui o negócio de vocês, isso é bom pros dois.\n[Speaker B, 34:26] É, é que você tá falando de um facilitador também.\n[Speaker A, 34:31] Também, é.\n[Speaker B, 34:32] Eu tô falando é de quem arbitra.\n[Speaker A, 34:34] Não, o árbitro com certeza, eu tô falando mais um, é, é um outro.\n[Speaker B, 34:39] É, é isso, e o, mas o facilitador ele tá, é, os dois, é os dois. E assim, então, eu não sei, cara, eu acho que tem várias coisas também que surgem a partir disso.\n[Speaker A, 34:51] Sim, por exemplo, o processo, o próprio processo da Master das bandeiras, né, no geral, de, de chargebacks, é isso.\n[Speaker B, 35:12] Cara, tem um tal minutinho.\n[Speaker A, 35:14] É um processo escroto. E eles são, em teoria, um árbitro neutro.\n[Speaker B, 35:21] Mas é uma merda.\n[Speaker A, 35:23] É uma merda. É caro pra caralho, é lento pra caralho, ineficiente.\n[Speaker B, 35:28] Então, e é um problema, tá? Tudo bem, mas assim, tá bom, então, vou pro GPT pra arbitrar, peraí, não é bem assim. É um, é, é difícil, não é fácil.\n[Speaker A, 35:38] Sim.\n[Speaker B, 35:39] Você vai ter que resolver um monte de problemas, inclusive um dos problemas é garantir que o negócio ele não é bias, que as pessoas conseguem entender a ciência de como ele funciona, de como ele decide, tudo isso, né?\n[Speaker A, 35:55] Tipo.\n[Speaker B, 35:58] Eu não sei, cara, fiquei com isso na cabeça, eu achei esse, esse. Achei interessante essa, essa reflexão aí.\n[Speaker A, 36:08] Acho que sim, mas a princípio, de bate pronto assim, eu achei a primeira mais fértil.\n[Speaker B, 36:15] É. É, ela é mais geral, né?\n[Speaker A, 36:18] É.\n[Speaker B, 36:19] Ela é mais geral.\n[Speaker A, 36:20] É um caminho interessante, mas não sei, ele já é bem, é, é bem mais, dá pra tangibilizar, ser uma coisa bem específica mesmo. Porque é, basicamente assim, coisas que você sabe que já existem, que as pessoas pagam, é, só que a forma de consumir vai passar a ser diferente. Então, tipo, a demanda tá provada, você só precisa escolher qual é aquele que que vai ter mais tailwind.\n[Speaker B, 36:49] É, e agora o consumo vai ser muito pequeno, mas você vai conseguir line up pra um, pra um muito bom.\n[Speaker A, 36:54] Exato.\n[Speaker A, 36:55] Que, que é parecido com o que a gente tava discutindo de agent e payments. Você provê aí uma forma de pagamento pro agent.\n[Speaker B, 37:03] É, a parte difícil do agent e payments é que o, o, o API já é muito forte, então a tendência é a API crescer.\n[Speaker A, 37:11] É usar o cartão.\n[Speaker B, 37:13] É, a API crescer. Não, é isso, que o agent payments tá na, naquele lugar de já ter o API forte, o consumo por API vai crescer, talvez você consiga fazer um modo alternativo que, que faça disrupção, talvez seja só vai crescer muito o existente. Pensando na pandemia, quando você, tipo, você tem lá o Mercado Livre que de repente ele estoura e fica 10 vezes maior na pandemia, mas é o Mercado Livre ainda, né?\n[Speaker B, 37:41] É, então, acho que, acho que tem que entender.\n[Speaker A, 37:44] É, o dos agents o que vai acontecer, eu acho que é uma, a difere, a principal diferença assim é, é aquela que você falou, eu acho que você fez um paralelo muito bom de do cartão do agent pra o Brex lá, né, pra o cartão corporativo.\n[Speaker B, 38:01] Aham.\n[Speaker A, 38:02] Você tem que saber dar limites, o que que a pessoa pode comprar com aquilo, e aí, então, eu acho que tem isso e a segunda coisa é a questão de fraude, que você tá basicamente botando na internet aí um cartão, então, é, como é que você diminui a probabilidade de fraude em cima disso? Então, eu acho que talvez essas coisas façam com que possa ter uma dinâmica um pouco diferente. Então é isso, as APIs existem, mas talvez tenha uma layer em cima que ainda seja necessário.\n[Speaker B, 38:41] É, mas talvez essa layer, ela é a layer mais do emissor ali do que do, do protocolo, né?\n[Speaker A, 38:48] É, é.\n[Speaker B, 38:50] Mas o protocolo tem alguns gaps que talvez ele tenha.\n[Speaker A, 38:53] Não, acho que é do emissor, mas acho que é do emissor mesmo.\n[Speaker B, 38:56] É, na verdade o que a gente tinha falado lá era mais assim, provavelmente vai ter que ter um emissor focado no agent e um acquirer focado no agent também. As duas pontas vão ser importantes.\n[Speaker A, 39:08] É, porque eventualmente o padrão de compra vai mudar, então o acquirer se não for otimizado pro agent, vai ter uma taxa de aprovação bem mais baixa, né?\n[Speaker B, 39:18] É, alguma coisa nessa linha pra refletir. Cara, aí sobre, voltando sobre o negócio de API, por exemplo, coisa de, de, de, de filing de coisas no governo. Cara, existe hoje uma API boa pra isso, será?\n[Speaker A, 39:35] Não.\n[Speaker B, 39:36] Eita. Tipo, uma API de preciso protocolar um não sei o quê na prefeitura. Preciso, puta, acho que não tem nada, mano.\n[Speaker A, 39:45] Não, até agendar pro poupatempo.\n[Speaker B, 39:48] Exato.\n[Speaker A, 39:49] Acordou. Agendar pro poupatempo ainda é digital, mas tem coisas que você tem que ir lá pessoalmente, assim. Sim. Não, mas tô dizendo, você, ao invés de ir lá e agendar no poupatempo, você poderia pedir pro seu agent fazer isso pra você.\n[Speaker B, 40:01] Sim. Tipo, eu acho que, ah, ah, lembrei. E aí eu lembrei de uma bem específica que tem lá fora e, cara, não sei se você já viu, tem o Stripe Atlas lá, né? Que é pra abrir conta.\n[Speaker A, 40:13] É, não vi.\n[Speaker B, 40:14] Aqui no Brasil tem, tá com API boa de abrir CNPJ, assim? Tá, de abrir no Contabilizei, não sei o quê.\n[Speaker A, 40:21] Eu sei que tem, o Nubank tava olhando uma coisa assim. Porque alguém fazia, quem que, cara, ah, o C6.\n[Speaker B, 40:31] A Stripe, a Stripe faz isso muito ridiculamente fácil, assim.\n[Speaker A, 40:34] Então, então, o C6, se eu não me engano, tava oferecendo um serviço assim, e aí a gente no Nubank tava investigando como eles faziam isso.\n[Speaker B, 40:45] Será que tem um provedor por trás?\n[Speaker A, 40:48] Mano, eu acho que não, em teoria, é, a conclusão que a gente chegou era que eles faziam via um scraping, porque tem uma página simplificada no governo que dá pra você fazer, e aí se a gente tava conectado com o Gov.br, essa era uma maneira de tentar, tipo, se autenticar no Gov.br, é, dentro do app do Nubank com uma, como é que é o nome quando você abre uma página da internet dentro do app? É, então, você, você abre uma página da internet, o cara se autentica, já fazendo login com o Nubank, e aí uma vez que o Nubank tem essas credenciais autenticadas, ele vai lá e faz essa solicitação pelo cara.\n[Speaker B, 41:34] Uhum. Porque, mas faz a solicitação no frontend, é, só que esse frontend tá no backend, tá, tá escondido do cliente, né? O cliente não vê o que tá acontecendo.\n[Speaker B, 41:48] Entendi. Não, é que eu tava, o que eu tava pensando é que eventualmente dá pra, não, não com desafio técnico, mas você tem uma pessoa fazendo isso.\n[Speaker A, 41:55] Você tem uma pessoa fazendo isso.\n[Speaker B, 41:57] Você fazer isso as service para os bancos, né? B2B pra C, assim.\n[Speaker A, 42:01] Sim, verdade, pô. Contabilizei aí pras coisas que é tipo, oferecer um serviço lá que abriu um PJ, abriu um PJ aqui, ó.\n[Speaker A, 42:09] Não, o Nubank queria muito isso, a gente tava realmente estudando, tipo, como uma coisa de altíssimo potencial pro PJ.\n[Speaker B, 42:15] Agora, recente?\n[Speaker A, 42:17] Recente, logo antes de eu sair. Foi uma das coisas que eu discuti com o pessoal de PJ.\n[Speaker B, 42:22] E tem mais vários outros bancos que vão precisar disso.\n[Speaker A, 42:25] Com certeza.\n[Speaker B, 42:26] Esse aí talvez seja um business bem direto assim, e que tem esse do Stripe lá no, nos Estados Unidos que parece que opera bem. E eu acho que é um, é um APIzação aí potencialmente bem interessante.\n[Speaker A, 42:38] É. Só tem que saber, eu não sei se o Nubank conseguiu resolver, né? Porque se tiver conseguido.\n[Speaker B, 42:46] Mas mesmo que não tenha, que tenha conseguido, talvez não seja fácil, talvez precise de um KYC que os outros não têm, talvez assim, acho que é um ponto potencial de investigação interessante.\n[Speaker A, 43:00] É.\n[Speaker A, 43:01] Ó, a Fernanda acordou aqui, eu vou ter que ir lá.\n[Speaker B, 43:03] Tá bom, mas, ah.\n[Speaker A, 43:08] Tá.\n[Speaker A, 43:09] Não, a única coisa que eu vou falar é, mano, de novo, eu, eu acho, eu achei animal essas, acho que tem coisas boas dessa discussão aí. A única coisa que, cara, eu acho que a gente tem que focar aqui nas teses de serviço financeiros que a gente já se comprometeu com, com o plug lá até maio. Então vamos aproveitar isso que a gente vai ter.\n[Speaker B, 43:32] A gente vai aproveitar, a gente não, mas isso é de menos. Eu acho que assim, uma investigação nessa linha é o tipo de coisa que não é muito sexy e é, essa, esse lugar de framework de, cara, coisas que não tem tanta API hoje e que vão crescer muito.\n[Speaker A, 43:49] É, não, isso é legal.\n[Speaker B, 43:50] Esse, não sei se esse caso me pareceu interessante, e assim, se você tá me falando que o Nubank tava querendo isso, é um, é um sinal muito grande, acho que a gente tem que, não pode vacilar, cara, é muito comum não deixar os sinais passarem, né? É, tipo, a gente fica aqui no mundo das ideias, que nem a história lá do, pra mim esse aprendizado de Invest era o principal, que era assim, os caras no mundo das ideias de Invest, de educação financeira, não sei o quê, mas o que a galera que de queria, a galera tava pedindo, que era organizar o porquinho em várias caixinhas e poder trancar de um jeito específico, enfim. Né? Então, eu acho que vale, vale bastante a gente ver. Outra coisa que eu só falar, seguros também, tá, cara? Seguros, eu acho que vale a gente dar uma olhada só porque eu gosto muito dessa coisa da tese de risco. E, mano, seguro é uma, é uma indústria como finance, assim, que não, não modernizou direito ainda, né? Tá muito early. É, modernização tech, assim.\n[Speaker A, 45:08] É, é que, é, puta, é que tem umas, tem uma infraestrutura foda, né? Tipo, seguro de carro. Você tem que ter o que mais atrai a galera é o, a rede de guincho.\n[Speaker B, 45:21] Não, mas você tava entrando, é, mas que tá operando, mas esse você tá na camada de serviços, é mais serviço do que o seguro em si, né?\n[Speaker A, 45:32] É.\n[Speaker B, 45:33] Mas a camada de seguro é pouco. Você vai ter que ir lá, ele vai lá.\n[Speaker A, 45:35] Você tem que ir lá, tem que ir lá.\n[Speaker B, 45:37] Vai lá, vai lá, vai lá, vai lá.\n[Speaker A, 45:39] Ah, foi bom, foi bom.\n[Speaker B, 45:41] Se tinha alguma coisa a mais que eu queria plantar na sua cabeça.\n[Speaker A, 45:43] Eu, eu vou, eu vou te mandar depois os, os quatro pontinhos de visão que eu tinha escrito lá, que é isso, tipo, ah, peguei duas horinhas ali, escrevi quatro coisas que estavam na minha cabeça, meio porquê, assim, um propósito. Acho que só pra, pra sentir um propósito que dá motivação assim, de, de seguir.\n[Speaker B, 46:06] Tá bom.\n[Speaker A, 46:07] Vou te mandar.\n[Speaker B, 46:08] Ô, você não quer fazer um investigado nesse assunto do, de ver?\n[Speaker A, 46:13] Puta, deixa eu ver, cara, eu vou lá, falou, falou, falou, falou, falou, falou.\n[Speaker B, 46:18] Falou, falou, falou.",
+  "latency_seconds": 229.44,
+  "duration_seconds": 2792.872925,
+  "estimated_cost_cents": 3.26,
+  "prompt_used": "Transcribe this audio in Portuguese with speaker diarization and timestamps.\n\nRULES:\n1. Label speakers as Speaker A, Speaker B, etc. based on voice.\n2. Group consecutive speech from the same speaker i...",
+  "language_hint": "pt",
+  "segments": [
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, fiquei.",
+      "start": 1,
+      "end": 4
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí?",
+      "start": 4,
+      "end": 6
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí, mano.",
+      "start": 6,
+      "end": 7
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Zão, fala com o tio Zé ali, tá? Você assiste a família sozinha um pouco.",
+      "start": 7,
+      "end": 11
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, eu quero.",
+      "start": 11,
+      "end": 12
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Beijo.",
+      "start": 12,
+      "end": 13
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E aí.",
+      "start": 13,
+      "end": 14
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que toca.",
+      "start": 14,
+      "end": 16
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Toca na lista.",
+      "start": 16,
+      "end": 17
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ai, que nojo.",
+      "start": 17,
+      "end": 20
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ai.",
+      "start": 20,
+      "end": 21
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí? A Fernanda voltou a te desafiar no FIFA, camarada?",
+      "start": 21,
+      "end": 24
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?",
+      "start": 24,
+      "end": 30
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, nem nem quando tá gripado, doente, é um 10 vezes mais trabalho.",
+      "start": 30,
+      "end": 36
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Pior é que ela tá de boa, só que ela tá com um catarro pra caralho assim, então é uma merda.",
+      "start": 36,
+      "end": 41
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas essa, essa é essa é a parte que dá 90% mais trabalho.",
+      "start": 41,
+      "end": 47
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa. Não é, não é a parte dela tá mal, é a parte dela não conseguir dormir.",
+      "start": 47,
+      "end": 52
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. Isso porque é uma merda.",
+      "start": 52,
+      "end": 55
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, tá foda. A Alice, como tá sem fôlego, não respira direito, tosse, acorda.",
+      "start": 55,
+      "end": 62
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Uhum.",
+      "start": 62,
+      "end": 64
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aí a gente fica na nóia ainda de, sei lá, né, de piorar, de ser, de virar bronquiolite, blá blá blá.",
+      "start": 64,
+      "end": 72
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ah, mas aí, cara, tem que tirar essa nóia da cabeça.",
+      "start": 72,
+      "end": 75
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 75,
+      "end": 77
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Se tirar da cabeça.",
+      "start": 77,
+      "end": 78
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É que, mano, pra gente é a primeira vez que ela tá ficando doente, né? Então acho que ela não.",
+      "start": 78,
+      "end": 82
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, se tiver bronquiolite, você já deu. Vai ter. Inclusive, mano.",
+      "start": 82,
+      "end": 88
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, não, que a gente. É que tem um, tem um fator que tá foda, que a gente não conseguiu migrar o plano. Porque o plano do Nubank era um plano de uma categoria inferior, e o plano que tá entrando a Paulinha e a Fernanda agora é um plano superior, então tem que cumprir todas as carências.",
+      "start": 88,
+      "end": 112
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas tem carência pra",
+      "start": 112,
+      "end": 115
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tem carência pra internação, pra tudo.",
+      "start": 115,
+      "end": 119
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Pô, tudo bem. Isso aí é um problema número dois. Eu não tô preocupado se ela vai ficar doente por causa disso.",
+      "start": 119,
+      "end": 125
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim.",
+      "start": 125,
+      "end": 127
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso é um problema. Já foi, você já foi, já foi, né?",
+      "start": 127,
+      "end": 130
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 130,
+      "end": 131
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Já foi, você já entrou nesse risco, agora se aconteceu, esse, o menor dos problemas vai ser isso.",
+      "start": 131,
+      "end": 139
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 139,
+      "end": 140
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. É. Sei lá.",
+      "start": 140,
+      "end": 144
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Enfim, mas e aí, você leu lá o que eu mandei?",
+      "start": 144,
+      "end": 147
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Cara, eu li um pedaço e a Alice me interrompeu aqui.",
+      "start": 147,
+      "end": 152
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Hum.",
+      "start": 152,
+      "end": 154
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ela acordou, não tinha acordado ainda. É, mas o post agora é muito grande que você mandou? É grande, né?",
+      "start": 154,
+      "end": 160
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, mano, não é grande, é tipo, é uma mensagem do GPT.",
+      "start": 160,
+      "end": 164
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, vamos ler junto aqui. Mas assim, o hoje, hoje de manhã acordei e fiquei, cara, entrei naquela moda de pensar um bilhão de ideias, é foda. Tá vendo.",
+      "start": 164,
+      "end": 180
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 180,
+      "end": 181
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vamos lá. É, mas cara, tem uma coisa que tá bem clara pra mim, eu não sei o quanto é bem clara mesmo, não sei o quanto a gente conversou, mas eu realmente tô dando muito mais prioridade em fazer um negócio consumer com escala, assim. Tipo, uma das coisas que eu reconheci é, cara,",
+      "start": 181,
+      "end": 202
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim.",
+      "start": 202,
+      "end": 203
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "trabalhar com escala, trabalhar com analytics e trabalhar em lugares que o analytics é bem forte.",
+      "start": 203,
+      "end": 211
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 211,
+      "end": 212
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É uma parte importante da, assim, do que eu acho que vale pra mim priorizar, assim, pra gente.",
+      "start": 212,
+      "end": 221
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim. Não, pra mim, pra mim também, isso a gente tá alinhado.",
+      "start": 221,
+      "end": 225
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E o, tipo, então por isso que eu gosto muito de crédito e tal, que a gente fala, sabe?",
+      "start": 225,
+      "end": 228
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 228,
+      "end": 229
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A gente que você fazer um analytics bom é muito importante, né?",
+      "start": 229,
+      "end": 233
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 233,
+      "end": 234
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É.",
+      "start": 234,
+      "end": 236
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, isso daí é menos uma crença e é mais um, uma coisa que te motiva, exato.",
+      "start": 236,
+      "end": 243
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é, motiva e que vai junto, né?",
+      "start": 243,
+      "end": 247
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Isso, é, como você tá motivado, é uma coisa que você vai melhorar e você é bom nisso e etc.",
+      "start": 247,
+      "end": 253
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Pois é.",
+      "start": 253,
+      "end": 254
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É. Que aí, inclusive, porque eu, eu, eu fiquei fazendo brainstorm de, de, de ideias que eu já tinha aqui, né?",
+      "start": 254,
+      "end": 262
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aham.",
+      "start": 262,
+      "end": 263
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "E não sei se a gente fala disso, então depois, mas enfim. Não, lê aí, lê aí antes.",
+      "start": 263,
+      "end": 270
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vamos ver. É. Tá bom. Qual delas? A primeira ou a segunda que eu li antes?",
+      "start": 270,
+      "end": 280
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Lê as duas, lê na sequência.",
+      "start": 280,
+      "end": 283
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom. Agreement. A gente quer não quer construir no vácuo. Você, você, você passou como isso pro GPT? Você só, só.",
+      "start": 283,
+      "end": 294
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu passei bullet points de tudo que eu fui lembrando. Aí eu falei assim, cara, eh, a discussão tava bagunçada, a gente foi rodando em círculos, estrutura aí, vê o que que a gente concorda e o que que a gente efetivamente discorda e e propõe aí como é que a gente segue a discussão, basicamente isso. Aí no segundo eu fiz a continuação disso, a segunda mensagem.",
+      "start": 294,
+      "end": 324
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá. É. Vou repetir. Tá bom, tá bem bom, né? Mas eu acho que a gente tem uma conclusão no final. Nossa discussão era como mais do que o quê, né?",
+      "start": 324,
+      "end": 347
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, exato, tudo a gente tá de acordo, é só a sequência das etapas que a gente não tava. Ah, puta. É, tô vendo, tô vendo que era pra, eu acho que era uma tabela isso que ficou quebrada, né?",
+      "start": 347,
+      "end": 369
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, tudo bem, dá pra entender mais ou menos.",
+      "start": 369,
+      "end": 373
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 373,
+      "end": 374
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, então, isso é um negócio, o botão de share do GPT de uma mensagem não é ruim, ele só deixa você share uma coisa só, né? Eu acho que eles querem que você deixe no link inteiro, talvez.",
+      "start": 374,
+      "end": 385
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, share na conversa inteira?",
+      "start": 385,
+      "end": 387
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, eu acho que você acessa.",
+      "start": 387,
+      "end": 389
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, pode ser, se preferir que eu faça isso.",
+      "start": 389,
+      "end": 391
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eles fizeram os multiplayer, inclusive, você tá ligado, né?",
+      "start": 391,
+      "end": 395
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Que, então, mas não, não funciona multiplayer, né? Tipo, se você continua a conversa, ele continua. Eu vi que ele mudou agora.",
+      "start": 395,
+      "end": 403
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ele fez um, um chat.",
+      "start": 403,
+      "end": 405
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, é, acabou de funcionar.",
+      "start": 405,
+      "end": 408
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu não testei, mas eles fizeram.",
+      "start": 408,
+      "end": 411
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu, eu compartilhei um com a Paulinha ontem, mas acho que ela não mandou nada, então eu não vi como é que tá indo.",
+      "start": 411,
+      "end": 419
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Puta, a tabela tá meio ruim que você me usou. Dá-me um print.",
+      "start": 419,
+      "end": 422
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Peraí. Aqui, ó. Peraí que eu acho que tem mais de uma tabela. Deixa eu ver qual que ele. Ah, é do primeiro texto, né?",
+      "start": 422,
+      "end": 450
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aham.",
+      "start": 450,
+      "end": 453
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ta ta ta ta ta ta.",
+      "start": 453,
+      "end": 460
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Os types, essa é a parte que eu tô interessado aqui. Lightweight Vision.",
+      "start": 460,
+      "end": 471
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Vou te mandar aqui. Pronto. E, caralho. Eu te mandei, mas a tabela ia pro lado.",
+      "start": 471,
+      "end": 488
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Pronto, não, tá muito bom, ou seja, é isso, né? É, é isso, eu acho que sim.",
+      "start": 488,
+      "end": 492
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim.",
+      "start": 492,
+      "end": 493
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E, e, e o mais importante é que o Lightweight Vision tem que ser low, assim, na verdade, o core aqui que não tá endereçado é que o Lightweight Vision ele tem que ser light commitment também. E que pra você é ruim ter um high commitment. Só que pra gente fazer um high commitment, a gente precisa de um coisa, né? A gente precisa de mais informação pra mim, é isso, né?",
+      "start": 493,
+      "end": 518
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, não é. Não, não é que é um low commitment, é assim, tipo, eu vou articular uma coisa que tem um propósito que eu consigo vender e e me convencer de uma visão grande. E aí a gente escolhe dentro disso onde que a gente vai atuar, que nem a gente falou, ah, vamos atuar dentro do, de serviço financeiros. Né? Então é basicamente tentar dar uma funilada extra e aí dentro desse, dessa visão lightweight, aí a gente olha todos os bitheads aí, enfim, só pra gente dar uma funilada extra.",
+      "start": 518,
+      "end": 554
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá, eh, hum, hum, hum, hum, hum.",
+      "start": 554,
+      "end": 561
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mas, por exemplo, eu já escrevi ontem, eh, quatro lightweight visions que, sei lá, na verdade, um é o que eu acho mais legal. Tem dois, na verdade, mas um é serviço financeiro, o outro é medicina, então eu tô achando que o serviço financeiros. Você tá lendo o segundo aí?",
+      "start": 561,
+      "end": 595
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tô.",
+      "start": 595,
+      "end": 603
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, aí o segundo, basicamente o que eu falei pra ele foi, Tá, tenta funilar, né, o que que você recomenda desse processo aí do bithead, long term vision, blá blá, e aí depois como você recomenda conduzir essas entrevistas, tipo, onde que a gente acha, com quem que a gente fala e etc. Que eu acho que, ó, ficou bom também.",
+      "start": 603,
+      "end": 639
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Deixa eu ver aqui. Vida, peraí, tá, tá, tá bem bom mesmo.",
+      "start": 639,
+      "end": 643
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 643,
+      "end": 673
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, o, o, não sei se esse how to interview pra mim é, eu achei que ficou narrow, porque eu acho que o sinal não vem só de interview.",
+      "start": 673,
+      "end": 682
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim, sim. Não, é que eu falei de, eu falei de interview porque eu acho que é o, o, o mais chato, não, o mais difícil.",
+      "start": 682,
+      "end": 696
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então, não sei se é o mais difícil, mas mas sim. É, mas sim, eu acho que eu consideraria que eu acho que interview é, é, é uma forma, mas não é a, a única.",
+      "start": 696,
+      "end": 707
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, outra forma, outra forma pode ser, é que eu acho que ali é mais exploratório. Quando você faz entrevista, mais exploratório. Eu acho que o outro é quando você já explorou um pouco, aí você já tem uma hipótese um pouco mais informada, aí você pode fazer uma landing page e começar a distribuir e ver o que acontece.",
+      "start": 707,
+      "end": 732
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é isso, mas é, você entendeu assim que, eu acho que você fazer uma landing page pra uma coisa pode te levar a ter um insight de outra coisa. E isso é muito comum, na verdade, na verdade, assim, o mais comum de todas as empresas que eu vejo, que eu falo e tal, o mais comum, cara, sempre é o cara não começa acertando e pivota bastante.",
+      "start": 732,
+      "end": 760
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim, sim, 99% pivota, mas bastante. Mas os caras fazem isso iterando com o cliente, né?",
+      "start": 760,
+      "end": 770
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim. O que eu quero dizer é assim, o processo padrão é, você vai lá, você tem uma hipótese, que é só da sua cabeça e das suas pesquisas. Aí você entrevista pessoas. Aí das pessoas você tenta concretizar o que que são as dores, aí você fala, puta, tô no caminho certo, tô no caminho errado, então é um primeiro nível de iteração. Aí beleza, você definiu, pô, então eu tenho uma hipótese já mais embasada agora, vamos fazer isso aqui. Aí você faz uma landing page ou então faz um MVP, já que o MVP demora um, dois dias pra fazer agora, e começa a distribuir. Aí você distribui, você vê tanto analytics do que você tá distribuindo, tipo, tá convertendo, não tá convertendo, onde estão clicando, quanto, mas principalmente você chama as pessoas pra conversar. Né? Pra saber. Principalmente pras coisas de consumer.",
+      "start": 770,
+      "end": 828
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Isso, isso.",
+      "start": 828,
+      "end": 830
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Né? Isso, as coisas de consumer elas são, eh, assim, as coisas de consumer elas são bem você tem que fazer as coisas mais em escala mesmo e testar.",
+      "start": 830,
+      "end": 853
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum. Se a gente fala de coisas de enterprise, aí é conversar, puro.",
+      "start": 853,
+      "end": 857
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim. Aí você tem que ir atrás e conversar com cada pessoa.",
+      "start": 857,
+      "end": 861
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, mas eu acho que no começo o consumer é aquilo que você falou, é tipo, cara, tem que conversar muito com as pessoas, é muito mais valioso no comecinho, comecinho você falar, você ter essa noção qualitativa do que quantitativo, cliques, conversão e etc.",
+      "start": 861,
+      "end": 881
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Uhum. Tá. É. Tá bom, tô vendo aqui, peraí.",
+      "start": 881,
+      "end": 896
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mas sim, aí eu, eu só pedi pra ele realmente sobre as entrevistas porque acho que esse é o, o pior pra gente, né? O mais difícil.",
+      "start": 896,
+      "end": 911
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Olha, é isso aí. Pergunta que eu faço esses dias. Tá, cara, tá bom, tá bom. Então, deixa eu, eu, eu agora falar coisas que eu pensei hoje de manhã, de visão, que já tava na minha cabeça aqui. Eu tive, eu tive uma.",
+      "start": 911,
+      "end": 942
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu, eu só pra alinhar, só não vou ter muito tempo porque a Fernanda acordando a gente já vai sair aqui, tá?",
+      "start": 942,
+      "end": 947
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom. Ela vai acordar daqui a 2 minutos ou daqui a 15 minutos?",
+      "start": 947,
+      "end": 953
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Imagino que daqui a 10 minutos.",
+      "start": 953,
+      "end": 955
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá. Não, beleza, assim, uma coisa que eu, eu tava trocando ideia com um cara ontem, é isso, é das ideias que vieram. De uma empresa que chama Buni, Buni, o CEO lá. Presta atenção nessa empresa. Os caras fazem, eles começaram, então assim, é isso, é narrow e abrange, né? E é resolvendo o problema do cliente. Eles começaram, acho que bem na pandemia, talvez, um pouco depois, pra construir um gerenciador de swags. Então, tipo, imagina as empresas tem que vender um monte de swag, tem que fazer logística disso e tal, com os remote workers principalmente. As empresas. E aí eles, era assim, gera o swag, ele compra, ele faz, ele faz o armazenamento e faz a logística de enviar pra onde o cara quer enviar.",
+      "start": 955,
+      "end": 1001
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham.",
+      "start": 1001,
+      "end": 1002
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí tem muito pra interno da empresa, mas também muito pra cliente, tipo, ah, recebi o swag da XP e tal.",
+      "start": 1002,
+      "end": 1006
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim.",
+      "start": 1006,
+      "end": 1007
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí ele falou assim que, beleza, funciona, inclusive, e aí ele vai entrando no fluxo, né? Aí ele, ah, fez o rastreamento, aí ele começou a fazer um rastreamento dele, ele pode, ele pode entregar pro cliente dele mesmo, esse rastreamento.",
+      "start": 1007,
+      "end": 1034
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1034,
+      "end": 1035
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aí ele falou de ter um, aí ele fez recente uma experiência de redeem agora, que é tipo, às vezes tem o trabalho de gerenciar o endereço do cara, ele fez assim, não, agora tem um de redeem, você só manda, tipo, imagina o cara da XP manda pra mim, ó, tá esse link aí pra você pedir, pegar seu, seu brinde.",
+      "start": 1035,
+      "end": 1049
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1049,
+      "end": 1050
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você clica, aparece seu endereço, escolhe se é GM, tanto faz.",
+      "start": 1050,
+      "end": 1053
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1053,
+      "end": 1054
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então assim, um negócio legal, ele começou a entrar no fluxo e foi abrangindo, né, o negócio.",
+      "start": 1054,
+      "end": 1056
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Foi aumentando as etapas.",
+      "start": 1056,
+      "end": 1060
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí outra coisa que ele me falou que me surtiu assim, guardou na cabeça, assim, ele falou que em algumas empresas eles estão absolutamente transparentes, transparentes e eles estão integrados via API no CRM do cara. E o CRM do cara dispara via API todo, todo esse processo puro. Tipo, nesse caso aqui, desse cliente, manda isso, sabe?",
+      "start": 1060,
+      "end": 1088
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Entendi, um processo físico que ele dá start via API.",
+      "start": 1088,
+      "end": 1093
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exato, né? E eu tava, e eu tô com isso na cabeça faz um tempo, e isso vem consolidando na minha cabeça que eu tô pensando que é muito essa coisa de, tá bom, como é que você dá APIs do mundo pro robô fazer coisa no mundo físico, pros agents, né? Isso é claro, assim, o maior gap dos agents é a capacidade de interagir.",
+      "start": 1093,
+      "end": 1112
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim.",
+      "start": 1112,
+      "end": 1113
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "De interações e, e tem muitas coisas do mundo físico que não tem API, inclusive os caras tão lá, tem os caras trabalhando nisso pra ciência, pra pesquisa, né, e tal. A gente já, já refletiu. E esse é, então, assim, uma das coisas que eu refleti é assim, cara, tá bom, isso é uma coisa que vai ter que ser resolvida num another level agora, já foi feito, né, nos últimos anos. É, principalmente pra coisas de muita escala, eu não pensei tão bem sobre exatamente o que, por que que a coisa valia a pena fazer antes e não valia depois. Mas, acho que a reflexão simples da maneira global é, agora você consegue automatizar um monte de processo que não dava pra automatizar antes. Porque antes você já tinha que ser, tinha que ser um humano orquestrando, nem valia muito a pena você botar um API. E agora você consegue, então, vai ter os agents orquestrando e eles vão precisar de dessas integrações, então essas integrações por API, por software, elas vão ser 100 vezes o que elas são hoje. Vai crescer muito as que existem e as que não existem e vão passar a existir.",
+      "start": 1113,
+      "end": 1187
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, porque deve ter um monte de, digamos, non-consumer desses serviços porque é custoso ou tem gargalo de mão de obra pra você fazer acontecer coisas dessas.",
+      "start": 1187,
+      "end": 1200
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exato. Tudo, tudo vai acontecer muito mais assim, em geral.",
+      "start": 1200,
+      "end": 1204
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Aham. Alguns, alguns serviços, acho que alguns você vai chegar à conclusão que não.",
+      "start": 1204,
+      "end": 1208
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Porque aumenta, por exemplo, as pessoas não vão comer mais porque é isso.",
+      "start": 1208,
+      "end": 1213
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 1213,
+      "end": 1214
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, então o consumo não aumenta, apesar de que provavelmente vai migrar um consumo não, não API pra API. Mas tem muitas coisas que além de migrar o consumo não API pra API, o consumo API vai ficar muito maior.",
+      "start": 1214,
+      "end": 1230
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1230,
+      "end": 1231
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Coisas que já estão via API que vai ficar muito maior. Então, um exemplo.",
+      "start": 1231,
+      "end": 1234
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Bom, um, um que é migrar é payments, né?",
+      "start": 1234,
+      "end": 1237
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não, não, assim, exemplo caro é tudo em software, né? É, é desenvolvimento de software, tipo, Superbase, esses caras crescendo infinito, é porque o software ficou muito mais fácil, então o consumo de software, ele não é bounded, aumenta. E ele tá sendo guiado por agents agora, e o cara que deu uma boa base de dados pra ser consumido por agent, estourou, que é a melhor forma de você consumir isso por agent. Então, esse é o, é o que tá acontecendo já, né? Só que isso vai acontecer em tudo. E aí eu dei uma explorada com ele aqui, tipo assim, tá bom, quais são essas coisas, né? Quais são as coisas que não tem uma boa API pra ser consumida ainda?",
+      "start": 1237,
+      "end": 1281
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1281,
+      "end": 1282
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E quais são as coisas que vão ter muito, muitos estouro de consumo? É uma matrizinha isso, provavelmente. Onde já tem API e vai ter estouro, é explosivas oportunidades até pra investir, sei lá, pra pensar.",
+      "start": 1282,
+      "end": 1299
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1299,
+      "end": 1300
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aonde não tem, não tem API e vai ter estouro, é uma boa de construir, é a melhor de construir de todas, assim. E onde não tem API e o estouro também não vai existir, às vezes é bom também, depende do tamanho do mercado.",
+      "start": 1300,
+      "end": 1313
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, sim, sim. É, que aí é só a migração do mercado, né? Tipo, quanto a gente acredita que agents que vão fazer isso mais do que pessoas.",
+      "start": 1313,
+      "end": 1323
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exato, exatamente. Então, e aí eu comecei a entender assim, e isso, de fato, já vem acontecendo na economia, né? Só que eu acho que vai acelerar muito isso. Então, você já, eh, insurance. O negócio do Vitigal é esse, praticamente, né? Ele meio que integra as várias coisas de crédito agrícola lá pra botar uma API só, sei lá. É, e aí, enfim, pegou as coisas, aí, aí o, eu acho que tem várias teses que surgem a partir disso, assim, precisa investigar mais, mas tem muitas teses que surgem a partir desse, dessa reflexão. Né? Então, sei lá, uma tese, eh, é KYC, né? É, é um KYC, assim. Em teoria, você vai ter muitos serviços de coisas que eram manuais, que uma pessoa ia lá e via quem era e tal, não sei o quê.",
+      "start": 1323,
+      "end": 1388
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1388,
+      "end": 1389
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Agora você vai precisar fazer um KYC disso, porque é um agent fazendo, e ter isso por API é muito importante. Eu sei que já tem coisa lá, mas KYC provavelmente vai estourar de necessidade de consumo de API.",
+      "start": 1389,
+      "end": 1405
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, KYC de pessoa meio que já tá assim, já, já.",
+      "start": 1405,
+      "end": 1411
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, não tô falando, a único, a único já transformou em uma API isso, basicamente, assim. Isso, a maioria, assim, vários casos já vão ter, esse é um dos casos que meio que já tem, mas provavelmente vai estourar e vai ter muito mais. É, e o fato de já ter e vai ter muito mais, eu acho que também é uma oportunidade de construir, porque você pode entrar mais direcionado a isso, né, e tal, fazer, eu falo mais de desenvolvimento, tipo assim, porque como vai crescer muito o mercado. Você, se você entrar com um ângulo bom, você vai embora, né?",
+      "start": 1411,
+      "end": 1445
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1445,
+      "end": 1445
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. Enfim, foi uma reflexão. E aí eu pedi pra ele pensar, né? E aí, cara, são problemas difíceis e tal. Mas ele falou muito aqui, ó, assim, a primeira passada ele foi assim, cara, a parte de.",
+      "start": 1445,
+      "end": 1465
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ele, quem é ele? É o GPT?",
+      "start": 1465,
+      "end": 1467
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, o robô.",
+      "start": 1467,
+      "end": 1468
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, tá.",
+      "start": 1468,
+      "end": 1469
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então, ele falou de casa, mas eu não, eu não tinha dado esse frame pra ele ainda não, a gente pode, posso dar depois. Mas tipo, cara, insurance aparente, aparentemente ainda, ainda é meio cru aqui, mas eu não sei se insurance é o tipo de coisa que vai explodir o consumo. Eu acho só que vão ser mais agents operando. Então, essa é mais uma migração.",
+      "start": 1469,
+      "end": 1491
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mas agents operando como o corretor, no lugar do corretor. É, é mais.",
+      "start": 1491,
+      "end": 1496
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é mais, é agents, agents operando, né, na, na, na execução das várias, operando claim, em tudo, é, claim, é, tudo. Operando análise, vai cair em análise de fraude e tal. Aí você tem, ele falou aqui, healthcare legal e tal. Legal, por exemplo, cara, é uma, é um, é uma merda. E, e, assim, tem uma certa razão, assim, cara, imagina o futuro de legal.",
+      "start": 1496,
+      "end": 1527
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1527,
+      "end": 1528
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mano, você vai ter API tudo, você vai pedir pra um agent, cara, resolver o seu claim, e do outro lado vai ter um outro agent resolvendo o claim dele. E atendendo, né? E todas as conversas vão ter que acontecer de uma forma integrada por API, processar por API, tudo. Isso não é bem resolvido hoje. Não é bem resolvido. É, certamente a Inter tá meio que construindo isso pro, pras enterprises. Tem gente meio tentando construir isso, eu sei, pra claim de pessoa física, mas tem bastante coisa aí, assim. A parte de real estate, real estate, mano, é zero API, né?",
+      "start": 1528,
+      "end": 1576
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa, zero. Zero.",
+      "start": 1576,
+      "end": 1578
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Zero API. Tipo, você poderia por API chamar o cara pra fotografar sua casa, né, listar nas corretoras.",
+      "start": 1578,
+      "end": 1588
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1588,
+      "end": 1592
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Executar, né, comprar seguro. Resolver uma.",
+      "start": 1592,
+      "end": 1596
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Nossa, exato, você pode ter tudo isso por API.",
+      "start": 1596,
+      "end": 1600
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, pra fazer, fazer a, fazer a transação e tal, tem isso, assim. Aí a parte de cartório, óbvio, né, assim, mas essa é muito óbvio, muito.",
+      "start": 1600,
+      "end": 1608
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mas, é.",
+      "start": 1608,
+      "end": 1610
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas mais ou menos, cara, porque se você, esse caso da Buni, ele faz um API pro mundo físico.",
+      "start": 1610,
+      "end": 1616
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1616,
+      "end": 1617
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Uhum. Tipo, o cartório, cara, não tem um, tem uns serviços, mas não são muito robustos, assim. Tipo, poderia ter um API de due diligence.",
+      "start": 1617,
+      "end": 1626
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, e, e mesmo assim, você pode ter uma API que é um carinha que vai lá e leva um documento no cartório e faz.",
+      "start": 1626,
+      "end": 1633
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exatamente.",
+      "start": 1633,
+      "end": 1634
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É isso, é que nem logística.",
+      "start": 1634,
+      "end": 1635
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso, exatamente, exatamente. Eu, eu acho que esse é o jogo, tá? Assim, onde tem as grandes oportunidades é isso. Aí depois você vai, é, é, é, deixando a operação mais eficiente por dentro. Eu acho que o jogo é você montar um API por fora de um serviço que a gente acredita que vai ter muita demanda por agents.",
+      "start": 1635,
+      "end": 1661
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1661,
+      "end": 1661
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E aí depois como você quebra as partes internas também em coisas programáticas e mais eficientes, é o segundo passo. Sabe? Então, tipo, o caso lá, eu acho que isso, esse frame entra muito no caso da igual lá, que é essa de claims de pessoa física. Ele, cara, põe um agent pra atender o cara e pra você disparar um claim de de processo.",
+      "start": 1661,
+      "end": 1688
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1688,
+      "end": 1689
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aí, lá dentro, ele, cara, faz o que quiser, ele pode fazer o processo, fazer não sei o quê. Com o tempo o que que ele tá fazendo lá? Ele tá fazendo uma uberização ali de, não sei se é exatamente o que ele tá, mas é isso que eu vi que era a oportunidade, uma uberização de advogado. Ou ele põe um agent pra operar, mas ele manda pra um advogado, pra o advogado garantir que tá tudo certo, se ele precisar mandar um negócio pro tribunal, ele já conecta um cara que vá. Então ele vai, ele vai construindo o que ele tem ali dentro.",
+      "start": 1689,
+      "end": 1716
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1716,
+      "end": 1719
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. Outras coisas, a parte de tributação. Eu não explorei muito com ele a tributação especificamente.",
+      "start": 1719,
+      "end": 1728
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ô, mano, a gente tem que ter mais essas conversas no, no Hangouts e gravando, né? Puta.",
+      "start": 1728,
+      "end": 1733
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu tô gravando aqui.",
+      "start": 1733,
+      "end": 1734
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, boa, boa.",
+      "start": 1734,
+      "end": 1735
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu tô gravando, não sei se tá, tá gravando certo, que eu vaibcodei o app de gravar. Eu tô aprendendo a testar. É, eu acho que tem coisa de, de, de, de accounting, talvez tenha APIs importantes disso, cara, aí tem que, eu acho que talvez valha a gente aprofundar, porque tem essa questão da da mudança da reforma tributária e tal, tem essas coisas. Então acho que vale, vale refletir aí.",
+      "start": 1735,
+      "end": 1762
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mesmo sem mudança de reforma tributária, tipo, a gente sabe que, que o arcabouço tributário do Brasil é um dos maiores bloqueios pra negócios no Brasil, pra empreendedorismo e tal.",
+      "start": 1762,
+      "end": 1777
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, tem coisa que, que tem coisa que, na verdade, nem é 100% nessa tese, mas que tem a tese independente, tipo, resolver a questão tributária, com certeza é importante nessa, é um ponto. Ah, tá bom. Ah, tá bom, mozão, tô falando com o tio Zé. Talvez, talvez a oportunidade ali seja a questão de agent, de, de, de deixar, fazer um software mais do que essa questão de dar uma interface pro agent.",
+      "start": 1777,
+      "end": 1798
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Cara, mas é isso, né? É basicamente, dá pra você reconstruir tudo, tipo, Ifood, Rappi, Uber, nessa camada de APIs pra agents, né?",
+      "start": 1798,
+      "end": 1809
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, mas o Ifood ele é essa tese já, né? O Ifood ele é um API pra você pedir, fazer pedidos.",
+      "start": 1809,
+      "end": 1815
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, eu sei, mas, mas ele resolve, mas ele resolve operacionalizada pra fora já. Sim, sim, sim. Mas o que eu tô dizendo é isso, daria pra você, né, tudo isso tem pra você transformar agora no agent first.",
+      "start": 1815,
+      "end": 1831
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. As, as coisas primeiro disso, provavelmente são que vão rolar, são as coisas que não tem interface com o mundo físico, que são muito fáceis, né? Sei lá, a gente tem, tem que, tem que aprofundar.",
+      "start": 1831,
+      "end": 1843
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, mas aí justamente o que é bom você ter as do mundo físico, porque.",
+      "start": 1843,
+      "end": 1849
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E, e a outra, e a, mas assim, a outra, a outra meta, essa oportunidade é, tá bom, mas o que que dá pra fazer pra, pra fazer os business que existem hoje acoplarem um API em volta deles?",
+      "start": 1849,
+      "end": 1866
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum, uhum.",
+      "start": 1866,
+      "end": 1868
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Né? Essa é a outra, é a outra reflexão, né? Tipo, você não, não vou resolver um específico, eu vou resolver os business que já existem.",
+      "start": 1868,
+      "end": 1879
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ou na real, cara, uma coisa que dá, bom, não sei. Mas uma coisa que dá pra fazer é, não é que você faz a API do cara, mas você faz um serviço que navega ali no frontend mesmo e faz uma requisição do serviço do cara, só que você transforma isso numa API pra quem quiser.",
+      "start": 1879,
+      "end": 1900
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. Mas tem que ser mais robusto ainda, porque é tipo, eu acho que você, é, enfim, sim, tem várias formas de pensar sobre isso. Mas no final das contas é isso, a reflexão é essa e eu gostei do frame pra tentar achar onde estão as oportunidades.",
+      "start": 1900,
+      "end": 1915
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 1915,
+      "end": 1917
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, e uma outra coisa que eu pensei assim, tem outro capability que eu achei bem curioso, essa é mais, essa é mais viagem. É uma parte de, cara, hoje a gente é capaz de ter um, um judgment em teoria neutro. Um agent, por exemplo. Então, assim, dá pra imaginar que no futuro seria melhor, não tô falando que vai acontecer, eu não acho que vai acontecer.",
+      "start": 1917,
+      "end": 1950
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "O juiz ser um agent.",
+      "start": 1950,
+      "end": 1952
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "O juiz ser um agent, são, são.",
+      "start": 1952,
+      "end": 1953
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, com certeza absoluta.",
+      "start": 1953,
+      "end": 1954
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Né? Tipo, uhum. Provavelmente ele seria capaz de fazer um trabalho melhor do que um juiz normal.",
+      "start": 1954,
+      "end": 1962
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Acho que sim.",
+      "start": 1962,
+      "end": 1963
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, mas eu acho muito, muito difícil isso acontecer pros juízes.",
+      "start": 1963,
+      "end": 1970
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 1970,
+      "end": 1972
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E por várias razões. Mas quais são as outras coisas que valeria a pena ter um agent neutro operando?",
+      "start": 1972,
+      "end": 1987
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, mano.",
+      "start": 1987,
+      "end": 1989
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Que não, não existe hoje, né? Então, a coisa mais idiota é assim, cara, você podia fazer um, idiota, um concurso de arte que ele é, entre aspas, objetivo porque é um agent que resolve isso.",
+      "start": 1989,
+      "end": 2008
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Uhum.",
+      "start": 2008,
+      "end": 2010
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É uma brincadeira assim, mas dava pra ter. Mas você pode ter claims de escrow, claims de não sei o quê.",
+      "start": 2010,
+      "end": 2018
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu acho que um, um bom é isso, são, são árbitros, né, no geral.",
+      "start": 2018,
+      "end": 2024
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exatamente.",
+      "start": 2024,
+      "end": 2025
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Um, um que é muito bom é de, de intermediação de negócios. É, não, não é intermediação de negócio, qual que é o nome? Bom, pode ser, intermediação de negócios, intermediação de conflitos.",
+      "start": 2025,
+      "end": 2042
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Isso, uma arbitragem, uma arbitragem, uma arbitragem não judicial, por exemplo.",
+      "start": 2042,
+      "end": 2048
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim.",
+      "start": 2048,
+      "end": 2049
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "O, outras coisas, bom dia, não sei o quê.",
+      "start": 2049,
+      "end": 2051
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, mas até numa negociação, tipo, tem uma empresa negociando com outra. Cara, puto esforço, tal, não sei o quê, podia botar um, sei lá, um conversa com a gente, outro conversa com a gente, ou a gente falou, ó, tá aqui o negócio de vocês, isso é bom pros dois.",
+      "start": 2051,
+      "end": 2066
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é que você tá falando de um facilitador também.",
+      "start": 2066,
+      "end": 2071
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Também, é.",
+      "start": 2071,
+      "end": 2072
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu tô falando é de quem arbitra.",
+      "start": 2072,
+      "end": 2074
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, o árbitro com certeza, eu tô falando mais um, é, é um outro.",
+      "start": 2074,
+      "end": 2079
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, é isso, e o, mas o facilitador ele tá, é, os dois, é os dois. E assim, então, eu não sei, cara, eu acho que tem várias coisas também que surgem a partir disso.",
+      "start": 2079,
+      "end": 2091
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, por exemplo, o processo, o próprio processo da Master das bandeiras, né, no geral, de, de chargebacks, é isso.",
+      "start": 2091,
+      "end": 2112
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Cara, tem um tal minutinho.",
+      "start": 2112,
+      "end": 2114
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É um processo escroto. E eles são, em teoria, um árbitro neutro.",
+      "start": 2114,
+      "end": 2121
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas é uma merda.",
+      "start": 2121,
+      "end": 2123
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É uma merda. É caro pra caralho, é lento pra caralho, ineficiente.",
+      "start": 2123,
+      "end": 2128
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Então, e é um problema, tá? Tudo bem, mas assim, tá bom, então, vou pro GPT pra arbitrar, peraí, não é bem assim. É um, é, é difícil, não é fácil.",
+      "start": 2128,
+      "end": 2138
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim.",
+      "start": 2138,
+      "end": 2139
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você vai ter que resolver um monte de problemas, inclusive um dos problemas é garantir que o negócio ele não é bias, que as pessoas conseguem entender a ciência de como ele funciona, de como ele decide, tudo isso, né?",
+      "start": 2139,
+      "end": 2155
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tipo.",
+      "start": 2155,
+      "end": 2158
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eu não sei, cara, fiquei com isso na cabeça, eu achei esse, esse. Achei interessante essa, essa reflexão aí.",
+      "start": 2158,
+      "end": 2168
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Acho que sim, mas a princípio, de bate pronto assim, eu achei a primeira mais fértil.",
+      "start": 2168,
+      "end": 2175
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É. É, ela é mais geral, né?",
+      "start": 2175,
+      "end": 2178
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 2178,
+      "end": 2179
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ela é mais geral.",
+      "start": 2179,
+      "end": 2180
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É um caminho interessante, mas não sei, ele já é bem, é, é bem mais, dá pra tangibilizar, ser uma coisa bem específica mesmo. Porque é, basicamente assim, coisas que você sabe que já existem, que as pessoas pagam, é, só que a forma de consumir vai passar a ser diferente. Então, tipo, a demanda tá provada, você só precisa escolher qual é aquele que que vai ter mais tailwind.",
+      "start": 2180,
+      "end": 2209
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, e agora o consumo vai ser muito pequeno, mas você vai conseguir line up pra um, pra um muito bom.",
+      "start": 2209,
+      "end": 2214
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Exato. Que, que é parecido com o que a gente tava discutindo de agent e payments. Você provê aí uma forma de pagamento pro agent.",
+      "start": 2214,
+      "end": 2223
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, a parte difícil do agent e payments é que o, o, o API já é muito forte, então a tendência é a API crescer.",
+      "start": 2223,
+      "end": 2231
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É usar o cartão.",
+      "start": 2231,
+      "end": 2233
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, a API crescer. Não, é isso, que o agent payments tá na, naquele lugar de já ter o API forte, o consumo por API vai crescer, talvez você consiga fazer um modo alternativo que, que faça disrupção, talvez seja só vai crescer muito o existente. Pensando na pandemia, quando você, tipo, você tem lá o Mercado Livre que de repente ele estoura e fica 10 vezes maior na pandemia, mas é o Mercado Livre ainda, né? É, então, acho que, acho que tem que entender.",
+      "start": 2233,
+      "end": 2264
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, o dos agents o que vai acontecer, eu acho que é uma, a difere, a principal diferença assim é, é aquela que você falou, eu acho que você fez um paralelo muito bom de do cartão do agent pra o Brex lá, né, pra o cartão corporativo.",
+      "start": 2264,
+      "end": 2281
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aham.",
+      "start": 2281,
+      "end": 2282
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Você tem que saber dar limites, o que que a pessoa pode comprar com aquilo, e aí, então, eu acho que tem isso e a segunda coisa é a questão de fraude, que você tá basicamente botando na internet aí um cartão, então, é, como é que você diminui a probabilidade de fraude em cima disso? Então, eu acho que talvez essas coisas façam com que possa ter uma dinâmica um pouco diferente. Então é isso, as APIs existem, mas talvez tenha uma layer em cima que ainda seja necessário.",
+      "start": 2282,
+      "end": 2321
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, mas talvez essa layer, ela é a layer mais do emissor ali do que do, do protocolo, né?",
+      "start": 2321,
+      "end": 2328
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, é.",
+      "start": 2328,
+      "end": 2330
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas o protocolo tem alguns gaps que talvez ele tenha.",
+      "start": 2330,
+      "end": 2333
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, acho que é do emissor, mas acho que é do emissor mesmo.",
+      "start": 2333,
+      "end": 2336
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, na verdade o que a gente tinha falado lá era mais assim, provavelmente vai ter que ter um emissor focado no agent e um acquirer focado no agent também. As duas pontas vão ser importantes.",
+      "start": 2336,
+      "end": 2348
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, porque eventualmente o padrão de compra vai mudar, então o acquirer se não for otimizado pro agent, vai ter uma taxa de aprovação bem mais baixa, né?",
+      "start": 2348,
+      "end": 2358
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "É, alguma coisa nessa linha pra refletir. Cara, aí sobre, voltando sobre o negócio de API, por exemplo, coisa de, de, de, de filing de coisas no governo. Cara, existe hoje uma API boa pra isso, será?",
+      "start": 2358,
+      "end": 2375
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não.",
+      "start": 2375,
+      "end": 2376
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Eita. Tipo, uma API de preciso protocolar um não sei o quê na prefeitura. Preciso, puta, acho que não tem nada, mano.",
+      "start": 2376,
+      "end": 2385
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Não, até agendar pro poupatempo.",
+      "start": 2385,
+      "end": 2388
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Exato.",
+      "start": 2388,
+      "end": 2389
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Acordou. Agendar pro poupatempo ainda é digital, mas tem coisas que você tem que ir lá pessoalmente, assim. Sim. Não, mas tô dizendo, você, ao invés de ir lá e agendar no poupatempo, você poderia pedir pro seu agent fazer isso pra você.",
+      "start": 2389,
+      "end": 2401
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Sim. Tipo, eu acho que, ah, ah, lembrei. E aí eu lembrei de uma bem específica que tem lá fora e, cara, não sei se você já viu, tem o Stripe Atlas lá, né? Que é pra abrir conta.",
+      "start": 2401,
+      "end": 2413
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, não vi.",
+      "start": 2413,
+      "end": 2414
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Aqui no Brasil tem, tá com API boa de abrir CNPJ, assim? Tá, de abrir no Contabilizei, não sei o quê.",
+      "start": 2414,
+      "end": 2421
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu sei que tem, o Nubank tava olhando uma coisa assim. Porque alguém fazia, quem que, cara, ah, o C6.",
+      "start": 2421,
+      "end": 2431
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A Stripe, a Stripe faz isso muito ridiculamente fácil, assim.",
+      "start": 2431,
+      "end": 2434
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Então, então, o C6, se eu não me engano, tava oferecendo um serviço assim, e aí a gente no Nubank tava investigando como eles faziam isso.",
+      "start": 2434,
+      "end": 2445
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Será que tem um provedor por trás?",
+      "start": 2445,
+      "end": 2448
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Mano, eu acho que não, em teoria, é, a conclusão que a gente chegou era que eles faziam via um scraping, porque tem uma página simplificada no governo que dá pra você fazer, e aí se a gente tava conectado com o Gov.br, essa era uma maneira de tentar, tipo, se autenticar no Gov.br, é, dentro do app do Nubank com uma, como é que é o nome quando você abre uma página da internet dentro do app? É, então, você, você abre uma página da internet, o cara se autentica, já fazendo login com o Nubank, e aí uma vez que o Nubank tem essas credenciais autenticadas, ele vai lá e faz essa solicitação pelo cara.",
+      "start": 2448,
+      "end": 2494
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Uhum. Porque, mas faz a solicitação no frontend, é, só que esse frontend tá no backend, tá, tá escondido do cliente, né? O cliente não vê o que tá acontecendo. Entendi. Não, é que eu tava, o que eu tava pensando é que eventualmente dá pra, não, não com desafio técnico, mas você tem uma pessoa fazendo isso.",
+      "start": 2494,
+      "end": 2515
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Você tem uma pessoa fazendo isso.",
+      "start": 2515,
+      "end": 2517
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Você fazer isso as service para os bancos, né? B2B pra C, assim.",
+      "start": 2517,
+      "end": 2521
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Sim, verdade, pô. Contabilizei aí pras coisas que é tipo, oferecer um serviço lá que abriu um PJ, abriu um PJ aqui, ó. Não, o Nubank queria muito isso, a gente tava realmente estudando, tipo, como uma coisa de altíssimo potencial pro PJ.",
+      "start": 2521,
+      "end": 2535
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Agora, recente?",
+      "start": 2535,
+      "end": 2537
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Recente, logo antes de eu sair. Foi uma das coisas que eu discuti com o pessoal de PJ.",
+      "start": 2537,
+      "end": 2542
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "E tem mais vários outros bancos que vão precisar disso.",
+      "start": 2542,
+      "end": 2545
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Com certeza.",
+      "start": 2545,
+      "end": 2546
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Esse aí talvez seja um business bem direto assim, e que tem esse do Stripe lá no, nos Estados Unidos que parece que opera bem. E eu acho que é um, é um APIzação aí potencialmente bem interessante.",
+      "start": 2546,
+      "end": 2558
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É. Só tem que saber, eu não sei se o Nubank conseguiu resolver, né? Porque se tiver conseguido.",
+      "start": 2558,
+      "end": 2566
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas mesmo que não tenha, que tenha conseguido, talvez não seja fácil, talvez precise de um KYC que os outros não têm, talvez assim, acho que é um ponto potencial de investigação interessante.",
+      "start": 2566,
+      "end": 2580
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É. Ó, a Fernanda acordou aqui, eu vou ter que ir lá.",
+      "start": 2580,
+      "end": 2583
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom, mas, ah.",
+      "start": 2583,
+      "end": 2588
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Tá. Não, a única coisa que eu vou falar é, mano, de novo, eu, eu acho, eu achei animal essas, acho que tem coisas boas dessa discussão aí. A única coisa que, cara, eu acho que a gente tem que focar aqui nas teses de serviço financeiros que a gente já se comprometeu com, com o plug lá até maio. Então vamos aproveitar isso que a gente vai ter.",
+      "start": 2588,
+      "end": 2612
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "A gente vai aproveitar, a gente não, mas isso é de menos. Eu acho que assim, uma investigação nessa linha é o tipo de coisa que não é muito sexy e é, essa, esse lugar de framework de, cara, coisas que não tem tanta API hoje e que vão crescer muito.",
+      "start": 2612,
+      "end": 2629
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, não, isso é legal.",
+      "start": 2629,
+      "end": 2630
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Esse, não sei se esse caso me pareceu interessante, e assim, se você tá me falando que o Nubank tava querendo isso, é um, é um sinal muito grande, acho que a gente tem que, não pode vacilar, cara, é muito comum não deixar os sinais passarem, né? É, tipo, a gente fica aqui no mundo das ideias, que nem a história lá do, pra mim esse aprendizado de Invest era o principal, que era assim, os caras no mundo das ideias de Invest, de educação financeira, não sei o quê, mas o que a galera que de queria, a galera tava pedindo, que era organizar o porquinho em várias caixinhas e poder trancar de um jeito específico, enfim. Né? Então, eu acho que vale, vale bastante a gente ver. Outra coisa que eu só falar, seguros também, tá, cara? Seguros, eu acho que vale a gente dar uma olhada só porque eu gosto muito dessa coisa da tese de risco. E, mano, seguro é uma, é uma indústria como finance, assim, que não, não modernizou direito ainda, né? Tá muito early. É, modernização tech, assim.",
+      "start": 2630,
+      "end": 2708
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É, é que, é, puta, é que tem umas, tem uma infraestrutura foda, né? Tipo, seguro de carro. Você tem que ter o que mais atrai a galera é o, a rede de guincho.",
+      "start": 2708,
+      "end": 2721
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Não, mas você tava entrando, é, mas que tá operando, mas esse você tá na camada de serviços, é mais serviço do que o seguro em si, né?",
+      "start": 2721,
+      "end": 2732
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "É.",
+      "start": 2732,
+      "end": 2733
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Mas a camada de seguro é pouco. Você vai ter que ir lá, ele vai lá.",
+      "start": 2733,
+      "end": 2735
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Você tem que ir lá, tem que ir lá.",
+      "start": 2735,
+      "end": 2737
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Vai lá, vai lá, vai lá, vai lá.",
+      "start": 2737,
+      "end": 2739
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Ah, foi bom, foi bom.",
+      "start": 2739,
+      "end": 2741
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Se tinha alguma coisa a mais que eu queria plantar na sua cabeça.",
+      "start": 2741,
+      "end": 2743
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Eu, eu vou, eu vou te mandar depois os, os quatro pontinhos de visão que eu tinha escrito lá, que é isso, tipo, ah, peguei duas horinhas ali, escrevi quatro coisas que estavam na minha cabeça, meio porquê, assim, um propósito. Acho que só pra, pra sentir um propósito que dá motivação assim, de, de seguir.",
+      "start": 2743,
+      "end": 2766
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Tá bom.",
+      "start": 2766,
+      "end": 2767
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Vou te mandar.",
+      "start": 2767,
+      "end": 2768
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Ô, você não quer fazer um investigado nesse assunto do, de ver?",
+      "start": 2768,
+      "end": 2773
+    },
+    {
+      "speaker": "Speaker A",
+      "text": "Puta, deixa eu ver, cara, eu vou lá, falou, falou, falou, falou, falou, falou.",
+      "start": 2773,
+      "end": 2778
+    },
+    {
+      "speaker": "Speaker B",
+      "text": "Falou, falou, falou.",
+      "start": 2778,
+      "end": null
+    }
+  ]
+}

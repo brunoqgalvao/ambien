@@ -9,6 +9,20 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Cursor Extension
+
+extension View {
+    func cursor(_ cursor: NSCursor) -> some View {
+        self.onHover { hovering in
+            if hovering {
+                cursor.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+    }
+}
+
 // MARK: - Notification Names
 
 extension Notification.Name {
@@ -84,12 +98,16 @@ enum NavigationItem: String, CaseIterable, Identifiable {
     case home = "Home"
     case calendar = "Calendar"
     case meetings = "Meetings"
+    case projects = "Projects"
     case dictations = "Dictations"
     case templates = "Templates"
     case analytics = "Analytics"
     case settings = "Settings"
 
     var id: String { rawValue }
+
+    /// Backwards compatibility alias
+    static var groups: NavigationItem { .projects }
 }
 
 // MARK: - Main App View
@@ -176,7 +194,16 @@ struct DetailView: View {
                     DetailToolbar(title: "Meetings", searchText: $searchText)
                     MeetingsListView(viewModel: viewModel, searchText: searchText, initialMeetingId: $selectedMeetingId)
                 }
-                
+
+            case .projects:
+                VStack(spacing: 0) {
+                    DetailToolbar(title: "Projects", searchText: $searchText)
+                    // TODO: ProjectsListView - coming soon
+                    Text("Projects coming soon")
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+
             case .dictations:
                 VStack(spacing: 0) {
                     DetailToolbar(title: "Dictations", searchText: $searchText)
@@ -234,7 +261,7 @@ struct DetailToolbar: View {
 struct DictationsListView: View {
     @ObservedObject var viewModel: MainAppViewModel
     let searchText: String
-    @StateObject private var storage = QuickRecordingStorage.shared
+    @ObservedObject private var storage = QuickRecordingStorage.shared
     @State private var selectedDictation: QuickRecording?
 
     private var filteredDictations: [QuickRecording] {
@@ -440,7 +467,10 @@ struct MeetingsListView: View {
     @Binding var initialMeetingId: UUID?
     @State private var selectedMeeting: Meeting?
     @State private var meetingToRename: Meeting?
+    @State private var meetingToAddToProject: Meeting?
     @State private var newTitle: String = ""
+    @AppStorage("meetingsListCollapsed") private var isListCollapsed = true  // Hidden by default
+    @State private var listWidth: CGFloat = 280
 
     private var filteredMeetings: [Meeting] {
         let meetings = viewModel.meetings.filter { meeting in
@@ -456,85 +486,189 @@ struct MeetingsListView: View {
     }
 
     var body: some View {
-        HSplitView {
-            // List
-            ScrollView {
-                if filteredMeetings.isEmpty {
-                    EmptyDetailView(
-                        icon: "waveform",
-                        title: searchText.isEmpty ? "No meetings yet" : "No matches",
-                        subtitle: searchText.isEmpty ? "Start recording to capture your meetings" : "Try a different search term"
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    LazyVStack(spacing: 1) {
-                        ForEach(filteredMeetings) { meeting in
-                            MainWindowMeetingRow(
-                                meeting: meeting,
-                                isSelected: selectedMeeting?.id == meeting.id,
-                                onSelect: {
-                                    selectedMeeting = meeting
-                                },
-                                onRename: {
-                                    meetingToRename = meeting
-                                    newTitle = meeting.title
-                                }
-                            )
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
-            }
-            .frame(minWidth: 300, idealWidth: 350)
-            .background(Color.white)
+        HStack(spacing: 0) {
+            // Collapsible list pane
+            if !isListCollapsed {
+                listPane
+                    .frame(width: listWidth)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
 
-            // Detail - use MeetingDetailView with full Amie-style features
-            if let meeting = selectedMeeting {
-                MeetingDetailView(
-                    meeting: meeting,
-                    showBackButton: false
-                )
-                .id(meeting.id) // Force view recreation on selection change
-            } else {
-                EmptyDetailView(
-                    icon: "waveform",
-                    title: "Select a meeting",
-                    subtitle: "Choose a meeting from the list to view details"
-                )
+                // Resize handle
+                Rectangle()
+                    .fill(Color.brandBorder)
+                    .frame(width: 1)
+                    .overlay(
+                        Rectangle()
+                            .fill(Color.clear)
+                            .frame(width: 8)
+                            .cursor(.resizeLeftRight)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        let newWidth = listWidth + value.translation.width
+                                        listWidth = max(200, min(400, newWidth))
+                                    }
+                            )
+                    )
+            }
+
+            // Detail pane with toggle button
+            ZStack(alignment: .topLeading) {
+                detailPane
+
+                // Toggle button
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isListCollapsed.toggle()
+                    }
+                }) {
+                    Image(systemName: isListCollapsed ? "sidebar.left" : "sidebar.left")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.brandTextSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.brandSurface)
+                                .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(12)
+                .help(isListCollapsed ? "Show meeting list" : "Hide meeting list")
             }
         }
         .sheet(item: $meetingToRename) { meeting in
-            RenameMeetingSheet(
-                meeting: meeting,
-                newTitle: $newTitle,
-                onSave: { updatedTitle in
-                    Task {
-                        await renameMeeting(meeting, to: updatedTitle)
-                    }
-                },
-                onCancel: {
-                    meetingToRename = nil
+            renameSheet(for: meeting)
+        }
+        .sheet(item: $meetingToAddToProject) { meeting in
+            // TODO: AddMeetingToProjectSheet - coming soon
+            VStack(spacing: 16) {
+                Text("Add to Project")
+                    .font(.headline)
+                Text("This feature is coming soon")
+                    .foregroundColor(.secondary)
+                Button("Close") {
+                    meetingToAddToProject = nil
                 }
-            )
+                .buttonStyle(.bordered)
+            }
+            .padding(24)
+            .frame(width: 300, height: 150)
         }
         .onChange(of: initialMeetingId) { _, newId in
-            if let id = newId, let meeting = filteredMeetings.first(where: { $0.id == id }) {
-                selectedMeeting = meeting
-                initialMeetingId = nil
-            }
+            handleInitialMeetingChange(newId)
         }
         .onAppear {
-            if let id = initialMeetingId, let meeting = filteredMeetings.first(where: { $0.id == id }) {
-                selectedMeeting = meeting
-                initialMeetingId = nil
+            handleInitialMeetingChange(initialMeetingId)
+        }
+        .onChange(of: viewModel.meetings) { _, newMeetings in
+            handleMeetingsChange(newMeetings)
+        }
+    }
+
+    @ViewBuilder
+    private var listPane: some View {
+        ScrollView {
+            if filteredMeetings.isEmpty {
+                EmptyDetailView(
+                    icon: "waveform",
+                    title: searchText.isEmpty ? "No meetings yet" : "No matches",
+                    subtitle: searchText.isEmpty ? "Start recording to capture your meetings" : "Try a different search term"
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                LazyVStack(spacing: 1) {
+                    ForEach(filteredMeetings) { meeting in
+                        MainWindowMeetingRow(
+                            meeting: meeting,
+                            isSelected: selectedMeeting?.id == meeting.id,
+                            onSelect: { selectedMeeting = meeting },
+                            onRename: {
+                                meetingToRename = meeting
+                                newTitle = meeting.title
+                            },
+                            onDelete: { deleteMeeting(meeting) },
+                            onAddToProject: { meetingToAddToProject = meeting },
+                            onShare: { shareMeeting(meeting) }
+                        )
+                    }
+                }
+                .padding(.vertical, 8)
             }
         }
-        // Refresh selectedMeeting when viewModel.meetings changes (e.g., after transcription)
-        .onChange(of: viewModel.meetings) { _, newMeetings in
-            if let currentId = selectedMeeting?.id,
-               let updated = newMeetings.first(where: { $0.id == currentId }) {
+        .background(Color.white)
+    }
+
+    @ViewBuilder
+    private var detailPane: some View {
+        if let meeting = selectedMeeting {
+            MeetingDetailView(
+                meeting: meeting,
+                showBackButton: false,
+                onDeleted: { selectedMeeting = nil }
+            )
+            .id(meeting.id)
+        } else {
+            EmptyDetailView(
+                icon: "waveform",
+                title: "Select a meeting",
+                subtitle: "Choose a meeting from the list to view details"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func renameSheet(for meeting: Meeting) -> some View {
+        RenameMeetingSheet(
+            meeting: meeting,
+            newTitle: $newTitle,
+            onSave: { updatedTitle in
+                Task { await renameMeeting(meeting, to: updatedTitle) }
+            },
+            onCancel: { meetingToRename = nil }
+        )
+    }
+
+    private func handleInitialMeetingChange(_ newId: UUID?) {
+        if let id = newId, let meeting = filteredMeetings.first(where: { $0.id == id }) {
+            selectedMeeting = meeting
+            initialMeetingId = nil
+        }
+    }
+
+    private func handleMeetingsChange(_ newMeetings: [Meeting]) {
+        if let currentId = selectedMeeting?.id {
+            if let updated = newMeetings.first(where: { $0.id == currentId }) {
                 selectedMeeting = updated
+            } else {
+                selectedMeeting = nil
             }
+        }
+    }
+
+    /// Delete a meeting with optimistic update
+    private func deleteMeeting(_ meeting: Meeting) {
+        // Optimistic update: clear selection immediately if this is selected
+        if selectedMeeting?.id == meeting.id {
+            selectedMeeting = nil
+        }
+
+        // Optimistic update: remove from local list immediately
+        viewModel.meetings.removeAll { $0.id == meeting.id }
+
+        // Perform actual deletion in background
+        Task {
+            // Delete audio file
+            try? FileManager.default.removeItem(atPath: meeting.audioPath)
+
+            // Delete from database
+            try? await DatabaseManager.shared.delete(meeting.id)
+
+            // Remove from Agent API exports
+            try? await AgentAPIManager.shared.deleteMeeting(meeting.id)
+
+            // Notify other views (they will reload, but we already updated)
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
         }
     }
 
@@ -551,6 +685,37 @@ struct MeetingsListView: View {
             print("[MeetingsListView] Failed to rename: \(error)")
         }
         meetingToRename = nil
+    }
+
+    /// Share meeting transcript via native share sheet
+    private func shareMeeting(_ meeting: Meeting) {
+        var shareItems: [Any] = []
+
+        // Share text content
+        var text = "Meeting: \(meeting.title)\n"
+        text += "Date: \(meeting.startTime.formatted(date: .long, time: .shortened))\n"
+        text += "Duration: \(meeting.formattedDuration)\n\n"
+
+        if let transcript = meeting.transcript {
+            text += "Transcript:\n\(transcript)"
+        }
+
+        shareItems.append(text)
+
+        // If audio file exists, add it
+        let audioURL = URL(fileURLWithPath: meeting.audioPath)
+        if FileManager.default.fileExists(atPath: meeting.audioPath) {
+            shareItems.append(audioURL)
+        }
+
+        // Show share picker
+        let picker = NSSharingServicePicker(items: shareItems)
+        if let window = NSApp.keyWindow,
+           let contentView = window.contentView {
+            // Position at center of window
+            let rect = NSRect(x: contentView.bounds.midX, y: contentView.bounds.midY, width: 0, height: 0)
+            picker.show(relativeTo: rect, of: contentView, preferredEdge: .minY)
+        }
     }
 }
 
@@ -734,8 +899,12 @@ struct MainWindowMeetingRow: View {
     let isSelected: Bool
     var onSelect: () -> Void
     var onRename: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
+    var onAddToProject: (() -> Void)? = nil
+    var onShare: (() -> Void)? = nil
 
     @State private var isHovered = false
+    @State private var showMoreMenu = false
 
     var body: some View {
         Button(action: onSelect) {
@@ -764,11 +933,51 @@ struct MainWindowMeetingRow: View {
 
                 Spacer()
 
-                // Chevron
-                if isHovered || isSelected {
+                // Three-dot menu (appears on hover)
+                if isHovered {
+                    Menu {
+                        Button {
+                            onAddToProject?()
+                        } label: {
+                            Label("Add to Project...", systemImage: "folder.badge.plus")
+                        }
+
+                        Button {
+                            onRename?()
+                        } label: {
+                            Label("Rename...", systemImage: "pencil")
+                        }
+
+                        Button {
+                            onShare?()
+                        } label: {
+                            Label("Share...", systemImage: "square.and.arrow.up")
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive) {
+                            onDelete?()
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                }
+
+                // Chevron (hidden when menu is visible)
+                if !isHovered {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary.opacity(0.5))
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary.opacity(0.3))
                 }
             }
             .padding(.horizontal, 16)
@@ -785,15 +994,27 @@ struct MainWindowMeetingRow: View {
         }
         .contextMenu {
             Button {
+                onAddToProject?()
+            } label: {
+                Label("Add to Project...", systemImage: "folder.badge.plus")
+            }
+
+            Button {
                 onRename?()
             } label: {
                 Label("Rename...", systemImage: "pencil")
             }
 
+            Button {
+                onShare?()
+            } label: {
+                Label("Share...", systemImage: "square.and.arrow.up")
+            }
+
             Divider()
 
             Button(role: .destructive) {
-                // TODO: Delete meeting
+                onDelete?()
             } label: {
                 Label("Delete", systemImage: "trash")
             }
@@ -808,10 +1029,13 @@ struct MainWindowMeetingRow: View {
             Circle()
                 .fill(Color.red)
                 .frame(width: 8, height: 8)
-        case .transcribing, .pendingTranscription:
-            ProgressView()
-                .scaleEffect(0.4)
+        case .transcribing:
+            BrandLoadingIndicator(size: .tiny)
                 .frame(width: 8, height: 8)
+        case .pendingTranscription:
+            Image(systemName: "clock")
+                .font(.system(size: 10))
+                .foregroundColor(.orange)
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 10))
@@ -910,11 +1134,27 @@ struct MeetingDetailContentView: View {
                             .lineSpacing(6)
                             .textSelection(.enabled)
                     }
-                } else if meeting.status == .transcribing || meeting.status == .pendingTranscription {
+                } else if meeting.status == .transcribing {
                     HStack(spacing: 8) {
-                        ProgressView()
-                            .scaleEffect(0.8)
+                        BrandLoadingIndicator(size: .medium)
                         Text("Transcribing...")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                } else if meeting.status == .pendingTranscription {
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock")
+                            .foregroundColor(.orange)
+                        Text("Waiting for transcription...")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                } else if meeting.status == .recording {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                        Text("Recording in progress...")
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                     }
@@ -923,6 +1163,14 @@ struct MeetingDetailContentView: View {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundColor(.orange)
                         Text(meeting.errorMessage ?? "Transcription failed")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.text")
+                            .foregroundColor(.secondary)
+                        Text("No transcript available")
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                     }
@@ -1338,6 +1586,8 @@ class MainAppViewModel: ObservableObject {
 
     func loadData() async {
         do {
+            // Wait for database to be initialized before querying
+            try await DatabaseManager.shared.waitForInitialization()
             meetings = try await DatabaseManager.shared.getAllMeetings()
 
             // All time stats

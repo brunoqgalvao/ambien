@@ -55,3 +55,7 @@ yarn-error.log*
 # bun.lock
 # package-lock.json
 # yarn.lock
+benchmark/.env
+
+# Releases (large zip files)
+releases/*.zip

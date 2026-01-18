@@ -44,31 +44,61 @@ actor DatabaseManager {
 
     // MARK: - Initialization
 
+    /// Wait until database is initialized - call this before any DB operations
+    func waitForInitialization() async throws {
+        try await initialize()
+    }
+
     /// Initialize the database and run migrations
     func initialize() async throws {
-        // Create directory if needed
-        let directory = databasePath.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        // Fast path - already initialized
+        if dbQueue != nil {
+            return
+        }
 
+        // We're the first caller - do the initialization synchronously
+        // Actor isolation ensures only one caller runs at a time
+        // (no need for a Task since we're already in an async context on the actor)
         do {
-            var config = Configuration()
-            config.prepareDatabase { db in
-                // Enable foreign keys
-                try db.execute(sql: "PRAGMA foreign_keys = ON")
-            }
-
-            dbQueue = try DatabaseQueue(path: databasePath.path, configuration: config)
-
-            try await runMigrations()
-
-            print("[DatabaseManager] Initialized at \(databasePath.path)")
+            try performInitialization()
         } catch {
+            dbQueue = nil
+            if let databaseError = error as? DatabaseError {
+                throw databaseError
+            }
             throw DatabaseError.initializationFailed(error)
         }
     }
 
-    private func runMigrations() async throws {
-        guard let db = dbQueue else { return }
+    private func performInitialization() throws {
+        // Create directory if needed
+        let directory = databasePath.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        var config = Configuration()
+        config.prepareDatabase { db in
+            // Enable foreign keys
+            try db.execute(sql: "PRAGMA foreign_keys = ON")
+        }
+
+        let queue = try DatabaseQueue(path: databasePath.path, configuration: config)
+        try Self.runMigrations(on: queue)
+        dbQueue = queue
+
+        // Initialize APICallLogManager with the database queue
+        Task {
+            await APICallLogManager.shared.initialize(with: queue)
+        }
+
+        // Initialize ActionItemManager with the database queue
+        Task {
+            await ActionItemManager.shared.initialize(with: queue)
+        }
+
+        print("[DatabaseManager] Initialized at \(databasePath.path)")
+    }
+
+    private static func runMigrations(on db: DatabaseQueue) throws {
 
         var migrator = DatabaseMigrator()
 
@@ -150,6 +180,113 @@ actor DatabaseManager {
                 t.add(column: "diarization_segments", .text) // JSON encoded [DiarizationSegment]
             }
             print("[DatabaseManager] Migration v3_add_participants_speakers applied")
+        }
+
+        // Migration 4: Add meeting groups
+        migrator.registerMigration("v4_add_meeting_groups") { db in
+            // Groups table
+            try db.create(table: "groups") { t in
+                t.column("id", .text).primaryKey()
+                t.column("name", .text).notNull()
+                t.column("description", .text)
+                t.column("emoji", .text)
+                t.column("color", .text)
+                t.column("created_at", .datetime).notNull()
+                t.column("last_updated", .datetime)
+                // Cached stats (updated on group membership changes)
+                t.column("meeting_count", .integer).notNull().defaults(to: 0)
+                t.column("total_duration", .double).notNull().defaults(to: 0)
+                t.column("total_cost_cents", .integer).notNull().defaults(to: 0)
+            }
+
+            // Junction table for many-to-many relationship
+            try db.create(table: "meeting_group_members") { t in
+                t.column("group_id", .text).notNull()
+                    .references("groups", onDelete: .cascade)
+                t.column("meeting_id", .text).notNull()
+                    .references("meetings", onDelete: .cascade)
+                t.column("added_at", .datetime).notNull()
+                t.primaryKey(["group_id", "meeting_id"])
+            }
+
+            // Indexes for fast lookups
+            try db.create(index: "idx_group_members_group", on: "meeting_group_members", columns: ["group_id"])
+            try db.create(index: "idx_group_members_meeting", on: "meeting_group_members", columns: ["meeting_id"])
+
+            print("[DatabaseManager] Migration v4_add_meeting_groups applied")
+        }
+
+        // Migration 5: Add API call logs table
+        migrator.registerMigration("v5_add_api_logs") { db in
+            try db.create(table: "api_logs") { t in
+                t.column("id", .text).primaryKey()
+                t.column("timestamp", .datetime).notNull()
+                t.column("call_type", .text).notNull()
+                t.column("provider", .text).notNull()
+                t.column("model", .text).notNull()
+                t.column("status", .text).notNull()
+                t.column("endpoint", .text).notNull()
+                t.column("input_size_bytes", .integer)
+                t.column("input_tokens", .integer)
+                t.column("output_tokens", .integer)
+                t.column("duration_ms", .integer).notNull()
+                t.column("cost_cents", .integer).notNull()
+                t.column("meeting_id", .text)
+                t.column("error_message", .text)
+            }
+
+            // Indexes for common queries
+            try db.create(index: "idx_api_logs_timestamp", on: "api_logs", columns: ["timestamp"])
+            try db.create(index: "idx_api_logs_meeting", on: "api_logs", columns: ["meeting_id"])
+            try db.create(index: "idx_api_logs_provider", on: "api_logs", columns: ["provider"])
+
+            print("[DatabaseManager] Migration v5_add_api_logs applied")
+        }
+
+        // Migration 6: Add project auto-classification fields (rename groups -> projects conceptually)
+        migrator.registerMigration("v6_add_project_classification") { db in
+            try db.alter(table: "groups") { t in
+                t.add(column: "speaker_patterns", .text)     // JSON array of speaker names
+                t.add(column: "theme_keywords", .text)       // JSON array of keywords
+                t.add(column: "auto_classify_enabled", .integer).notNull().defaults(to: 1)
+            }
+            print("[DatabaseManager] Migration v6_add_project_classification applied")
+        }
+
+        // Migration 7: Add action_items table and meeting_brief column
+        migrator.registerMigration("v7_add_action_items") { db in
+            // Action items table - first-class entity
+            try db.create(table: "action_items") { t in
+                t.column("id", .text).primaryKey()
+                t.column("meeting_id", .text).notNull()
+                    .references("meetings", onDelete: .cascade)
+                t.column("task", .text).notNull()
+                t.column("assignee", .text)
+                t.column("due_date", .datetime)
+                t.column("due_suggestion", .text)
+                t.column("priority", .text).notNull().defaults(to: "medium")
+                t.column("context", .text)
+                t.column("status", .text).notNull().defaults(to: "open")
+                t.column("created_at", .datetime).notNull()
+                t.column("completed_at", .datetime)
+                t.column("updated_at", .datetime)
+                t.column("synced_to", .text)        // JSON array
+                t.column("external_ids", .text)     // JSON object
+            }
+
+            // Indexes for fast queries
+            try db.create(index: "idx_action_items_meeting", on: "action_items", columns: ["meeting_id"])
+            try db.create(index: "idx_action_items_status", on: "action_items", columns: ["status"])
+            try db.create(index: "idx_action_items_due", on: "action_items", columns: ["due_date"])
+            try db.create(index: "idx_action_items_assignee", on: "action_items", columns: ["assignee"])
+
+            // Add meeting_brief column to meetings
+            try db.alter(table: "meetings") { t in
+                t.add(column: "meeting_brief", .text)        // JSON MeetingBrief
+                t.add(column: "brief_generated_at", .datetime)
+            }
+
+            print("[DatabaseManager] Migration v7_add_action_items applied")
         }
 
         do {
@@ -357,6 +494,10 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
     var speakerLabels: String?       // JSON encoded [SpeakerLabel]
     var diarizationSegments: String? // JSON encoded [DiarizationSegment]
 
+    // Meeting brief fields
+    var meetingBrief: String?        // JSON encoded MeetingBrief
+    var briefGeneratedAt: Date?
+
     enum CodingKeys: String, CodingKey {
         case id
         case title
@@ -378,6 +519,8 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         case speakerCount = "speaker_count"
         case speakerLabels = "speaker_labels"
         case diarizationSegments = "diarization_segments"
+        case meetingBrief = "meeting_brief"
+        case briefGeneratedAt = "brief_generated_at"
     }
 
     init(_ meeting: Meeting) {
@@ -427,6 +570,14 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
         } else {
             self.diarizationSegments = nil
         }
+
+        // Encode meeting brief as JSON
+        if let brief = meeting.meetingBrief {
+            self.meetingBrief = try? String(data: JSONEncoder().encode(brief), encoding: .utf8)
+        } else {
+            self.meetingBrief = nil
+        }
+        self.briefGeneratedAt = meeting.briefGeneratedAt
     }
 
     func toMeeting() -> Meeting {
@@ -454,6 +605,12 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             segmentsArray = try? JSONDecoder().decode([DiarizationSegment].self, from: data)
         }
 
+        // Decode meeting brief from JSON
+        var brief: MeetingBrief? = nil
+        if let json = meetingBrief, let data = json.data(using: .utf8) {
+            brief = try? JSONDecoder().decode(MeetingBrief.self, from: data)
+        }
+
         return Meeting(
             id: UUID(uuidString: id) ?? UUID(),
             title: title,
@@ -474,7 +631,9 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
             participants: participantsArray,
             speakerCount: speakerCount,
             speakerLabels: speakerLabelsArray,
-            diarizationSegments: segmentsArray
+            diarizationSegments: segmentsArray,
+            meetingBrief: brief,
+            briefGeneratedAt: briefGeneratedAt
         )
     }
 }
@@ -483,4 +642,9 @@ private struct MeetingRecord: Codable, FetchableRecord, PersistableRecord {
 
 extension DatabaseManager {
     static let shared = DatabaseManager()
+
+    /// Expose the database queue for GroupManager to use
+    func getDbQueue() -> DatabaseQueue? {
+        return dbQueue
+    }
 }

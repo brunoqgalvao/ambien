@@ -17,6 +17,7 @@ struct MeetingRecorderApp: App {
 
     init() {
         // Initialize database on app launch
+        // GroupManager gets database access lazily via DatabaseManager.shared.getDbQueue()
         Task {
             do {
                 try await DatabaseManager.shared.initialize()
@@ -112,7 +113,9 @@ final class CheckForUpdatesViewModel: ObservableObject {
 struct MenuBarDropdown: View {
     @ObservedObject var audioManager: AudioCaptureManager
     @StateObject private var micRecorder = MicRecorderWithTranscription()
-    @ObservedObject private var meetingDetector = MeetingDetector.shared
+
+    // Access MeetingDetector settings directly via AppStorage instead of observing the singleton
+    @AppStorage("autoDetectMeetings") private var autoDetectMeetings = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -183,11 +186,11 @@ struct MenuBarDropdown: View {
                 }
 
                 MenuToggleButton(
-                    icon: meetingDetector.isEnabled ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash",
+                    icon: autoDetectMeetings ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash",
                     title: "Auto-detect Meetings",
-                    isOn: meetingDetector.isEnabled
+                    isOn: autoDetectMeetings
                 ) {
-                    meetingDetector.isEnabled.toggle()
+                    autoDetectMeetings.toggle()
                 }
 
                 BrandMenuButton(icon: "magnifyingglass", title: "Search", shortcut: "F") {
@@ -201,8 +204,7 @@ struct MenuBarDropdown: View {
             // Transcription progress
             if let progress = audioManager.transcriptionProgress {
                 HStack(spacing: 8) {
-                    ProgressView()
-                        .scaleEffect(0.6)
+                    BrandLoadingIndicator(size: .tiny)
                     Text(progress)
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)

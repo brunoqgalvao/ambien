@@ -107,10 +107,11 @@ enum KeychainHelper {
 // MARK: - Transcription Provider Definition
 
 /// Supported transcription API providers
+/// Order reflects priority: AssemblyAI (most reliable) > Gemini > OpenAI > Deepgram
 enum TranscriptionProvider: String, CaseIterable, Identifiable {
-    case openai = "openai"
-    case gemini = "gemini"
     case assemblyai = "assemblyai"
+    case gemini = "gemini"
+    case openai = "openai"
     case deepgram = "deepgram"
 
     var id: String { rawValue }
@@ -144,15 +145,15 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .openai: return "Best for short meetings (<25MB). High accuracy."
-        case .gemini: return "Google's AI. Good for long meetings."
-        case .assemblyai: return "Specialized in transcription. Real-time support."
+        case .assemblyai: return "Most reliable. Native diarization. Recommended."
+        case .gemini: return "Fast with native diarization. Good for long meetings."
+        case .openai: return "Good for short meetings (<25MB). Limited file size."
         case .deepgram: return "Fast and affordable. Good for long recordings."
         }
     }
 
     var isRecommended: Bool {
-        self == .openai
+        self == .assemblyai  // AssemblyAI is the most reliable
     }
 
     /// Keychain key for storing the API key
@@ -196,9 +197,9 @@ enum TranscriptionProvider: String, CaseIterable, Identifiable {
         case .gemini:
             return [
                 TranscriptionModelOption(
-                    id: "gemini-2.5-flash-lite",
-                    displayName: "Gemini 2.5 Flash Lite",
-                    costPerMinute: 0.0002,  // ~based on token pricing
+                    id: "gemini-2.5-flash",
+                    displayName: "Gemini 2.5 Flash",
+                    costPerMinute: 0.0003,  // ~based on token pricing
                     provider: self
                 )
             ]
@@ -328,9 +329,17 @@ struct TranscriptionModelOption: Identifiable, Hashable {
             .flatMap { $0.models }
     }
 
-    /// Default model (OpenAI gpt-4o-mini-transcribe if available, else first configured)
+    /// Default model (AssemblyAI if available, else Gemini, else OpenAI, else first configured)
     static var defaultModel: TranscriptionModelOption? {
-        // Prefer OpenAI if configured
+        // Prefer AssemblyAI if configured (most reliable + native diarization)
+        if TranscriptionProvider.assemblyai.isConfigured {
+            return TranscriptionProvider.assemblyai.models.first
+        }
+        // Fall back to Gemini if configured (fast with native diarization)
+        if TranscriptionProvider.gemini.isConfigured {
+            return TranscriptionProvider.gemini.models.first
+        }
+        // Fall back to OpenAI if configured
         if TranscriptionProvider.openai.isConfigured {
             return TranscriptionProvider.openai.models.first
         }
@@ -514,9 +523,13 @@ extension KeychainHelper {
         TranscriptionProvider.allCases.filter { hasKey(for: $0) }
     }
 
-    /// Get the first available provider (OpenAI preferred)
+    /// Get the first available provider (AssemblyAI preferred, then Gemini, then OpenAI)
     static func getPreferredProvider() -> TranscriptionProvider? {
-        // Prefer OpenAI if available
+        // Prefer AssemblyAI if available (most reliable + native diarization)
+        if hasKey(for: .assemblyai) { return .assemblyai }
+        // Fall back to Gemini (fast with native diarization)
+        if hasKey(for: .gemini) { return .gemini }
+        // Fall back to OpenAI
         if hasKey(for: .openai) { return .openai }
         // Otherwise return first configured
         return getAllConfiguredProviders().first

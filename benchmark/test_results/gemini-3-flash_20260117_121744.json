@@ -1,0 +1,17 @@
+{
+  "model": "gemini-3-flash",
+  "timestamp": "20260117_121744",
+  "audio_file": "/Users/brunogalvao/Documents/MeetingRecorder/recordings/meeting_2026-01-17_10-09-33.m4a",
+  "error": null,
+  "result": {
+    "text": "[Speaker A, 0:00] E aí, Chiquinho?\n[Speaker B, 0:04] E aí.\n[Speaker A, 0:05] E aí, mano. Beijão. Fala com o tio Zé ali, tá? Você vai ficar aqui sozinho um pouco? Beijão. E aí, Bistoca? Bistoca na mesa.\n[Speaker B, 0:10] Ai, caramba. Ai. E aí?\n[Speaker A, 0:23] Nossa, tô cansado, cara. Os últimos três dias foram difíceis assim com a Fernanda, viu?\n[Speaker B, 0:30] Ah, neném quando tá gripado, doente, é umas dez vezes mais trabalho.\n[Speaker A, 0:38] Pior é que ela tá de boa, só que ela tá com ca...",
+    "full_text_length": 881,
+    "latency_seconds": 91.32,
+    "api_model": "gemini-3-flash-preview",
+    "speakers_found": [
+      "A",
+      "B"
+    ],
+    "has_speaker_labels": true
+  }
+}

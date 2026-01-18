@@ -13,87 +13,104 @@ struct MeetingDetailView: View {
     @State var meeting: Meeting
     var showBackButton: Bool = true
     var onRetry: ((Meeting) -> Void)?
+    var onDeleted: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioPlayer = AudioPlayerManager()
     @State private var selectedContentTab: TranscriptSummarySection.ContentTab = .summary
     @State private var isProcessing = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Rich Amie-style header with editable title/description
-            MeetingHeaderSection(
-                meeting: $meeting,
-                showBackButton: showBackButton,
-                onDismiss: { dismiss() }
-            )
+        ZStack(alignment: .bottomTrailing) {
+            VStack(spacing: 0) {
+                // Rich Amie-style header with editable title/description
+                MeetingHeaderSection(
+                    meeting: $meeting,
+                    showBackButton: showBackButton,
+                    onDismiss: { dismiss() },
+                    onDelete: { deleteMeeting() }
+                )
 
-            Divider()
+                Divider()
 
-            // Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Audio player - show immediately once recording is done
-                    // User can listen while transcription happens in background
-                    AudioPlayerCard(
-                        audioPath: meeting.audioPath,
-                        player: audioPlayer
-                    )
+                // Content
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Audio player - show immediately once recording is done
+                        // User can listen while transcription happens in background
+                        AudioPlayerCard(
+                            audioPath: meeting.audioPath,
+                            player: audioPlayer
+                        )
 
-                    // Share bar (Amie-style export/share buttons)
-                    MeetingShareBar(meeting: meeting)
+                        // Share bar (Amie-style export/share buttons)
+                        MeetingShareBar(meeting: meeting)
 
-                    // Processing indicator
-                    if isProcessing {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                            Text("Generating summary...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        // Processing indicator
+                        if isProcessing {
+                            HStack(spacing: 8) {
+                                BrandLoadingIndicator(size: .small)
+                                Text("Generating summary...")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                    }
 
-                    // New tabbed transcript/summary section
-                    TranscriptSummarySection(
-                        meeting: $meeting,
-                        selectedTab: $selectedContentTab,
-                        onReprocess: {
-                            await processMeeting()
-                        },
-                        onRetryTranscription: meeting.status == .failed ? {
-                            Task {
-                                await retryTranscription()
+                        // Speakers section (above tabs, outside the tabbed section)
+                        SpeakersBar(meeting: $meeting)
+
+                        // New tabbed transcript/summary section
+                        TranscriptSummarySection(
+                            meeting: $meeting,
+                            selectedTab: $selectedContentTab,
+                            onReprocess: {
+                                await processMeeting()
+                            },
+                            onRetryTranscription: meeting.status == .failed ? {
+                                Task {
+                                    await retryTranscription()
+                                }
+                            } : nil,
+                            onReprocessTranscription: {
+                                Task {
+                                    await reprocessTranscription()
+                                }
                             }
-                        } : nil
-                    )
-                    .frame(minHeight: 300)
+                        )
+                        .frame(minHeight: 300)
 
-                    // Action items (if any and not already in summary)
-                    if let items = meeting.actionItems, !items.isEmpty, selectedContentTab != .summary {
-                        ActionItemsSection(items: items)
+                        // Error message (if failed)
+                        if let error = meeting.errorMessage {
+                            ErrorSection(message: error, status: meeting.status, onRetry: meeting.status == .failed ? {
+                                Task {
+                                    await retryTranscription()
+                                }
+                            } : nil)
+                        }
                     }
-
-                    // Error message (if failed)
-                    if let error = meeting.errorMessage {
-                        ErrorSection(message: error, onRetry: meeting.status == .failed ? {
-                            Task {
-                                await retryTranscription()
-                            }
-                        } : nil)
-                    }
+                    .padding()
                 }
-                .padding()
             }
 
-            // Keyboard shortcuts footer
-            DetailKeyboardFooter()
+            // Bottom-right transcribing indicator
+            if meeting.status == .transcribing {
+                TranscribingIndicator()
+                    .padding(16)
+                    .transition(.scale.combined(with: .opacity))
+            }
         }
         .frame(minWidth: 450, idealWidth: 550, minHeight: 550, idealHeight: 700)
         .background(Color.brandBackground)
         .onDisappear {
             audioPlayer.stop()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .meetingsDidChange)) { _ in
+            Task {
+                if let updatedMeeting = try? await DatabaseManager.shared.getMeeting(id: meeting.id) {
+                    meeting = updatedMeeting
+                }
+            }
         }
         // Keyboard shortcuts
         .onKeyPress(.space) {
@@ -136,9 +153,64 @@ struct MeetingDetailView: View {
         NSPasteboard.general.setString(transcript, forType: .string)
     }
 
+    private func deleteMeeting() {
+        audioPlayer.stop()  // Stop playback before deleting
+
+        Task {
+            // Delete audio file
+            try? FileManager.default.removeItem(atPath: meeting.audioPath)
+
+            // Delete from database
+            try? await DatabaseManager.shared.delete(meeting.id)
+
+            // Remove from Agent API exports
+            try? await AgentAPIManager.shared.deleteMeeting(meeting.id)
+
+            // Notify UI
+            NotificationCenter.default.post(name: .meetingsDidChange, object: nil)
+
+            // Dismiss and notify parent
+            await MainActor.run {
+                onDeleted?()
+                dismiss()
+            }
+        }
+    }
+
     private func retryTranscription() async {
+        meeting.status = .transcribing
+        meeting.errorMessage = nil
+
         // Use AudioCaptureManager's retryTranscription which handles UI feedback properly
         // (shows transcribing island, toast notifications, etc.)
+        await AudioCaptureManager.shared.retryTranscription(meetingId: meeting.id)
+
+        // Refresh meeting from database to get updated state
+        if let updatedMeeting = try? await DatabaseManager.shared.getMeeting(id: meeting.id) {
+            meeting = updatedMeeting
+        }
+
+        // Also call the parent callback if provided
+        onRetry?(meeting)
+    }
+
+    /// Reprocess transcription for an already-transcribed meeting
+    private func reprocessTranscription() async {
+        // Clear existing transcript and summary data
+        meeting.transcript = nil
+        meeting.summary = nil
+        meeting.actionItems = nil
+        meeting.diarizedTranscript = nil
+        meeting.diarizationSegments = nil
+        meeting.processedSummaries = nil
+        meeting.processedAt = nil
+        meeting.status = .transcribing
+        meeting.errorMessage = nil
+
+        // Save the cleared state
+        try? await DatabaseManager.shared.update(meeting)
+
+        // Use AudioCaptureManager's retryTranscription which handles UI feedback properly
         await AudioCaptureManager.shared.retryTranscription(meetingId: meeting.id)
 
         // Refresh meeting from database to get updated state
@@ -266,8 +338,7 @@ struct DetailHeader: View {
                     .foregroundColor(.red)
                     .help(meeting.errorMessage ?? "Transcription failed")
             } else if meeting.status == .transcribing {
-                ProgressView()
-                    .scaleEffect(0.7)
+                BrandLoadingIndicator(size: .small)
             } else if meeting.status == .recording {
                 Circle()
                     .fill(Color.red)
@@ -289,17 +360,19 @@ struct MeetingHeaderSection: View {
     @Binding var meeting: Meeting
     var showBackButton: Bool = true
     var onDismiss: (() -> Void)?
+    var onDelete: (() -> Void)?
 
     @State private var isEditingTitle = false
     @State private var isEditingDescription = false
     @State private var editedTitle: String = ""
     @State private var editedDescription: String = ""
+    @State private var showDeleteConfirmation = false
     @FocusState private var titleFieldFocused: Bool
     @FocusState private var descriptionFieldFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Top row: Back button + Updated indicator
+            // Top row: Back button + Updated indicator + Actions menu
             HStack {
                 if showBackButton {
                     Button(action: { onDismiss?() }) {
@@ -325,10 +398,17 @@ struct MeetingHeaderSection: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
+                } else if meeting.status == .pendingTranscription {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .foregroundColor(.orange)
+                        Text("Pending transcription")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 } else if meeting.status == .transcribing {
                     HStack(spacing: 4) {
-                        ProgressView()
-                            .scaleEffect(0.6)
+                        BrandLoadingIndicator(size: .tiny)
                         Text("Transcribing...")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -350,6 +430,44 @@ struct MeetingHeaderSection: View {
                             .foregroundColor(.secondary)
                     }
                 }
+
+                // Actions menu (three dots)
+                Menu {
+                    Button(action: {
+                        // Show in Finder
+                        if let url = URL(string: "file://\(meeting.audioPath)") {
+                            NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: "")
+                        }
+                    }) {
+                        Label("Show in Finder", systemImage: "folder")
+                    }
+
+                    Divider()
+
+                    Button(role: .destructive, action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        Label("Delete Meeting", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .frame(width: 28)
+                .help("More options")
+            }
+            .alert("Delete Meeting?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    onDelete?()
+                }
+            } message: {
+                Text("This will permanently delete \"\(meeting.title)\" and its audio file. This action cannot be undone.")
             }
 
             // Editable Title
@@ -590,7 +708,7 @@ struct MeetingShareBar: View {
 
                 // Export Markdown
                 ShareButton(
-                    icon: "text.document",
+                    icon: "doc.text",
                     label: "Export MD",
                     action: exportMarkdown
                 )
@@ -761,7 +879,8 @@ struct MeetingInfoCard: View {
                     if let app = meeting.sourceApp {
                         InfoItem(icon: "app", label: "Source", value: app)
                     }
-                    if let cost = meeting.formattedCost {
+                    // Cost info - only visible for beta testers
+                    if FeatureFlags.shared.showCosts, let cost = meeting.formattedCost {
                         InfoItem(icon: "dollarsign.circle", label: "Cost", value: cost)
                     }
                 }
@@ -820,8 +939,7 @@ struct AudioPlayerCard: View {
                 // Audio file not ready yet (still recording or processing)
                 BrandCard(padding: 16) {
                     HStack(spacing: 12) {
-                        ProgressView()
-                            .scaleEffect(0.8)
+                        BrandLoadingIndicator(size: .medium)
                         Text("Preparing audio...")
                             .font(.brandDisplay(14))
                             .foregroundColor(.brandTextSecondary)
@@ -986,21 +1104,22 @@ struct TranscriptSummarySection: View {
     @Binding var selectedTab: ContentTab
     var onReprocess: (() async -> Void)?
     var onRetryTranscription: (() -> Void)?
+    var onReprocessTranscription: (() -> Void)?
 
+    // Reordered: Summary and Action Items on top (generated together), then Transcript, then Private Notes
+    // Speakers is removed from tabs - shown separately above
     enum ContentTab: String, CaseIterable {
-        case privateNotes = "Private notes"
         case summary = "Summary"
         case actionItems = "Action Items"
         case transcript = "Transcript"
-        case speakers = "Speakers"
+        case privateNotes = "Private notes"
 
         var icon: String {
             switch self {
-            case .privateNotes: return "note.text"
             case .summary: return "doc.text"
             case .actionItems: return "checklist"
             case .transcript: return "text.alignleft"
-            case .speakers: return "person.2"
+            case .privateNotes: return "note.text"
             }
         }
     }
@@ -1017,17 +1136,6 @@ struct TranscriptSummarySection: View {
                             isSelected: selectedTab == tab,
                             action: { selectedTab = tab }
                         )
-                    }
-
-                    if let onReprocess = onReprocess, !meeting.isProcessed && meeting.transcript != nil {
-                        BrandPrimaryButton(
-                            title: "Summarize",
-                            icon: "sparkles",
-                            size: .small,
-                            action: { Task { await onReprocess() } }
-                        )
-                        .help("Generate AI summary")
-                        .padding(.leading, 8)
                     }
 
                     Spacer()
@@ -1052,16 +1160,14 @@ struct TranscriptSummarySection: View {
             ScrollView {
                 Group {
                     switch selectedTab {
+                    case .summary:
+                        SummaryContentView(meeting: meeting, onReprocess: onReprocess)
+                    case .actionItems:
+                        ActionItemsContentView(meeting: meeting, onReprocess: onReprocess)
+                    case .transcript:
+                        TranscriptContentView(meeting: meeting, onRetry: onRetryTranscription, onReprocess: onReprocessTranscription)
                     case .privateNotes:
                         PrivateNotesContentView(meeting: $meeting)
-                    case .summary:
-                        SummaryContentView(meeting: meeting)
-                    case .actionItems:
-                        ActionItemsContentView(meeting: meeting)
-                    case .transcript:
-                        TranscriptContentView(meeting: meeting, onRetry: onRetryTranscription)
-                    case .speakers:
-                        SpeakersContentView(meeting: $meeting)
                     }
                 }
                 .padding()
@@ -1077,11 +1183,10 @@ struct TranscriptSummarySection: View {
 
     private var currentContent: String? {
         switch selectedTab {
-        case .privateNotes: return meeting.privateNotes
         case .summary: return meeting.summary ?? meeting.processedSummaries?.first?.content
         case .actionItems: return meeting.actionItems?.joined(separator: "\n")
         case .transcript: return meeting.transcript
-        case .speakers: return meeting.diarizedTranscript ?? meeting.transcript
+        case .privateNotes: return meeting.privateNotes
         }
     }
 
@@ -1096,8 +1201,10 @@ struct TranscriptSummarySection: View {
 
 struct SummaryContentView: View {
     let meeting: Meeting
-    @StateObject private var templateManager = SummaryTemplateManager.shared
+    var onReprocess: (() async -> Void)?
+    @ObservedObject private var templateManager = SummaryTemplateManager.shared
     @State private var selectedSummaryId: UUID?
+    @State private var isProcessing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1129,28 +1236,51 @@ struct SummaryContentView: View {
                 // Fallback to raw summary string
                 MarkdownTextView(text: summary)
             } else {
-                // No summary yet
-                VStack(spacing: 12) {
+                // No summary yet - show centered Summarize button
+                VStack(spacing: 16) {
                     Image(systemName: "sparkles")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary.opacity(0.5))
+                        .font(.system(size: 48))
+                        .foregroundColor(.brandViolet.opacity(0.4))
 
                     Text("No summary yet")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.brandDisplay(16, weight: .medium))
+                        .foregroundColor(.brandTextSecondary)
 
                     if meeting.transcript != nil {
-                        Text("Click \"Summarize\" to generate an AI summary")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if isProcessing {
+                            HStack(spacing: 8) {
+                                BrandLoadingIndicator(size: .medium)
+                                Text("Generating summary...")
+                                    .font(.brandDisplay(13))
+                                    .foregroundColor(.brandTextSecondary)
+                            }
+                        } else if let onReprocess = onReprocess {
+                            BrandPrimaryButton(
+                                title: "Summarize",
+                                icon: "sparkles",
+                                size: .medium,
+                                action: {
+                                    isProcessing = true
+                                    Task {
+                                        await onReprocess()
+                                        isProcessing = false
+                                    }
+                                }
+                            )
+                            .help("Generate AI summary and action items")
+                        }
+
+                        Text("AI will generate a summary and extract action items")
+                            .font(.brandDisplay(12))
+                            .foregroundColor(.brandTextSecondary.opacity(0.7))
                     } else {
                         Text("Transcript must be ready before summarizing")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.brandDisplay(12))
+                            .foregroundColor(.brandTextSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 60)
             }
         }
     }
@@ -1192,7 +1322,7 @@ struct ProcessedSummaryView: View {
                 ActionItemsListView(content: summary.content)
 
             case .diarizedTranscript:
-                DiarizedTranscriptView(content: summary.content)
+                SummarySpeakerView(content: summary.content)
 
             case .keyPoints:
                 KeyPointsView(content: summary.content)
@@ -1295,9 +1425,9 @@ struct ActionItemsListView: View {
     }
 }
 
-// MARK: - Diarized Transcript View
+// MARK: - Summary Speaker View (parses speaker patterns from summary text)
 
-struct DiarizedTranscriptView: View {
+struct SummarySpeakerView: View {
     let content: String
 
     var body: some View {
@@ -1513,7 +1643,9 @@ struct PrivateNotesContentView: View {
 
 struct ActionItemsContentView: View {
     let meeting: Meeting
+    var onReprocess: (() async -> Void)?
     @State private var completedItems: Set<String> = []
+    @State private var isProcessing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1539,28 +1671,55 @@ struct ActionItemsContentView: View {
                 // Parse action items from processed summary
                 ActionItemsListView(content: actionSummary.content)
             } else {
-                // No action items
-                VStack(spacing: 12) {
+                // No action items - show centered Summarize button
+                VStack(spacing: 16) {
                     Image(systemName: "checklist")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary.opacity(0.5))
+                        .font(.system(size: 48))
+                        .foregroundColor(.brandViolet.opacity(0.4))
 
                     Text("No action items yet")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.brandDisplay(16, weight: .medium))
+                        .foregroundColor(.brandTextSecondary)
 
                     if meeting.transcript != nil && !meeting.isProcessed {
-                        Text("Click \"Summarize\" to extract action items")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if isProcessing {
+                            HStack(spacing: 8) {
+                                BrandLoadingIndicator(size: .medium)
+                                Text("Extracting action items...")
+                                    .font(.brandDisplay(13))
+                                    .foregroundColor(.brandTextSecondary)
+                            }
+                        } else if let onReprocess = onReprocess {
+                            BrandPrimaryButton(
+                                title: "Summarize",
+                                icon: "sparkles",
+                                size: .medium,
+                                action: {
+                                    isProcessing = true
+                                    Task {
+                                        await onReprocess()
+                                        isProcessing = false
+                                    }
+                                }
+                            )
+                            .help("Generate AI summary and action items")
+                        }
+
+                        Text("AI will extract action items from the transcript")
+                            .font(.brandDisplay(12))
+                            .foregroundColor(.brandTextSecondary.opacity(0.7))
                     } else if meeting.transcript == nil {
                         Text("Transcript must be ready before extracting action items")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.brandDisplay(12))
+                            .foregroundColor(.brandTextSecondary)
+                    } else if meeting.isProcessed {
+                        Text("No action items were found in this meeting")
+                            .font(.brandDisplay(12))
+                            .foregroundColor(.brandTextSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 60)
             }
         }
     }
@@ -1579,21 +1738,379 @@ struct ActionItemsContentView: View {
 struct TranscriptContentView: View {
     let meeting: Meeting
     var onRetry: (() -> Void)?
+    var onReprocess: (() -> Void)?
+    @State private var isReprocessing = false
+    @State private var showReprocessConfirmation = false
+    @State private var viewMode: TranscriptViewMode = .diarized
+
+    enum TranscriptViewMode: String, CaseIterable {
+        case diarized = "Speakers"
+        case plain = "Plain Text"
+    }
 
     var body: some View {
-        if let transcript = meeting.transcript {
-            Text(transcript)
-                .font(.body)
-                .lineSpacing(4)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 12) {
+            if let transcript = meeting.transcript {
+                // Header row with view toggle and reprocess button
+                HStack(spacing: 12) {
+                    // View mode toggle (only if we have diarization)
+                    if hasDiarization {
+                        Picker("", selection: $viewMode) {
+                            ForEach(TranscriptViewMode.allCases, id: \.self) { mode in
+                                Text(mode.rawValue).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 180)
+                    }
+
+                    Spacer()
+
+                    Button(action: { showReprocessConfirmation = true }) {
+                        HStack(spacing: 6) {
+                            if isReprocessing {
+                                BrandLoadingIndicator(size: .tiny)
+                            } else {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 11))
+                            }
+                            Text(isReprocessing ? "Reprocessing..." : "Re-transcribe")
+                                .font(.brandDisplay(11, weight: .medium))
+                        }
+                        .foregroundColor(.brandViolet)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.brandViolet.opacity(0.1))
+                        .cornerRadius(BrandRadius.small)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isReprocessing || meeting.status == .transcribing)
+                    .help("Re-run transcription on this audio file")
+                    .alert("Re-transcribe Audio?", isPresented: $showReprocessConfirmation) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Re-transcribe") {
+                            isReprocessing = true
+                            onReprocess?()
+                        }
+                    } message: {
+                        Text("This will re-transcribe the audio file and replace the current transcript. This action will incur API costs.")
+                    }
+                }
+
+                // Content based on view mode
+                if viewMode == .diarized && hasDiarization {
+                    DiarizedTranscriptView(meeting: meeting)
+                } else {
+                    Text(transcript)
+                        .font(.body)
+                        .lineSpacing(4)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                TranscriptPlaceholder(status: meeting.status, onRetry: onRetry)
+            }
+        }
+        .onChange(of: meeting.status) { _, newStatus in
+            if newStatus != .transcribing {
+                isReprocessing = false
+            }
+        }
+    }
+
+    private var hasDiarization: Bool {
+        meeting.diarizationSegments?.isEmpty == false
+    }
+}
+
+// MARK: - Diarized Transcript View
+
+/// Chat-like view showing transcript with speaker labels and timestamps
+struct DiarizedTranscriptView: View {
+    let meeting: Meeting
+
+    private var segments: [DiarizationSegment] {
+        meeting.diarizationSegments ?? []
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
+                DiarizationSegmentRow(
+                    segment: segment,
+                    speakerName: meeting.speakerName(for: segment.speakerId),
+                    speakerIndex: speakerIndex(for: segment.speakerId),
+                    isNewSpeaker: isNewSpeaker(at: index)
+                )
+            }
+        }
+    }
+
+    private func speakerIndex(for speakerId: String) -> Int {
+        let uniqueSpeakers = meeting.uniqueSpeakers
+        return uniqueSpeakers.firstIndex(of: speakerId) ?? 0
+    }
+
+    private func isNewSpeaker(at index: Int) -> Bool {
+        guard index > 0 else { return true }
+        return segments[index].speakerId != segments[index - 1].speakerId
+    }
+}
+
+// MARK: - Diarization Segment Row
+
+/// A single speaker segment with avatar, name, timestamp, and text
+struct DiarizationSegmentRow: View {
+    let segment: DiarizationSegment
+    let speakerName: String
+    let speakerIndex: Int
+    let isNewSpeaker: Bool
+
+    private static let speakerColors: [Color] = [
+        .brandViolet,
+        .brandCoral,
+        Color(red: 0.2, green: 0.7, blue: 0.5),  // Teal
+        Color(red: 0.9, green: 0.6, blue: 0.2),  // Orange
+        Color(red: 0.5, green: 0.4, blue: 0.8),  // Purple
+        Color(red: 0.3, green: 0.6, blue: 0.9),  // Blue
+    ]
+
+    private var speakerColor: Color {
+        Self.speakerColors[speakerIndex % Self.speakerColors.count]
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Speaker avatar (only show on first message from this speaker in a row)
+            if isNewSpeaker {
+                Circle()
+                    .fill(speakerColor)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(speakerName.prefix(1).uppercased())
+                            .font(.brandDisplay(13, weight: .semibold))
+                            .foregroundColor(.white)
+                    )
+            } else {
+                // Placeholder for alignment
+                Color.clear
+                    .frame(width: 32, height: 32)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                // Speaker name and timestamp (only on first message)
+                if isNewSpeaker {
+                    HStack(spacing: 8) {
+                        Text(speakerName)
+                            .font(.brandDisplay(13, weight: .semibold))
+                            .foregroundColor(speakerColor)
+
+                        Text(formatTimestamp(segment.start))
+                            .font(.brandMono(11))
+                            .foregroundColor(.brandTextSecondary)
+                    }
+                }
+
+                // Message text
+                Text(segment.text)
+                    .font(.brandDisplay(14))
+                    .foregroundColor(.brandTextPrimary)
+                    .textSelection(.enabled)
+                    .lineSpacing(3)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, isNewSpeaker ? 8 : 2)
+        .padding(.horizontal, 4)
+    }
+
+    private func formatTimestamp(_ seconds: Double) -> String {
+        let totalSeconds = Int(seconds)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let secs = totalSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
         } else {
-            TranscriptPlaceholder(status: meeting.status, onRetry: onRetry)
+            return String(format: "%d:%02d", minutes, secs)
         }
     }
 }
 
-// MARK: - Speakers Content View
+// MARK: - Speakers Bar (Compact, Above Tabs)
+
+/// Compact speakers display shown above the tabbed section
+struct SpeakersBar: View {
+    @Binding var meeting: Meeting
+    @State private var isExpanded = false
+
+    private var speakerCount: Int {
+        if let segments = meeting.diarizationSegments {
+            return Set(segments.map { $0.speakerId }).count
+        } else if let participants = meeting.participants {
+            return participants.count
+        }
+        return 0
+    }
+
+    private var speakerNames: [String] {
+        if let segments = meeting.diarizationSegments {
+            let uniqueIds = Set(segments.map { $0.speakerId })
+            return uniqueIds.sorted().map { meeting.speakerName(for: $0) }
+        } else if let participants = meeting.participants {
+            return participants.map { $0.name }
+        }
+        return []
+    }
+
+    var body: some View {
+        if speakerCount > 0 || meeting.hasSpeakerData {
+            BrandCard(padding: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Header row
+                    Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "person.2.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.brandViolet)
+
+                            Text("Speakers")
+                                .font(.brandDisplay(12, weight: .semibold))
+                                .foregroundColor(.brandTextPrimary)
+
+                            if speakerCount > 0 {
+                                Text("(\(speakerCount))")
+                                    .font(.brandDisplay(11))
+                                    .foregroundColor(.brandTextSecondary)
+                            }
+
+                            Spacer()
+
+                            // Collapsed preview: show speaker avatars
+                            if !isExpanded && speakerCount > 0 {
+                                HStack(spacing: -6) {
+                                    ForEach(Array(speakerNames.prefix(4).enumerated()), id: \.offset) { index, name in
+                                        Circle()
+                                            .fill(colorForIndex(index))
+                                            .frame(width: 24, height: 24)
+                                            .overlay(
+                                                Text(name.prefix(1).uppercased())
+                                                    .font(.brandDisplay(10, weight: .semibold))
+                                                    .foregroundColor(.white)
+                                            )
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.brandSurface, lineWidth: 2)
+                                            )
+                                    }
+
+                                    if speakerCount > 4 {
+                                        Circle()
+                                            .fill(Color.brandTextSecondary.opacity(0.3))
+                                            .frame(width: 24, height: 24)
+                                            .overlay(
+                                                Text("+\(speakerCount - 4)")
+                                                    .font(.brandMono(9, weight: .semibold))
+                                                    .foregroundColor(.brandTextSecondary)
+                                            )
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.brandSurface, lineWidth: 2)
+                                            )
+                                    }
+                                }
+                            }
+
+                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.brandTextSecondary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    // Expanded content
+                    if isExpanded {
+                        VStack(alignment: .leading, spacing: 12) {
+                            // Speaker pills/chips
+                            FlowLayout(spacing: 6) {
+                                ForEach(Array(speakerNames.enumerated()), id: \.offset) { index, name in
+                                    HStack(spacing: 6) {
+                                        Circle()
+                                            .fill(colorForIndex(index))
+                                            .frame(width: 20, height: 20)
+                                            .overlay(
+                                                Text(name.prefix(1).uppercased())
+                                                    .font(.brandDisplay(9, weight: .semibold))
+                                                    .foregroundColor(.white)
+                                            )
+
+                                        Text(name)
+                                            .font(.brandDisplay(12))
+                                            .foregroundColor(.brandTextPrimary)
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.brandBackground)
+                                    .cornerRadius(BrandRadius.small)
+                                }
+                            }
+
+                            // Participants from screenshot (if any)
+                            if let participants = meeting.participants, !participants.isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Detected from meeting")
+                                        .font(.brandDisplay(10, weight: .medium))
+                                        .foregroundColor(.brandTextSecondary)
+
+                                    FlowLayout(spacing: 4) {
+                                        ForEach(participants) { participant in
+                                            HStack(spacing: 4) {
+                                                Image(systemName: sourceIcon(participant.source))
+                                                    .font(.system(size: 9))
+                                                Text(participant.name)
+                                                    .font(.brandDisplay(11))
+                                            }
+                                            .foregroundColor(.brandTextSecondary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.brandBackground.opacity(0.5))
+                                            .cornerRadius(BrandRadius.small)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Edit speakers link
+                            if meeting.hasSpeakerData {
+                                SpeakerLabelingView(meeting: $meeting)
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+            }
+        }
+    }
+
+    private func colorForIndex(_ index: Int) -> Color {
+        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .teal, .indigo, .mint]
+        return colors[index % colors.count]
+    }
+
+    private func sourceIcon(_ source: MeetingParticipant.ParticipantSource) -> String {
+        switch source {
+        case .screenshot: return "camera.viewfinder"
+        case .calendar: return "calendar"
+        case .manual: return "pencil"
+        case .speakerLabel: return "waveform"
+        }
+    }
+}
+
+// MARK: - Speakers Content View (Legacy - kept for reference)
 
 struct SpeakersContentView: View {
     @Binding var meeting: Meeting
@@ -1622,11 +2139,11 @@ struct SpeakersContentView: View {
                 DiarizedSegmentsView(segments: segments, meeting: meeting)
             } else if let diarized = meeting.diarizedTranscript {
                 Divider()
-                DiarizedTranscriptView(content: diarized)
+                SummarySpeakerView(content: diarized)
             } else if let summaries = meeting.processedSummaries,
                       let speakerSummary = summaries.first(where: { $0.outputFormat == .diarizedTranscript }) {
                 Divider()
-                DiarizedTranscriptView(content: speakerSummary.content)
+                SummarySpeakerView(content: speakerSummary.content)
             } else if !meeting.hasSpeakerData {
                 // No speaker data at all
                 VStack(spacing: 12) {
@@ -1894,16 +2411,13 @@ struct TranscriptPlaceholder: View {
             HStack(spacing: 12) {
                 switch status {
                 case .recording:
-                    ProgressView()
-                        .scaleEffect(0.8)
+                    BrandLoadingIndicator(size: .medium, color: .brandCoral, style: .bars)
                     Text("Recording in progress...")
                 case .pendingTranscription:
-                    ProgressView()
-                        .scaleEffect(0.8)
+                    BrandLoadingIndicator(size: .medium)
                     Text("Waiting for transcription...")
                 case .transcribing:
-                    ProgressView()
-                        .scaleEffect(0.8)
+                    BrandLoadingIndicator(size: .medium)
                     Text("Transcribing...")
                 case .ready:
                     Image(systemName: "doc.text")
@@ -1933,6 +2447,11 @@ struct TranscriptPlaceholder: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
+        .onChange(of: status) { _, newStatus in
+            if newStatus != .failed {
+                isRetrying = false
+            }
+        }
     }
 }
 
@@ -1969,6 +2488,7 @@ struct ActionItemsSection: View {
 
 struct ErrorSection: View {
     let message: String
+    let status: MeetingStatus
     var onRetry: (() -> Void)?
     @State private var isRetrying = false
 
@@ -1995,8 +2515,6 @@ struct ErrorSection: View {
                         action: {
                             isRetrying = true
                             onRetry()
-                            // Note: isRetrying will stay true until view reloads
-                            // or we add complex state management here
                         }
                     )
                 }
@@ -2005,6 +2523,14 @@ struct ErrorSection: View {
         }
         .background(Color.brandCoral.opacity(0.05))
         .cornerRadius(BrandRadius.medium)
+        .onChange(of: status) { _, newStatus in
+            if newStatus != .failed {
+                isRetrying = false
+            }
+        }
+        .onChange(of: message) { _, _ in
+            isRetrying = false
+        }
     }
 }
 
@@ -2233,9 +2759,59 @@ class AudioPlayerManager: ObservableObject {
 }
 
 #Preview("Error Section") {
-    ErrorSection(message: "API key invalid. Please check your settings.")
+    ErrorSection(message: "API key invalid. Please check your settings.", status: .failed)
         .frame(width: 400)
         .padding()
+}
+
+// MARK: - Transcribing Indicator (Bottom-right floating pill)
+
+struct TranscribingIndicator: View {
+    @State private var dotOffset: CGFloat = 0
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Animated loading dots
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 6, height: 6)
+                        .offset(y: dotOffset(for: index))
+                }
+            }
+
+            Text("Transcribing")
+                .font(.brandDisplay(12, weight: .medium))
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            Capsule()
+                .fill(Color.brandViolet)
+                .shadow(color: Color.black.opacity(0.15), radius: 8, y: 4)
+        )
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
+                dotOffset = 1
+            }
+        }
+    }
+
+    private func dotOffset(for index: Int) -> CGFloat {
+        let offset = dotOffset * -4
+        let delay = Double(index) * 0.15
+        return offset * sin(.pi * (dotOffset + CGFloat(delay)))
+    }
+}
+
+#Preview("Transcribing Indicator") {
+    ZStack {
+        Color.brandBackground
+        TranscribingIndicator()
+    }
+    .frame(width: 200, height: 100)
 }
 
 #Preview("Meeting Header Section") {

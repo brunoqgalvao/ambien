@@ -14,7 +14,7 @@ import SwiftUI
 // MARK: - Templates Settings Tab
 
 struct SummaryTemplatesSettingsTab: View {
-    @StateObject private var templateManager = SummaryTemplateManager.shared
+    @ObservedObject private var templateManager = SummaryTemplateManager.shared
     @State private var showingNewTemplate = false
     @State private var editingTemplate: SummaryTemplate?
     @State private var showingResetConfirmation = false

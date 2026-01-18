@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - Templates View (Main Container)
 
 struct TemplatesView: View {
-    @StateObject private var templateManager = SummaryTemplateManager.shared
+    @ObservedObject private var templateManager = SummaryTemplateManager.shared
     @State private var selectedTemplate: SummaryTemplate?
     @State private var isCreatingNew = false
     @State private var searchText = ""

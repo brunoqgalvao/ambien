@@ -80,8 +80,7 @@ struct ContentView: View {
                 // Transcription progress (if any)
                 if let progress = audioManager.transcriptionProgress {
                     HStack(spacing: 6) {
-                        ProgressView()
-                            .scaleEffect(0.6)
+                        BrandLoadingIndicator(size: .tiny)
                         Text(progress)
                             .font(.caption)
                             .foregroundColor(.secondary)

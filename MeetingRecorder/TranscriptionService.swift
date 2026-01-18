@@ -2,11 +2,13 @@
 //  TranscriptionService.swift
 //  MeetingRecorder
 //
-//  OpenAI API integration for audio transcription
-//  Supports gpt-4o-mini-transcribe (default) and whisper-1 (fallback)
+//  Facade over TranscriptionProcess for backwards compatibility.
+//  New code should use TranscriptionProcess.shared directly.
 //
 
 import Foundation
+
+// MARK: - Legacy Types (kept for backwards compatibility)
 
 /// Errors that can occur during transcription
 enum TranscriptionError: LocalizedError {
@@ -25,55 +27,51 @@ enum TranscriptionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noAPIKey:
-            return "OpenAI API key not found. Please add your API key in Settings."
+            return "No API key configured. Add your key in Settings."
         case .invalidAPIKey:
-            return "Invalid API key. Please check your OpenAI API key."
+            return "Invalid API key. Check your key in Settings."
         case .networkError(let error):
-            // Provide more helpful messages for common network errors
             let nsError = error as NSError
             if nsError.domain == NSURLErrorDomain {
                 switch nsError.code {
                 case NSURLErrorTimedOut:
-                    return "Request timed out. The file may be too large or your connection is slow. Try again or enable 'Crop silences' in settings."
+                    return "Request timed out. Try again or enable 'Crop silences' in settings."
                 case NSURLErrorNotConnectedToInternet:
-                    return "No internet connection. Please check your network and try again."
+                    return "No internet connection."
                 case NSURLErrorNetworkConnectionLost:
-                    return "Network connection was lost during upload. Please try again."
-                case NSURLErrorCannotConnectToHost:
-                    return "Cannot connect to OpenAI servers. Please try again later."
+                    return "Network connection lost. Try again."
                 default:
                     break
                 }
             }
             return "Network error: \(error.localizedDescription)"
         case .timeout:
-            return "Request timed out. The file may be too large or your connection is slow. Try enabling 'Crop silences' in settings to reduce file size."
+            return "Request timed out. Try enabling 'Crop silences' in settings."
         case .quotaExceeded:
-            return "API quota exceeded. Please check your OpenAI billing."
+            return "API quota exceeded. Check your billing."
         case .fileNotFound(let path):
             return "Audio file not found: \(path)"
         case .invalidResponse:
-            return "Invalid response from OpenAI API. Please try again."
+            return "Invalid response from API."
         case .serverError(let code, let message):
-            // Parse common OpenAI error messages
             if message.contains("rate_limit") || code == 429 {
-                return "Rate limit exceeded. Please wait a moment and try again."
+                return "Rate limit exceeded. Wait a moment and try again."
             }
             if message.contains("insufficient_quota") {
-                return "Your OpenAI account has run out of credits. Please add payment method."
+                return "Account out of credits. Add payment method."
             }
             return "Server error (\(code)): \(message)"
         case .fileTooLarge(let size):
-            return "File too large (\(size / 1_000_000)MB). Maximum is 25MB."
+            return "File too large (\(size / 1_000_000)MB)."
         case .fileTooLargeAfterCompression(let originalMB, let estimatedMinutes, let provider):
-            return "Recording is too long for \(provider) (~\(estimatedMinutes) minutes, \(originalMB)MB). Try using AssemblyAI or Gemini for longer recordings, or enable 'Crop silences' in settings."
+            return "Recording too long for \(provider) (~\(estimatedMinutes) min, \(originalMB)MB). Try AssemblyAI or Gemini."
         case .compressionFailed(let reason):
-            return "Audio compression failed: \(reason)"
+            return "Compression failed: \(reason)"
         }
     }
 }
 
-/// Model options for transcription (legacy - use TranscriptionModelOption for new code)
+/// Model options for transcription (legacy)
 enum TranscriptionModel: String, CaseIterable {
     case gpt4oMiniTranscribe = "gpt-4o-mini-transcribe"
     case whisper1 = "whisper-1"
@@ -85,18 +83,15 @@ enum TranscriptionModel: String, CaseIterable {
         }
     }
 
-    /// Cost per minute in cents
     var costPerMinuteCents: Double {
         switch self {
-        case .gpt4oMiniTranscribe: return 0.3  // $0.003/min
-        case .whisper1: return 0.6  // $0.006/min
+        case .gpt4oMiniTranscribe: return 0.3
+        case .whisper1: return 0.6
         }
     }
 }
 
-// Note: TranscriptionProvider and TranscriptionModelOption are defined in KeychainHelper.swift
-
-/// Response from verbose_json format including duration
+/// Response from verbose_json format
 struct TranscriptionResponse: Codable {
     let text: String
     let duration: Double?
@@ -120,639 +115,347 @@ struct TranscriptionResult {
     let segments: [TranscriptionSegment]?
     let diarizationSegments: [DiarizationSegment]?
     let speakerCount: Int?
+    let title: String?
+    /// AI-inferred speaker labels with names and confidence
+    let inferredSpeakerLabels: [SpeakerLabel]?
+
+    init(
+        text: String,
+        duration: TimeInterval,
+        costCents: Int,
+        model: TranscriptionModel = .whisper1,
+        segments: [TranscriptionSegment]? = nil,
+        diarizationSegments: [DiarizationSegment]? = nil,
+        speakerCount: Int? = nil,
+        title: String? = nil,
+        inferredSpeakerLabels: [SpeakerLabel]? = nil
+    ) {
+        self.text = text
+        self.duration = duration
+        self.costCents = costCents
+        self.model = model
+        self.segments = segments
+        self.diarizationSegments = diarizationSegments
+        self.speakerCount = speakerCount
+        self.title = title
+        self.inferredSpeakerLabels = inferredSpeakerLabels
+    }
 }
 
-/// Result of a quick dictation transcription (optimized for latency)
+/// Result of a quick dictation transcription
 struct DictationResult {
     let text: String
     let latency: TimeInterval
 }
 
-/// Service for transcribing audio via OpenAI API
-actor TranscriptionService {
-    private let endpoint = URL(string: "https://api.openai.com/v1/audio/transcriptions")!
-    private let maxFileSize: Int64 = 25 * 1024 * 1024  // 25MB limit
+// Note: DiarizationSegment is defined in Meeting.swift
 
-    /// Default model to use (whisper-1 is more reliable)
+// MARK: - Transcription Service (Facade)
+
+/// Facade over TranscriptionProcess for backwards compatibility
+actor TranscriptionService {
+    static let shared = TranscriptionService()
+
+    /// Default model (legacy)
     var defaultModel: TranscriptionModel = .whisper1
 
-    /// Whether to perform speaker diarization on transcripts
+    /// Whether to perform speaker diarization
     var enableDiarization: Bool = true
 
+    // MARK: - Main Transcription (delegates to TranscriptionProcess)
+
     /// Transcribe an audio file
-    /// - Parameters:
-    ///   - audioPath: Path to the .m4a audio file
-    ///   - model: Model to use (defaults to gpt-4o-mini-transcribe)
-    ///   - performDiarization: Whether to perform speaker diarization (default: true if enabled globally)
-    /// - Returns: TranscriptionResult with text and cost
-    func transcribe(audioPath: String, model: TranscriptionModel? = nil, performDiarization: Bool? = nil) async throws -> TranscriptionResult {
-        // Get API key from Keychain
-        guard let apiKey = KeychainHelper.readOpenAIKey() else {
-            throw TranscriptionError.noAPIKey
-        }
-
-        // Determine file to transcribe (may be cropped version)
-        var effectiveAudioPath = audioPath
-
-        // Check if silence cropping is enabled
+    func transcribe(
+        audioPath: String,
+        model: TranscriptionModel? = nil,
+        performDiarization: Bool? = nil
+    ) async throws -> TranscriptionResult {
+        // Read user preferences
         let cropLongSilences = UserDefaults.standard.bool(forKey: "cropLongSilences")
         let silenceCropThreshold = UserDefaults.standard.double(forKey: "silenceCropThreshold")
 
-        if cropLongSilences && silenceCropThreshold > 0 {
-            do {
-                let result = try await SilenceProcessor.shared.cropLongSilences(
-                    audioPath: audioPath,
-                    minSilenceDuration: silenceCropThreshold,
-                    keepDuration: 1.0
-                )
+        // Build options
+        var options = TranscriptionProcessOptions()
+        options.enableDiarization = performDiarization ?? enableDiarization
+        options.cropSilences = cropLongSilences
+        options.silenceCropThreshold = silenceCropThreshold
+        options.generateTitle = true
 
-                if result.silencesCropped > 0 {
-                    effectiveAudioPath = result.outputPath
-                    logInfo("[SilenceProcessor] Cropped \(result.silencesCropped) silences, saved \(String(format: "%.1f", result.timeSaved / 60)) minutes")
-                }
-            } catch {
-                // Log error but continue with original file
-                logWarning("[SilenceProcessor] Failed to crop silences: \(error.localizedDescription)")
-                logWarning("[SilenceProcessor] Continuing with original file")
+        // Map legacy model to provider preference
+        if let model = model {
+            options.provider = .openai
+            options.modelId = model.rawValue
+        }
+
+        do {
+            let result = try await TranscriptionProcess.shared.transcribe(
+                audioPath: audioPath,
+                options: options
+            )
+
+            // Convert InferredSpeaker to SpeakerLabel
+            let speakerLabels: [SpeakerLabel]? = result.inferredSpeakers?.map { inferred in
+                SpeakerLabel(
+                    speakerId: inferred.speakerId,
+                    name: inferred.inferredName,
+                    confidence: inferred.confidence,
+                    evidence: inferred.evidence,
+                    role: inferred.role,
+                    isUserAssigned: false
+                )
             }
-        }
 
-        // Verify file exists
-        let fileURL = URL(fileURLWithPath: effectiveAudioPath)
-        guard FileManager.default.fileExists(atPath: effectiveAudioPath) else {
-            throw TranscriptionError.fileNotFound(effectiveAudioPath)
-        }
-
-        // Check file size and compress if needed
-        var fileAttributes = try FileManager.default.attributesOfItem(atPath: effectiveAudioPath)
-        var fileSize = fileAttributes[.size] as? Int64 ?? 0
-
-        // If file is too large, try compression
-        if fileSize > maxFileSize {
-            logInfo("[TranscriptionService] File size \(fileSize / 1_000_000)MB exceeds limit, attempting compression...")
-
-            do {
-                // Try compression with progressive levels up to aggressive
-                effectiveAudioPath = try await AudioCompressor.shared.compress(
-                    inputPath: effectiveAudioPath,
-                    targetSizeBytes: AudioCompressor.targetSizeBytes,
-                    maxLevel: .extreme  // Try up to extreme compression
-                )
-
-                // Re-check file size after compression
-                fileAttributes = try FileManager.default.attributesOfItem(atPath: effectiveAudioPath)
-                fileSize = fileAttributes[.size] as? Int64 ?? 0
-                logInfo("[TranscriptionService] Compressed to \(fileSize / 1_000_000)MB")
-
-            } catch let error as AudioCompressionError {
-                switch error {
-                case .fileTooLargeAfterCompression(let originalMB, let estimatedMinutes, let provider):
-                    throw TranscriptionError.fileTooLargeAfterCompression(
-                        originalMB: originalMB,
-                        estimatedMinutes: estimatedMinutes,
-                        provider: provider
+            // Convert to legacy format
+            return TranscriptionResult(
+                text: result.text,
+                duration: result.duration,
+                costCents: result.costCents,
+                model: model ?? defaultModel,
+                segments: result.segments?.enumerated().map { idx, seg in
+                    TranscriptionSegment(id: idx, start: seg.start, end: seg.end, text: seg.text)
+                },
+                diarizationSegments: result.segments?.compactMap { seg -> DiarizationSegment? in
+                    guard let speaker = seg.speaker else { return nil }
+                    return DiarizationSegment(
+                        speakerId: speaker,
+                        start: seg.start,
+                        end: seg.end,
+                        text: seg.text
                     )
-                default:
-                    throw TranscriptionError.compressionFailed(error.localizedDescription)
-                }
-            } catch {
-                throw TranscriptionError.compressionFailed(error.localizedDescription)
-            }
-        }
-
-        // Final size check (should pass after compression)
-        guard fileSize <= maxFileSize else {
-            // Get duration for error message
-            let duration = await AudioCompressor.shared.getAudioDuration(filePath: effectiveAudioPath) ?? 0
-            let estimatedMinutes = Int(duration / 60)
-            throw TranscriptionError.fileTooLargeAfterCompression(
-                originalMB: Int(fileSize / 1_000_000),
-                estimatedMinutes: estimatedMinutes,
-                provider: "OpenAI"
+                },
+                speakerCount: result.speakerCount,
+                title: result.title,
+                inferredSpeakerLabels: speakerLabels
             )
-        }
 
-        // Read audio data (use effectiveAudioPath which may be the compressed version)
-        let effectiveFileURL = URL(fileURLWithPath: effectiveAudioPath)
-        let audioData = try Data(contentsOf: effectiveFileURL)
-
-        let selectedModel = model ?? defaultModel
-
-        // Build multipart form request
-        let boundary = UUID().uuidString
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        // Build request body
-        var body = Data()
-
-        // Determine file extension and MIME type (use effectiveFileURL which may be compressed)
-        let fileExtension = effectiveFileURL.pathExtension.lowercased()
-        let mimeType: String
-        let filename: String
-        switch fileExtension {
-        case "wav":
-            mimeType = "audio/wav"
-            filename = "audio.wav"
-        case "mp3":
-            mimeType = "audio/mpeg"
-            filename = "audio.mp3"
-        case "m4a":
-            mimeType = "audio/m4a"
-            filename = "audio.m4a"
-        default:
-            mimeType = "audio/mpeg"
-            filename = "audio.\(fileExtension)"
-        }
-
-        // File field
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(audioData)
-        body.append("\r\n".data(using: .utf8)!)
-
-        // Model field
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(selectedModel.rawValue)\r\n".data(using: .utf8)!)
-
-        // Response format field (verbose_json for duration)
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8)!)
-        body.append("verbose_json\r\n".data(using: .utf8)!)
-
-        // End boundary
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-
-        request.httpBody = body
-
-        // Set timeout based on file size (larger files need more time for upload + processing)
-        // OpenAI can take 1-2 minutes to process per hour of audio
-        // Base: 120 seconds + 30 seconds per MB (16MB file = 120 + 480 = 600s = 10 min)
-        let fileSizeMB = Double(fileSize) / 1_000_000.0
-        let timeoutSeconds = 120.0 + (fileSizeMB * 30.0)
-        request.timeoutInterval = max(180, min(timeoutSeconds, 900))  // Between 3-15 minutes
-        logInfo("[TranscriptionService] Request timeout set to \(Int(request.timeoutInterval))s for \(String(format: "%.1f", fileSizeMB))MB file")
-
-        // Make request with better error handling
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await URLSession.shared.data(for: request)
-        } catch {
-            // Wrap network errors with better descriptions
-            logError("[TranscriptionService] Network request failed: \(error)")
-            throw TranscriptionError.networkError(error)
-        }
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw TranscriptionError.invalidResponse
-        }
-
-        // Handle HTTP errors
-        if httpResponse.statusCode != 200 {
-            try handleHTTPError(statusCode: httpResponse.statusCode, data: data)
-        }
-
-        // Parse response
-        let decoder = JSONDecoder()
-        let transcriptionResponse = try decoder.decode(TranscriptionResponse.self, from: data)
-
-        // Calculate cost based on duration
-        let duration = transcriptionResponse.duration ?? estimateDuration(fileSize: fileSize)
-        let durationMinutes = duration / 60.0
-        var costCents = Int(ceil(durationMinutes * selectedModel.costPerMinuteCents))
-
-        logInfo("[TranscriptionService] Transcribed \(String(format: "%.1f", duration))s using \(selectedModel.displayName)")
-        logInfo("[TranscriptionService] Cost: \(costCents) cents (\(String(format: "%.2f", durationMinutes)) minutes)")
-
-        // Perform speaker diarization if enabled
-        let shouldDiarize = performDiarization ?? enableDiarization
-        var diarizationSegments: [DiarizationSegment]? = nil
-        var speakerCount: Int? = nil
-
-        if shouldDiarize && !transcriptionResponse.text.isEmpty {
-            logDebug("[TranscriptionService] Performing speaker diarization...")
-            let diarizationResult = await performSpeakerDiarization(
-                transcript: transcriptionResponse.text,
-                segments: transcriptionResponse.segments
-            )
-            diarizationSegments = diarizationResult.segments
-            speakerCount = diarizationResult.speakerCount
-            costCents += diarizationResult.costCents
-            logInfo("[TranscriptionService] Diarization complete: \(speakerCount ?? 0) speakers detected")
-        }
-
-        return TranscriptionResult(
-            text: transcriptionResponse.text,
-            duration: duration,
-            costCents: costCents,
-            model: selectedModel,
-            segments: transcriptionResponse.segments,
-            diarizationSegments: diarizationSegments,
-            speakerCount: speakerCount
-        )
-    }
-
-    /// Estimate cost before transcription
-    /// - Parameters:
-    ///   - audioPath: Path to audio file
-    ///   - model: Model to use
-    /// - Returns: Estimated cost in cents
-    func estimateCost(audioPath: String, model: TranscriptionModel? = nil) throws -> Int {
-        let fileAttributes = try FileManager.default.attributesOfItem(atPath: audioPath)
-        let fileSize = fileAttributes[.size] as? Int64 ?? 0
-
-        let duration = estimateDuration(fileSize: fileSize)
-        let durationMinutes = duration / 60.0
-        let selectedModel = model ?? defaultModel
-
-        return Int(ceil(durationMinutes * selectedModel.costPerMinuteCents))
-    }
-
-    /// Validate that the API key works
-    /// - Returns: true if the key is valid
-    func validateAPIKey() async -> Bool {
-        guard let apiKey = KeychainHelper.readOpenAIKey() else {
-            return false
-        }
-
-        // Make a simple models request to validate the key
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse else {
-                return false
-            }
-            return httpResponse.statusCode == 200
-        } catch {
-            return false
+        } catch let error as TranscriptionProcessError {
+            // Map to legacy error type
+            throw mapProcessError(error)
         }
     }
 
-    // MARK: - Quick Dictation Transcription
+    // MARK: - Dictation (fast path, stays with OpenAI)
 
-    /// Transcribe audio quickly for dictation (optimized for low latency)
-    /// Uses whisper-1 which tends to have lower latency for short clips
-    /// - Parameter audioPath: Path to the audio file
-    /// - Returns: DictationResult with transcribed text and latency
+    /// Quick transcription for dictation (optimized for latency)
     func transcribeDictation(audioPath: String) async throws -> DictationResult {
         let startTime = CFAbsoluteTimeGetCurrent()
 
-        // Get API key from Keychain
         guard let apiKey = KeychainHelper.readOpenAIKey() else {
             throw TranscriptionError.noAPIKey
         }
 
-        // Verify file exists
-        let fileURL = URL(fileURLWithPath: audioPath)
         guard FileManager.default.fileExists(atPath: audioPath) else {
             throw TranscriptionError.fileNotFound(audioPath)
         }
 
-        // Read audio data
+        let fileURL = URL(fileURLWithPath: audioPath)
         let audioData = try Data(contentsOf: fileURL)
 
-        // Use whisper-1 for dictation (lower latency)
-        let model = TranscriptionModel.whisper1
-
-        // Build multipart form request
+        // Build request (whisper-1 for low latency)
         let boundary = UUID().uuidString
-        var request = URLRequest(url: endpoint)
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/transcriptions")!)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30  // 30 second timeout for dictation
+        request.timeoutInterval = 30
 
-        // Build request body
         var body = Data()
+        let ext = fileURL.pathExtension.lowercased()
+        let mimeType = ext == "wav" ? "audio/wav" : ext == "mp3" ? "audio/mpeg" : "audio/m4a"
 
-        // Determine file extension and MIME type
-        let fileExtension = fileURL.pathExtension.lowercased()
-        let mimeType: String
-        let filename: String
-        switch fileExtension {
-        case "wav":
-            mimeType = "audio/wav"
-            filename = "audio.wav"
-        case "mp3":
-            mimeType = "audio/mpeg"
-            filename = "audio.mp3"
-        case "m4a":
-            mimeType = "audio/m4a"
-            filename = "audio.m4a"
-        default:
-            mimeType = "audio/wav"
-            filename = "audio.wav"
-        }
-
-        // File field
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.\(ext)\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
         body.append(audioData)
         body.append("\r\n".data(using: .utf8)!)
 
-        // Model field
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(model.rawValue)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\nwhisper-1\r\n".data(using: .utf8)!)
 
-        // Response format field (text for fastest response)
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8)!)
-        body.append("text\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\ntext\r\n".data(using: .utf8)!)
 
-        // Language hint (optional, can speed up transcription)
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"language\"\r\n\r\n".data(using: .utf8)!)
-        body.append("en\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"language\"\r\n\r\nen\r\n".data(using: .utf8)!)
 
-        // End boundary
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-
         request.httpBody = body
 
-        // Make request
-        let (data, response) = try await URLSession.shared.data(for: request)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let latency = CFAbsoluteTimeGetCurrent() - startTime
+            let durationMs = Int(latency * 1000)
 
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw TranscriptionError.invalidResponse
+            guard let httpResponse = response as? HTTPURLResponse else {
+                await APICallLogManager.shared.logFailure(
+                    type: .dictation,
+                    provider: "OpenAI",
+                    model: "whisper-1",
+                    endpoint: "/v1/audio/transcriptions",
+                    durationMs: durationMs,
+                    error: "Invalid response"
+                )
+                throw TranscriptionError.invalidResponse
+            }
+
+            if httpResponse.statusCode == 401 {
+                await APICallLogManager.shared.logFailure(
+                    type: .dictation,
+                    provider: "OpenAI",
+                    model: "whisper-1",
+                    endpoint: "/v1/audio/transcriptions",
+                    durationMs: durationMs,
+                    error: "Invalid API key"
+                )
+                throw TranscriptionError.invalidAPIKey
+            }
+
+            guard httpResponse.statusCode == 200 else {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown"
+                await APICallLogManager.shared.logFailure(
+                    type: .dictation,
+                    provider: "OpenAI",
+                    model: "whisper-1",
+                    endpoint: "/v1/audio/transcriptions",
+                    durationMs: durationMs,
+                    error: "HTTP \(httpResponse.statusCode): \(errorMessage)"
+                )
+                throw TranscriptionError.serverError(httpResponse.statusCode, errorMessage)
+            }
+
+            let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            // Dictation is usually very short, minimal cost
+            await APICallLogManager.shared.logSuccess(
+                type: .dictation,
+                provider: "OpenAI",
+                model: "whisper-1",
+                endpoint: "/v1/audio/transcriptions",
+                inputSizeBytes: audioData.count,
+                durationMs: durationMs,
+                costCents: 0  // Dictation is typically < 30 seconds, negligible cost
+            )
+
+            logDebug("[TranscriptionService] Dictation transcribed in \(String(format: "%.2f", latency))s")
+
+            return DictationResult(text: text, latency: latency)
+        } catch let error as TranscriptionError {
+            throw error
+        } catch {
+            let durationMs = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            await APICallLogManager.shared.logFailure(
+                type: .dictation,
+                provider: "OpenAI",
+                model: "whisper-1",
+                endpoint: "/v1/audio/transcriptions",
+                durationMs: durationMs,
+                error: error.localizedDescription
+            )
+            throw TranscriptionError.networkError(error)
         }
-
-        // Handle HTTP errors
-        if httpResponse.statusCode != 200 {
-            try handleHTTPError(statusCode: httpResponse.statusCode, data: data)
-        }
-
-        // Parse response (plain text format)
-        let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        let latency = CFAbsoluteTimeGetCurrent() - startTime
-
-        logDebug("[TranscriptionService] Dictation transcribed in \(String(format: "%.2f", latency))s")
-
-        return DictationResult(text: text, latency: latency)
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Title Generation (delegates to process, but exposed for legacy callers)
 
-    private func handleHTTPError(statusCode: Int, data: Data) throws -> Never {
-        let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
-
-        // Log the full error for debugging
-        logError("[TranscriptionService] HTTP Error \(statusCode):")
-        logError("[TranscriptionService] Response: \(errorMessage)")
-
-        switch statusCode {
-        case 401:
-            throw TranscriptionError.invalidAPIKey
-        case 429:
-            throw TranscriptionError.quotaExceeded
-        default:
-            throw TranscriptionError.serverError(statusCode, errorMessage)
-        }
-    }
-
-    /// Estimate duration from file size (rough approximation)
-    /// AAC at 64kbps mono = ~8KB per second
-    private func estimateDuration(fileSize: Int64) -> TimeInterval {
-        let bytesPerSecond: Double = 8000  // 64kbps / 8
-        return Double(fileSize) / bytesPerSecond
-    }
-
-    // MARK: - Smart Meeting Title Generation
-
-    /// Generate a smart, relevant title from transcript using GPT-4o-mini
-    /// - Parameter transcript: The meeting transcript
-    /// - Returns: A concise, descriptive title or nil if generation fails
+    /// Generate a meeting title from transcript
     func generateMeetingTitle(from transcript: String) async -> String? {
-        guard let apiKey = KeychainHelper.readOpenAIKey() else {
-            return nil
-        }
+        // The new process does this internally, but some callers still use this directly
+        guard let apiKey = KeychainHelper.readOpenAIKey() else { return nil }
 
-        // Take first ~2000 chars to avoid token limits
-        let truncatedTranscript = String(transcript.prefix(2000))
-
+        let truncated = String(transcript.prefix(2000))
         let prompt = """
         Based on this meeting transcript, generate a short, descriptive title (max 6 words).
-        The title should capture the main topic or purpose of the meeting.
-        Return ONLY the title, no quotes or extra text.
+        Return ONLY the title, no quotes.
 
         Transcript:
-        \(truncatedTranscript)
+        \(truncated)
         """
 
-        let requestBody: [String: Any] = [
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+
+        let body: [String: Any] = [
             "model": "gpt-4o-mini",
             "messages": [
-                ["role": "system", "content": "You are a helpful assistant that generates concise meeting titles."],
+                ["role": "system", "content": "Generate concise meeting titles."],
                 ["role": "user", "content": prompt]
             ],
             "max_tokens": 20,
             "temperature": 0.3
         ]
-
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
-        request.timeoutInterval = 10
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-
             guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
+                  httpResponse.statusCode == 200,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = json["choices"] as? [[String: Any]],
+                  let message = choices.first?["message"] as? [String: Any],
+                  let content = message["content"] as? String else {
                 return nil
             }
-
-            // Parse response
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let choices = json["choices"] as? [[String: Any]],
-               let firstChoice = choices.first,
-               let message = firstChoice["message"] as? [String: Any],
-               let content = message["content"] as? String {
-                let title = content.trimmingCharacters(in: .whitespacesAndNewlines)
-                logInfo("[TranscriptionService] Generated title: \(title)")
-                return title.isEmpty ? nil : title
-            }
+            let title = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            return title.isEmpty ? nil : title
         } catch {
-            logWarning("[TranscriptionService] Title generation failed: \(error)")
+            return nil
         }
-
-        return nil
     }
 
-    // MARK: - Speaker Diarization
+    // MARK: - Cost Estimation
 
-    /// Result of speaker diarization
-    struct DiarizationResult {
-        let segments: [DiarizationSegment]
-        let speakerCount: Int
-        let costCents: Int
+    /// Estimate transcription cost for an audio file
+    func estimateCost(audioPath: String) async throws -> Int {
+        let duration = await AudioCompressor.shared.getAudioDuration(filePath: audioPath) ?? 0
+        // Use default OpenAI whisper-1 rate: $0.006/min = 0.6 cents/min
+        return Int(ceil((duration / 60.0) * 0.6))
     }
 
-    /// Perform speaker diarization using GPT-4o-mini
-    /// - Parameters:
-    ///   - transcript: The full transcript text
-    ///   - segments: Optional time-aligned segments from transcription
-    /// - Returns: DiarizationResult with speaker-labeled segments
-    private func performSpeakerDiarization(
-        transcript: String,
-        segments: [TranscriptionSegment]?
-    ) async -> DiarizationResult {
-        guard let apiKey = KeychainHelper.readOpenAIKey() else {
-            return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
-        }
+    // MARK: - API Key Validation
 
-        // Truncate transcript if too long (keep ~8000 chars for context)
-        let maxLength = 8000
-        let truncatedTranscript = transcript.count > maxLength
-            ? String(transcript.prefix(maxLength)) + "..."
-            : transcript
+    func validateAPIKey() async -> Bool {
+        guard let apiKey = KeychainHelper.readOpenAIKey() else { return false }
 
-        let prompt = """
-        Analyze this meeting transcript and identify different speakers. For each segment of speech, assign a speaker ID (speaker_0, speaker_1, etc.).
-
-        Return a JSON array where each element has:
-        - "speakerId": string like "speaker_0", "speaker_1"
-        - "text": the text spoken by this speaker
-
-        Try to detect speaker changes based on:
-        - Topic shifts
-        - Questions and answers
-        - Different speaking styles
-        - Context clues like "thanks John" or "as I mentioned"
-
-        Return ONLY the JSON array, no explanation.
-
-        Transcript:
-        \(truncatedTranscript)
-        """
-
-        let requestBody: [String: Any] = [
-            "model": "gpt-4o-mini",
-            "messages": [
-                ["role": "system", "content": "You are an expert at speaker diarization. Analyze transcripts and identify different speakers. Always respond with valid JSON only."],
-                ["role": "user", "content": prompt]
-            ],
-            "max_tokens": 4000,
-            "temperature": 0.3,
-            "response_format": ["type": "json_object"]
-        ]
-
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
-        request.httpMethod = "POST"
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
-        request.timeoutInterval = 60  // Diarization can take time
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-                logWarning("[TranscriptionService] Diarization API error")
-                return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
-            }
-
-            // Estimate cost (~500 input tokens + ~1000 output tokens for gpt-4o-mini)
-            // gpt-4o-mini: $0.15/1M input, $0.60/1M output
-            let estimatedInputTokens = truncatedTranscript.count / 4
-            let estimatedOutputTokens = 1000
-            let costCents = Int(ceil(Double(estimatedInputTokens) * 0.00015 + Double(estimatedOutputTokens) * 0.0006))
-
-            // Parse response
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let choices = json["choices"] as? [[String: Any]],
-               let firstChoice = choices.first,
-               let message = firstChoice["message"] as? [String: Any],
-               let content = message["content"] as? String {
-
-                // Parse the JSON response
-                let segments = parseDiarizationResponse(content)
-                let uniqueSpeakers = Set(segments.map { $0.speakerId })
-
-                return DiarizationResult(
-                    segments: segments,
-                    speakerCount: uniqueSpeakers.count,
-                    costCents: costCents
-                )
-            }
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
         } catch {
-            logError("[TranscriptionService] Diarization failed: \(error)")
+            return false
         }
-
-        return DiarizationResult(segments: [], speakerCount: 0, costCents: 0)
     }
 
-    /// Parse the JSON response from diarization
-    private func parseDiarizationResponse(_ content: String) -> [DiarizationSegment] {
-        guard let data = content.data(using: .utf8) else { return [] }
+    // MARK: - Error Mapping
 
-        do {
-            // Try to parse as a root object with "segments" key or as an array
-            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                // Handle {"segments": [...]} format
-                if let segmentsArray = json["segments"] as? [[String: Any]] {
-                    return parseSegmentsArray(segmentsArray)
-                }
-                // Handle {"speakers": [...]} format
-                if let speakersArray = json["speakers"] as? [[String: Any]] {
-                    return parseSegmentsArray(speakersArray)
-                }
-            }
-
-            // Try to parse as direct array
-            if let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                return parseSegmentsArray(array)
-            }
-        } catch {
-            logWarning("[TranscriptionService] Failed to parse diarization JSON: \(error)")
-        }
-
-        return []
-    }
-
-    /// Parse an array of segment dictionaries
-    private func parseSegmentsArray(_ array: [[String: Any]]) -> [DiarizationSegment] {
-        var segments: [DiarizationSegment] = []
-        var currentTime: TimeInterval = 0
-
-        for item in array {
-            guard let speakerId = item["speakerId"] as? String ?? item["speaker_id"] as? String ?? item["speaker"] as? String,
-                  let text = item["text"] as? String else {
-                continue
-            }
-
-            // Estimate timing (rough: ~150 words per minute, ~5 chars per word)
-            let wordCount = Double(text.split(separator: " ").count)
-            let estimatedDuration = max(1.0, wordCount / 2.5)  // ~150 wpm
-
-            let segment = DiarizationSegment(
-                speakerId: speakerId,
-                start: currentTime,
-                end: currentTime + estimatedDuration,
-                text: text
+    private func mapProcessError(_ error: TranscriptionProcessError) -> TranscriptionError {
+        switch error {
+        case .noProviderConfigured, .noAPIKey:
+            return .noAPIKey
+        case .invalidAPIKey:
+            return .invalidAPIKey
+        case .fileNotFound(let path):
+            return .fileNotFound(path)
+        case .fileTooLarge(let sizeMB, let provider):
+            return .fileTooLargeAfterCompression(
+                originalMB: sizeMB,
+                estimatedMinutes: sizeMB * 8 / 60,  // rough estimate
+                provider: provider.displayName
             )
-            segments.append(segment)
-            currentTime += estimatedDuration
+        case .compressionFailed(let reason):
+            return .compressionFailed(reason)
+        case .networkError(let err):
+            return .networkError(err)
+        case .serverError(let code, let msg):
+            return .serverError(code, msg)
+        case .transcriptionFailed(let reason):
+            return .serverError(500, reason)
+        case .timeout:
+            return .timeout
         }
-
-        return segments
     }
-}
-
-// MARK: - Singleton for Easy Access
-
-extension TranscriptionService {
-    static let shared = TranscriptionService()
 }
