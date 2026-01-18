@@ -413,8 +413,11 @@ class AudioCaptureManager: NSObject, ObservableObject {
                 }
             )
 
-            // Perform transcription
-            let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
+            // Perform transcription (pass meeting ID for voice embedding extraction)
+            let result = try await TranscriptionService.shared.transcribe(
+                audioPath: meeting.audioPath,
+                meetingId: meetingId
+            )
 
             // Update meeting with transcript
             updatedMeeting.transcript = result.text
@@ -1726,8 +1729,11 @@ class MicRecorderWithTranscription: ObservableObject {
                 meetingId: meetingId
             )
 
-            // Perform transcription
-            let result = try await TranscriptionService.shared.transcribe(audioPath: meeting.audioPath)
+            // Perform transcription (pass meeting ID for voice embedding extraction)
+            let result = try await TranscriptionService.shared.transcribe(
+                audioPath: meeting.audioPath,
+                meetingId: meetingId
+            )
 
             // Update meeting with transcript
             updatedMeeting.transcript = result.text

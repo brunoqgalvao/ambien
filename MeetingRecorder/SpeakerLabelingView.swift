@@ -95,10 +95,8 @@ struct SpeakerLabelingView: View {
                     ForEach(meeting.uniqueSpeakers, id: \.self) { speakerId in
                         SpeakerLabelRow(
                             speakerId: speakerId,
-                            currentLabel: meeting.speakerName(for: speakerId),
-                            isLabeled: meeting.speakerLabels?.contains(where: { $0.speakerId == speakerId }) ?? false,
+                            meeting: $meeting,
                             sampleSegment: firstSegment(for: speakerId),
-                            audioPath: meeting.audioPath,
                             audioPreview: audioPreview,
                             onLabelChanged: { newName in
                                 updateSpeakerLabel(speakerId: speakerId, name: newName)
@@ -175,10 +173,8 @@ struct SpeakerLabelingView: View {
 /// Row for a single speaker with editable label and audio preview
 struct SpeakerLabelRow: View {
     let speakerId: String
-    let currentLabel: String
-    let isLabeled: Bool
+    @Binding var meeting: Meeting
     var sampleSegment: DiarizationSegment? = nil
-    var audioPath: String? = nil
     var audioPreview: SpeakerAudioPreviewManager? = nil
     let onLabelChanged: (String) -> Void
 
@@ -188,6 +184,16 @@ struct SpeakerLabelRow: View {
     @State private var isPlayButtonHovered = false
     @FocusState private var isFocused: Bool
 
+    /// Current label derived from meeting binding (reactive)
+    private var currentLabel: String {
+        meeting.speakerName(for: speakerId)
+    }
+
+    /// Whether this speaker has a user-assigned label
+    private var isLabeled: Bool {
+        meeting.speakerLabels?.contains(where: { $0.speakerId == speakerId }) ?? false
+    }
+
     /// Whether this speaker's sample is currently playing
     @MainActor private var isPlayingSample: Bool {
         audioPreview?.isPlayingSpeaker(speakerId) ?? false
@@ -195,7 +201,7 @@ struct SpeakerLabelRow: View {
 
     /// Whether we can play a sample (have segment data and audio file)
     private var canPlaySample: Bool {
-        sampleSegment != nil && audioPath != nil && audioPreview != nil
+        sampleSegment != nil && !meeting.audioPath.isEmpty && audioPreview != nil
     }
 
     var body: some View {
@@ -308,8 +314,9 @@ struct SpeakerLabelRow: View {
 
     @MainActor private func togglePlaySample() {
         guard let preview = audioPreview,
-              let segment = sampleSegment,
-              let path = audioPath else { return }
+              let segment = sampleSegment else { return }
+
+        let path = meeting.audioPath
 
         if isPlayingSample {
             preview.stop()
@@ -520,10 +527,8 @@ struct SpeakerNamingPrompt: View {
                         ForEach(meeting.uniqueSpeakers, id: \.self) { speakerId in
                             SpeakerLabelRow(
                                 speakerId: speakerId,
-                                currentLabel: meeting.speakerName(for: speakerId),
-                                isLabeled: meeting.speakerLabels?.contains(where: { $0.speakerId == speakerId && $0.isUserAssigned }) ?? false,
+                                meeting: $meeting,
                                 sampleSegment: firstSegment(for: speakerId),
-                                audioPath: meeting.audioPath,
                                 audioPreview: audioPreview,
                                 onLabelChanged: { newName in
                                     updateSpeakerLabel(speakerId: speakerId, name: newName, isUserAssigned: true)

@@ -118,6 +118,8 @@ struct TranscriptionResult {
     let title: String?
     /// AI-inferred speaker labels with names and confidence
     let inferredSpeakerLabels: [SpeakerLabel]?
+    /// Voice embedding matches (for cross-meeting speaker identification)
+    let speakerEmbeddings: SpeakerEmbeddingResult?
 
     init(
         text: String,
@@ -128,7 +130,8 @@ struct TranscriptionResult {
         diarizationSegments: [DiarizationSegment]? = nil,
         speakerCount: Int? = nil,
         title: String? = nil,
-        inferredSpeakerLabels: [SpeakerLabel]? = nil
+        inferredSpeakerLabels: [SpeakerLabel]? = nil,
+        speakerEmbeddings: SpeakerEmbeddingResult? = nil
     ) {
         self.text = text
         self.duration = duration
@@ -139,6 +142,7 @@ struct TranscriptionResult {
         self.speakerCount = speakerCount
         self.title = title
         self.inferredSpeakerLabels = inferredSpeakerLabels
+        self.speakerEmbeddings = speakerEmbeddings
     }
 }
 
@@ -168,7 +172,8 @@ actor TranscriptionService {
     func transcribe(
         audioPath: String,
         model: TranscriptionModel? = nil,
-        performDiarization: Bool? = nil
+        performDiarization: Bool? = nil,
+        meetingId: UUID? = nil
     ) async throws -> TranscriptionResult {
         // Read user preferences
         let cropLongSilences = UserDefaults.standard.bool(forKey: "cropLongSilences")
@@ -180,6 +185,7 @@ actor TranscriptionService {
         options.cropSilences = cropLongSilences
         options.silenceCropThreshold = silenceCropThreshold
         options.generateTitle = true
+        options.meetingId = meetingId  // For voice embedding extraction
 
         // Map legacy model to provider preference
         if let model = model {
@@ -205,6 +211,30 @@ actor TranscriptionService {
                 )
             }
 
+            // Merge speaker labels from AI inference and voice matching
+            var finalSpeakerLabels = speakerLabels ?? []
+
+            // If we have voice embedding matches with named profiles, add/override those labels
+            if let embeddings = result.speakerEmbeddings {
+                for match in embeddings.speakerMatches {
+                    // Only use if the profile has a name
+                    if let profileName = match.profile.name, !profileName.isEmpty {
+                        // Remove any existing label for this speaker
+                        finalSpeakerLabels.removeAll { $0.speakerId == match.meetingSpeakerId }
+
+                        // Add the profile-based label with higher priority
+                        finalSpeakerLabels.append(SpeakerLabel(
+                            speakerId: match.meetingSpeakerId,
+                            name: profileName,
+                            confidence: Double(match.confidence),
+                            isUserAssigned: false  // It's from voice matching, not user
+                        ))
+
+                        logInfo("[TranscriptionService] Auto-named \(match.meetingSpeakerId) as '\(profileName)' from voice profile")
+                    }
+                }
+            }
+
             // Convert to legacy format
             return TranscriptionResult(
                 text: result.text,
@@ -225,7 +255,8 @@ actor TranscriptionService {
                 },
                 speakerCount: result.speakerCount,
                 title: result.title,
-                inferredSpeakerLabels: speakerLabels
+                inferredSpeakerLabels: finalSpeakerLabels.isEmpty ? nil : finalSpeakerLabels,
+                speakerEmbeddings: result.speakerEmbeddings
             )
 
         } catch let error as TranscriptionProcessError {

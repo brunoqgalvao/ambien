@@ -528,7 +528,17 @@ struct BriefContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let brief = meeting.meetingBrief {
+            if isGenerating {
+                // Loading state - show loading indicator (for both initial and regenerate)
+                VStack(spacing: 16) {
+                    BrandLoadingIndicator(size: .large)
+                    Text(meeting.meetingBrief != nil ? "Regenerating brief..." : "Generating brief...")
+                        .font(.brandDisplay(14))
+                        .foregroundColor(.brandTextSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 80)
+            } else if let brief = meeting.meetingBrief {
                 // Render brief as markdown
                 MarkdownTextView(text: brief.markdown)
 
@@ -567,16 +577,6 @@ struct BriefContentView: View {
                     }
                 }
                 .padding(.top, 8)
-            } else if isGenerating {
-                // Loading state - show only loading indicator
-                VStack(spacing: 16) {
-                    BrandLoadingIndicator(size: .large)
-                    Text("Generating brief...")
-                        .font(.brandDisplay(14))
-                        .foregroundColor(.brandTextSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 80)
             } else {
                 // No brief yet - empty state
                 VStack(spacing: 16) {

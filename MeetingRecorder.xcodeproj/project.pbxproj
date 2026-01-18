@@ -77,6 +77,7 @@
 		1FVOICEEMBED00002 /* VoiceEmbeddingClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */; };
 		1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERPROF00001 /* SpeakerProfile.swift */; };
 		1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */; };
+		1FSPEAKEREMBED00002 /* SpeakerEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -151,6 +152,7 @@
 		1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceEmbeddingClient.swift; sourceTree = "<group>"; };
 		1FSPEAKERPROF00001 /* SpeakerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfile.swift; sourceTree = "<group>"; };
 		1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerProfilesSettingsView.swift; sourceTree = "<group>"; };
+		1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakerEmbeddingService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,6 +247,7 @@
 				1FVOICEEMBED00001 /* VoiceEmbeddingClient.swift */,
 				1FSPEAKERPROF00001 /* SpeakerProfile.swift */,
 				1FSPEAKERSET00001 /* SpeakerProfilesSettingsView.swift */,
+				1FSPEAKEREMBED00001 /* SpeakerEmbeddingService.swift */,
 				1A0000000000000000000015 /* Info.plist */,
 				1A0000000000000000000016 /* MeetingRecorder.entitlements */,
 			);
@@ -427,6 +430,7 @@
 				1FVOICEEMBED00002 /* VoiceEmbeddingClient.swift in Sources */,
 				1FSPEAKERPROF00002 /* SpeakerProfile.swift in Sources */,
 				1FSPEAKERSET00002 /* SpeakerProfilesSettingsView.swift in Sources */,
+				1FSPEAKEREMBED00002 /* SpeakerEmbeddingService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -43,6 +43,9 @@ struct TranscriptionProcessResult {
 
     /// AI-inferred speaker names (nil if speaker ID was skipped or failed)
     let inferredSpeakers: [InferredSpeaker]?
+
+    /// Voice embedding matches (nil if embedding extraction was skipped)
+    let speakerEmbeddings: SpeakerEmbeddingResult?
 }
 
 /// A segment of transcribed speech
@@ -130,6 +133,12 @@ struct TranscriptionProcessOptions {
 
     /// Known participants for speaker identification
     var knownParticipants: [MeetingParticipant]?
+
+    /// Extract voice embeddings for speaker profiles (requires voice embedding service)
+    var extractVoiceEmbeddings: Bool = true
+
+    /// Meeting ID for linking speaker profiles
+    var meetingId: UUID?
 
     static let `default` = TranscriptionProcessOptions()
 }
@@ -228,6 +237,41 @@ actor TranscriptionProcess {
             }
         }
 
+        // Voice embedding extraction (Pass 3 - optional)
+        var speakerEmbeddings: SpeakerEmbeddingResult? = nil
+
+        if options.extractVoiceEmbeddings,
+           options.enableDiarization,
+           let meetingId = options.meetingId,
+           let diarizationSegments = transcriptionResult.segments?.compactMap({ segment -> DiarizationSegment? in
+               guard let speaker = segment.speaker else { return nil }
+               return DiarizationSegment(
+                   speakerId: speaker,
+                   start: segment.start,
+                   end: segment.end,
+                   text: segment.text
+               )
+           }),
+           !diarizationSegments.isEmpty {
+            do {
+                logInfo("[TranscriptionProcess] Extracting voice embeddings...")
+                speakerEmbeddings = try await SpeakerEmbeddingService.shared.extractAndMatchSpeakers(
+                    audioPath: audioPath,  // Use original audio for best quality
+                    segments: diarizationSegments,
+                    meetingId: meetingId
+                )
+
+                if let embeddings = speakerEmbeddings {
+                    let newCount = embeddings.speakerMatches.filter { $0.isNewProfile }.count
+                    let matchCount = embeddings.speakerMatches.filter { !$0.isNewProfile }.count
+                    logInfo("[TranscriptionProcess] Voice embeddings: \(matchCount) matched, \(newCount) new profiles")
+                }
+            } catch {
+                logWarning("[TranscriptionProcess] Voice embedding extraction failed (non-fatal): \(error.localizedDescription)")
+                // Continue without embeddings - this is non-fatal
+            }
+        }
+
         let processingTime = CFAbsoluteTimeGetCurrent() - startTime
 
         logInfo("[TranscriptionProcess] Complete in \(String(format: "%.1f", processingTime))s")
@@ -246,7 +290,8 @@ actor TranscriptionProcess {
             wasCompressed: preprocessResult.wasCompressed,
             wasSilenceCropped: preprocessResult.wasSilenceCropped,
             qualityValidation: qualityValidation,
-            inferredSpeakers: inferredSpeakers
+            inferredSpeakers: inferredSpeakers,
+            speakerEmbeddings: speakerEmbeddings
         )
     }
 
