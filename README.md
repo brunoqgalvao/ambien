@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
   <a href="#installation">Installation</a> •
+  <a href="#features">Features</a> •
   <a href="#usage">Usage</a> •
   <a href="#agent-api">Agent API</a> •
   <a href="#contributing">Contributing</a>
@@ -26,35 +26,31 @@
 
 ---
 
-## Why Ambien?
+## Philosophy
 
-Every meeting recorder either:
-- **Joins as a bot** → awkward "Recording Bot has joined" notifications
-- **Lives in the cloud** → your conversations on someone else's servers
-- **Costs $20+/month** → subscription fatigue
+**Local-first.** All recordings and transcripts stay on your Mac. Nothing leaves your machine unless you explicitly choose to transcribe.
 
-Ambien is different:
+**Bring your own keys.** You use your own OpenAI API key. No middleman, no markup. Pay OpenAI directly at ~$0.006/minute.
 
-| Feature | Ambien | Otter/Fireflies/etc |
-|---------|--------|---------------------|
-| Bot joins call | **No** | Yes, awkward |
-| Data stored | **Your Mac only** | Their cloud |
-| Pricing | **Free & open source** | $20+/month |
-| Agent API | **Built-in** | None |
+**Open source.** Tune it, fork it, self-host it. MIT licensed — do whatever you want.
 
-## Features
+---
 
-- **Invisible Recording** — Captures system audio via ScreenCaptureKit. No one knows you're recording.
-- **AI Transcription** — Uses OpenAI's Whisper API (bring your own key). ~$0.006/minute.
-- **Local-First** — All data stays on your Mac. SQLite database with full-text search.
-- **Meeting Detection** — Auto-detects Zoom, Google Meet, Microsoft Teams, Slack Huddles.
-- **Calendar View** — Browse recordings by date. Search across all transcripts.
-- **Dictation Mode** — Hold `Ctrl+Cmd+D` anywhere, speak, release → text at cursor.
-- **Agent API** — Expose meetings as JSON for Claude Code, Codex, or any AI agent.
+## vs. Otter, Fireflies, etc.
+
+| | Ambien | Others |
+|---|--------|--------|
+| Bot joins your call | **No** — captures system audio silently | Yes — "Recording Bot has joined" |
+| Where's your data | **Your Mac** | Their cloud |
+| Pricing | **Free** (you pay OpenAI directly) | $20+/month |
+| Agent API | **Built-in** — query from Claude Code | None |
+| Customizable | **Fully** — it's open source | Nope |
+
+---
 
 ## Installation
 
-### Download Release (Recommended)
+### Download (Recommended)
 
 1. Go to [Releases](https://github.com/brunoqgalvao/ambien/releases)
 2. Download the latest `.dmg`
@@ -64,76 +60,69 @@ Ambien is different:
 ### Build from Source
 
 ```bash
-# Clone the repo
 git clone https://github.com/brunoqgalvao/ambien.git
 cd ambien
-
-# Open in Xcode
 open MeetingRecorder.xcodeproj
-
 # Build and run (Cmd+R)
 ```
 
-**Requirements:**
-- macOS 12.3+ (Monterey or later)
-- Xcode 15+
-- OpenAI API key for transcription
+**Requirements:** macOS 12.3+, Xcode 15+
+
+---
+
+## Features
+
+- **Invisible Recording** — Captures system audio via ScreenCaptureKit. No one knows you're recording.
+- **AI Transcription** — OpenAI Whisper API with your own key. ~$0.006/minute.
+- **Meeting Detection** — Auto-detects Zoom, Google Meet, Microsoft Teams, Slack Huddles.
+- **Full-Text Search** — SQLite with FTS5. Search across all your transcripts instantly.
+- **Calendar View** — Browse recordings by date.
+- **Dictation Mode** — Hold `Ctrl+Cmd+D` anywhere, speak, release → text appears at cursor.
+- **Agent API** — Expose meetings as JSON for Claude Code, Codex, or any AI agent.
+
+---
 
 ## Usage
 
 ### Recording
 
-1. Click the menu bar icon (or press `Ctrl+Cmd+R`)
-2. Select "Start Recording"
-3. Have your meeting
-4. Click "Stop Recording" when done
-5. Transcription starts automatically
+1. Click the menu bar icon (or `Ctrl+Cmd+R`)
+2. Start your meeting in Zoom/Meet/Teams
+3. Click "Stop Recording" when done
+4. Transcription runs automatically
 
-### Transcription Setup
-
-Ambien uses your own OpenAI API key (BYOK model):
+### Setup Transcription
 
 1. Open Settings (`Cmd+,`)
 2. Enter your OpenAI API key
-3. That's it — transcription costs ~$0.006/minute
+3. Done — a 1-hour meeting costs ~$0.36
 
 ### Dictation
 
-Hold `Ctrl+Cmd+D`, speak, release. Your speech appears at the cursor. Works in any app.
+Hold `Ctrl+Cmd+D`, speak, release. Text appears at cursor. Works anywhere.
+
+---
 
 ## Agent API
 
-Ambien exposes your meetings as JSON files for AI agents to query:
+Ambien exposes your meetings as JSON for AI agents:
 
 ```
 ~/.ambien/meetings/
-├── index.json              # List of all meetings
-├── 2024-01-15-standup.json # Individual meeting with transcript
+├── index.json
+├── 2024-01-15-standup.json
 └── 2024-01-14-review.json
 ```
 
 ### Claude Code Integration
 
-Install the CLI tool:
-
 ```bash
-# From the app: Settings → Install CLI
-ambien install-cli
-
-# Or manually
+# Install CLI (from Settings → Install CLI, or manually)
 sudo ln -s /Applications/Ambien.app/Contents/MacOS/ambien /usr/local/bin/ambien
-```
 
-Then Claude Code can query your meetings:
-
-```bash
-# List recent meetings
+# Query your meetings
 ambien list --limit 5
-
-# Search transcripts
 ambien search "action items"
-
-# Get full transcript
 ambien get 2024-01-15-standup
 ```
 
@@ -147,78 +136,50 @@ ambien get 2024-01-15-standup
   "duration": 1847,
   "participants": ["Alice", "Bob"],
   "transcript": [
-    {
-      "speaker": "Alice",
-      "timestamp": 0.0,
-      "text": "Good morning everyone..."
-    }
+    { "speaker": "Alice", "timestamp": 0.0, "text": "Good morning..." }
   ],
   "summary": "Discussed Q1 roadmap...",
-  "action_items": [
-    "Bob to send proposal by Friday"
-  ]
+  "action_items": ["Bob to send proposal by Friday"]
 }
 ```
 
-## Project Structure
-
-```
-ambien/
-├── MeetingRecorder/           # Main macOS app (SwiftUI)
-│   ├── MeetingRecorderApp.swift
-│   ├── AudioCaptureManager.swift   # ScreenCaptureKit integration
-│   ├── TranscriptionManager.swift  # OpenAI Whisper API
-│   ├── DatabaseManager.swift       # SQLite + GRDB
-│   ├── AgentAPIManager.swift       # JSON export for agents
-│   └── ...
-├── MeetingRecorder.xcodeproj/
-├── AmbientCLI/                # CLI tool (Swift Package)
-└── brand/                     # Logos and brand assets
-```
+---
 
 ## Contributing
 
-We'd love your help! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Quick Start
+We'd love your help! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
-# Fork and clone
 git clone https://github.com/YOUR_USERNAME/ambien.git
 cd ambien
-
-# Open in Xcode
 open MeetingRecorder.xcodeproj
-
 # Make changes, test, submit PR
 ```
 
-### Ideas for Contribution
+### Ideas
 
 - [ ] Speaker diarization (who said what)
-- [ ] Local Whisper model option (no API needed)
+- [ ] Local Whisper (no API needed)
 - [ ] Export to Notion/Obsidian
-- [ ] Calendar integration (auto-name meetings)
-- [ ] Linux port (PipeWire audio capture)
+- [ ] Calendar integration
+- [ ] Linux port
+
+---
 
 ## Privacy
 
-- **All recordings stay on your Mac** — nothing uploaded without your explicit action
-- **Transcription uses OpenAI API** — audio sent to OpenAI, then deleted (per their API policy)
-- **No analytics or telemetry** — we don't track anything
+- **Recordings stay on your Mac** — nothing uploaded without your action
+- **Transcription uses OpenAI** — audio sent to OpenAI, then deleted per their policy
+- **No telemetry** — we don't track anything
+
+---
 
 ## License
 
-MIT License — do whatever you want. See [LICENSE](LICENSE).
-
-## Acknowledgments
-
-- [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit) — Apple's framework for system audio
-- [GRDB.swift](https://github.com/groue/GRDB.swift) — SQLite toolkit
-- [OpenAI Whisper](https://openai.com/research/whisper) — Speech recognition
+MIT — do whatever you want. See [LICENSE](LICENSE).
 
 ---
 
 <p align="center">
-  Made with coffee in San Francisco ☕
+  Made with coffee in San Francisco
 </p>
